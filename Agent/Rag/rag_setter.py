@@ -3,11 +3,6 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_qdrant import QdrantVectorStore
 import os
-
-
-
-
-
 from dotenv import load_dotenv
 from pathlib import Path
 

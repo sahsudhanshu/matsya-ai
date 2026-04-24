@@ -37,7 +37,8 @@ result=vector_db.similarity_search(query=user_query, k=10)
 
 formatted_result=[]
 
-print(f"Found {len(result)} relevant chunks")
+
+count=0
 for res in result:
     entry=(
         f"page content {res.page_content} \n"
