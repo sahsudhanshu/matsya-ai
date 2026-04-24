@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 import asyncio
 load_dotenv(Path(__file__).parent.parent.parent / ".env")
+from langchain.tools import tool
 
 
 BEAUFORT_DESCRIPTIONS = [
@@ -26,7 +27,7 @@ def _wind_advisory(speed_ms: float) -> str:
     return "Unknown"
 
 
-
+@tool
 async def weather_agent(lat:float,long:float,place:Optional[str]=None) -> str:
 
     print("--> weather tool called")
