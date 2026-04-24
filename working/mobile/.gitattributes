@@ -1,0 +1,23 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Git Attributes – OceanAI Mobile
+#
+# Stores large TFLite binary files in Git LFS so the main repo stays lean.
+# Set up LFS once:
+#   git lfs install
+#   git add .gitattributes
+#   git add models/*.tflite
+#   git commit -m "chore: track TFLite models via LFS"
+# ─────────────────────────────────────────────────────────────────────────────
+
+# TFLite binary models
+models/*.tflite filter=lfs diff=lfs merge=lfs -text
+
+# Android build artifacts that may be large
+*.apk        filter=lfs diff=lfs merge=lfs -text
+*.aab        filter=lfs diff=lfs merge=lfs -text
+
+# iOS archives
+*.ipa        filter=lfs diff=lfs merge=lfs -text
+
+# Keystores
+*.jks        filter=lfs diff=lfs merge=lfs -text

@@ -1,0 +1,77 @@
+version: 1.0
+runtime: python311
+build:
+  commands:
+    build:
+      - python3 -m venv venv
+      - venv/bin/pip install -r requirements.txt
+run:
+  command: venv/bin/python -m uvicorn src.main:app --host 0.0.0.0 --port 8080
+  network:
+    port: 8080
+    env: PORT
+  env:
+    - name: PYTHONUNBUFFERED
+      value: "1"
+
+    - name: "BEDROCK_REGION"
+      value: "us-east-1"
+    - name: "BEDROCK_MODEL_ID"
+      value: "us.amazon.nova-pro-v1:0"
+    - name: "GOOGLE_API_KEY"
+      value: "REDACTED_GOOGLE_API_KEY"
+    - name: "GEMINI_MODEL"
+      value: "gemini-3-flash-preview"
+    - name: "AWS_REGION"
+      value: "ap-south-1"
+    - name: "OPENWEATHERMAP_API_KEY"
+      value: "REDACTED_OPENWEATHERMAP_KEY"
+    - name: "DYNAMODB_CONVERSATIONS_TABLE"
+      value: "ai-bharat-conversations"
+    - name: "DYNAMODB_MESSAGES_TABLE"
+      value: "ai-bharat-messages"
+    - name: "DYNAMODB_MEMORY_TABLE"
+      value: "ai-bharat-memory"
+    - name: "DYNAMODB_IMAGES_TABLE"
+      value: "ai-bharat-images"
+    - name: "DYNAMODB_CHATS_TABLE"
+      value: "ai-bharat-chats"
+    - name: "DYNAMODB_USERS_TABLE"
+      value: "ai-bharat-users"
+    - name: "GROUPS_TABLE"
+      value: "ai-bharat-groups"
+    - name: "SHORT_TERM_MESSAGE_LIMIT"
+      value: "10"
+    - name: "CATCH_HISTORY_PAGE_SIZE"
+      value: "10"
+    - name: "COGNITO_USER_POOL_ID"
+      value: "REDACTED_COGNITO_POOL_ID"
+    - name: "COGNITO_CLIENT_ID"
+      value: "REDACTED_COGNITO_CLIENT_ID"
+    - name: "USE_GEMINI"
+      value: "true"
+    - name: "FISH_WEIGHT_API_URL"
+      value: "https://kyanmahajan-fish-weight.hf.space"
+    - name: "DEMO_MODE"
+      value: "true"
+    - name: "TAVILY_API_KEY"
+      value: "REDACTED_TAVILY_KEY"
+    - name: "BEDROCK_API_KEY"
+      value: "REDACTED_BEDROCK_API_KEY"
+    - name: "BEDROCK_LLM_MODEL_ID"
+      value: "us.amazon.nova-pro-v1:0"
+    - name: "BEDROCK_EMBED_MODEL_ID"
+      value: "amazon.nova-2-multimodal-embeddings-v1:0"
+    - name: "BEDROCK_KB_ID"
+      value: "REDACTED_BEDROCK_KB_ID"
+    - name: "AOSS_ENDPOINT"
+      value: "https://REDACTED_AOSS_ENDPOINT.us-east-1.aoss.amazonaws.com"
+    - name: "AOSS_INDEX_NAME"
+      value: "fish-gemini-index"
+    - name: "GEMINI_EMBED_MODEL"
+      value: "models/gemini-embedding-001"
+    - name: "BEDROCK_S3_BUCKET"
+      value: "REDACTED_S3_BUCKET"
+    - name: "BEDROCK_S3_PREFIX"
+      value: "rag-docs"
+

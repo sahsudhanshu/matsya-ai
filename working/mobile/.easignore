@@ -1,0 +1,29 @@
+# Exclude large model files (not bundled with app)
+resources/
+
+# Exclude Python virtual environment
+scripts/venv/
+**/__pycache__/
+*.pyc
+
+# Exclude documentation
+*.md
+!README.md
+
+# Exclude test files
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+
+# Exclude development files
+.vscode/
+.idea/
+*.log
+
+# Exclude git
+.git/
+.gitignore
+
+# Node modules (already excluded by default but being explicit)
+node_modules/

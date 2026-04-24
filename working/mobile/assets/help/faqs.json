@@ -1,0 +1,145 @@
+{
+  "categories": [
+    {
+      "id": "getting-started",
+      "title": "Getting Started",
+      "faqs": [
+        {
+          "id": "what-is-oceanai",
+          "question": "What is OceanAI?",
+          "answer": "OceanAI is an AI-powered mobile application designed to help Indian fishermen identify fish species, detect diseases, estimate catch weight, assess freshness, and gain market insights through smartphone photos. It combines machine learning with real-time ocean data to support sustainable fishing practices."
+        },
+        {
+          "id": "how-to-upload",
+          "question": "How do I upload a fish image for analysis?",
+          "answer": "Tap the camera icon on the home screen, then choose to take a photo or select from your gallery. Make sure the fish is well-lit and clearly visible. The AI will analyze the image and provide species identification, weight estimation, freshness assessment, and disease detection results within seconds."
+        },
+        {
+          "id": "offline-mode",
+          "question": "Can I use OceanAI offline?",
+          "answer": "Yes! OceanAI supports offline mode for basic fish detection using on-device AI models. Your uploads will be queued and automatically synced when you're back online. However, features like chat, map data, and analytics require an internet connection."
+        }
+      ]
+    },
+    {
+      "id": "analysis",
+      "title": "Fish Analysis",
+      "faqs": [
+        {
+          "id": "accuracy",
+          "question": "How accurate is the fish species identification?",
+          "answer": "Our AI models are trained on thousands of images of Indian fish species and achieve over 90% accuracy for common species. Accuracy depends on image quality, lighting, and how clearly the fish is visible. For best results, photograph the fish against a plain background in good lighting."
+        },
+        {
+          "id": "weight-estimation",
+          "question": "How does weight estimation work?",
+          "answer": "The AI estimates weight by analyzing the fish's size, body shape, and species characteristics. While estimates are generally accurate within 10-15%, we recommend using a scale for commercial transactions. Weight estimates improve when you include a reference object in the photo."
+        },
+        {
+          "id": "disease-detection",
+          "question": "What diseases can OceanAI detect?",
+          "answer": "OceanAI can detect common fish diseases including bacterial infections, fungal infections, parasites, and physical damage. The system provides a confidence score and severity level for each detection. Always consult with a fish health expert for serious disease concerns."
+        },
+        {
+          "id": "group-analysis",
+          "question": "What is group analysis?",
+          "answer": "Group analysis allows you to upload multiple fish images (2-20) at once to get aggregate statistics for your entire catch. The system will provide total fish count, species distribution, combined weight, overall quality grade, and disease detection across all images."
+        }
+      ]
+    },
+    {
+      "id": "map-features",
+      "title": "Map & Ocean Data",
+      "faqs": [
+        {
+          "id": "weather-layers",
+          "question": "What weather information is available on the map?",
+          "answer": "The map provides real-time weather layers including sea surface temperature, wind speed and direction, atmospheric pressure, and cloud cover. You can toggle between layers and tap any location to see detailed weather data. This helps you plan fishing trips and stay safe at sea."
+        },
+        {
+          "id": "disaster-alerts",
+          "question": "How do disaster alerts work?",
+          "answer": "OceanAI displays live disaster alerts for cyclones, tsunamis, storms, and floods affecting Indian coastal waters. Alerts are color-coded by severity (low, medium, high, critical) and show affected areas on the map. You'll receive push notifications for critical alerts near your location."
+        },
+        {
+          "id": "fishing-times",
+          "question": "What are the best fishing times?",
+          "answer": "The Fisherman Tools panel shows sunrise/sunset times, moon phases, tide schedules, and calculated best fishing times based on astronomical data. Fish are typically most active during dawn, dusk, and around tide changes."
+        }
+      ]
+    },
+    {
+      "id": "chat-assistant",
+      "title": "AI Chat Assistant",
+      "faqs": [
+        {
+          "id": "chat-features",
+          "question": "What can I ask the AI assistant?",
+          "answer": "The AI assistant can answer questions about fish species, fishing techniques, weather conditions, market prices, disease treatment, and sustainable fishing practices. You can also reference your catch analysis results in conversations to get specific advice about your catches."
+        },
+        {
+          "id": "voice-input",
+          "question": "Can I use voice input for chat?",
+          "answer": "Yes! Tap the microphone icon to speak your question instead of typing. The assistant also supports text-to-speech playback of responses, which is helpful when you're busy on the boat."
+        },
+        {
+          "id": "telegram-bot",
+          "question": "How do I connect to the Telegram bot?",
+          "answer": "Tap the Telegram icon in the chat screen to open the OceanAI bot in Telegram. This allows you to get fishing advice and analysis results directly in Telegram, which can be more convenient when you're at sea with limited data."
+        }
+      ]
+    },
+    {
+      "id": "account-settings",
+      "title": "Account & Settings",
+      "faqs": [
+        {
+          "id": "change-language",
+          "question": "How do I change the app language?",
+          "answer": "Go to Settings > Language and select your preferred language. OceanAI supports English, Hindi, Bengali, Tamil, Telugu, and Marathi. The AI assistant will also respond in your selected language."
+        },
+        {
+          "id": "public-profile",
+          "question": "What is a public profile?",
+          "answer": "A public profile allows you to share your fishing statistics and achievements with others via a unique link. You can control what information is visible (stats, recent catches, badges) and generate a QR code for easy sharing. This is useful for building your reputation with buyers and cooperatives."
+        },
+        {
+          "id": "export-data",
+          "question": "How do I export my catch data?",
+          "answer": "Go to Settings > Privacy & Security > Export Data. You can export your analyses, groups, and chat history as a CSV file. This is useful for record-keeping, tax purposes, or sharing with buyers."
+        },
+        {
+          "id": "delete-account",
+          "question": "How do I delete my account?",
+          "answer": "Go to Settings > Privacy & Security > Delete Account. You'll need to confirm with your password. This action is permanent and will delete all your data including catch history, analytics, and chat conversations."
+        }
+      ]
+    },
+    {
+      "id": "troubleshooting",
+      "title": "Troubleshooting",
+      "faqs": [
+        {
+          "id": "upload-failed",
+          "question": "Why did my image upload fail?",
+          "answer": "Upload failures are usually due to poor internet connection, large file size, or server issues. Check your connection and try again. If offline, your upload will be queued and automatically retried when you're back online. You can also try compressing the image or using a different photo."
+        },
+        {
+          "id": "slow-analysis",
+          "question": "Why is analysis taking so long?",
+          "answer": "Analysis time depends on your internet speed and server load. Most analyses complete within 5-10 seconds. If you're offline, the app uses on-device AI which may be slower but doesn't require internet. Group analyses with many images take longer."
+        },
+        {
+          "id": "map-not-loading",
+          "question": "Why isn't the map loading?",
+          "answer": "The map requires an internet connection to load tiles and weather data. Check your connection and ensure location permissions are enabled. If the problem persists, try restarting the app or clearing the app cache in Settings."
+        },
+        {
+          "id": "notifications-not-working",
+          "question": "Why am I not receiving notifications?",
+          "answer": "Check that notifications are enabled in Settings > Preferences and in your device's system settings for OceanAI. For disaster alerts, ensure location permissions are granted so the app can determine if alerts affect your area."
+        }
+      ]
+    }
+  ]
+}
