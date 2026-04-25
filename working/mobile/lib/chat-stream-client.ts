@@ -20,6 +20,12 @@ import { ApiError } from "./api-client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { handleUnauthorizedError } from "./error-handler";
 
+export interface ContextChip {
+  type: "location" | "history" | "upload" | "analytics";
+  label: string;
+  data?: Record<string, any>;
+}
+
 /** UI action hints returned by the agent */
 export interface AgentUIActions {
   map: boolean;
@@ -39,6 +45,7 @@ export interface StreamOptions {
   };
   replyToMessageId?: string;
   analysisId?: string;
+  groupId?: string;
   onToken?: (token: string) => void;
   onToolCall?: (toolName: string) => void;
   onComplete?: (ui?: AgentUIActions) => void;
@@ -72,6 +79,9 @@ class ChatStreamClient {
       message,
       language,
       location,
+      replyToMessageId,
+      analysisId,
+      groupId,
       onToken,
       onToolCall,
       onComplete,
@@ -92,6 +102,12 @@ class ChatStreamClient {
 
     return new Promise(async (resolve, reject) => {
       const token = await this.getToken();
+      if (!token) {
+        handleUnauthorizedError();
+        this.isStreaming = false;
+        return reject(new ApiError(401, "No auth token found"));
+      }
+
       const url = `${AGENT_BASE_URL}/conversations/${conversationId}/messages/stream`;
 
       const xhr = new XMLHttpRequest();
@@ -208,16 +224,43 @@ class ChatStreamClient {
         }
       };
 
-      console.log(
-        `[stream] POST ${url} | msg="${message.slice(0, 40)}" lang=${language}`,
-      );
-
       const requestBody = {
         message,
         language,
         latitude: location?.latitude,
         longitude: location?.longitude,
+        replyToMessageId,
+        analysisId,
+        groupId,
       };
+
+      const requestTypeMatches = message.match(/\[(.*?)\]/g);
+      const requestType = requestTypeMatches
+        ? requestTypeMatches.join(" ")
+        : "none";
+
+      const headersForLogging = {
+        "Content-Type": "application/json",
+        Accept: "text/event-stream",
+        Authorization: "[REDACTED]",
+        "X-App-Version": "1.0.0",
+      };
+
+      console.log(
+        "--- Sending stream request to agent ---",
+        JSON.stringify(
+          {
+            url,
+            method: "POST",
+            headers: headersForLogging,
+            requestType,
+            body: requestBody,
+          },
+          null,
+          2,
+        ),
+      );
+
       xhr.send(JSON.stringify(requestBody));
     });
   }
@@ -280,17 +323,110 @@ export function sanitiseAgentText(raw: string): string {
 }
 
 /**
- * Strip bracket context tags from a stored user message for display.
- * Tags like [page:map], [userLoc:...], [mapPin:...], [lang:...], etc. are
- * prepended by the app before sending to the agent but should never be shown.
+ * Parse a stored user message, extract its context chips, and strip tags from content.
  */
-export function stripContextTags(raw: string): string {
-  return raw
+export function parseStoredUserMessage(rawText: string): {
+  content: string;
+  replyTo?: string;
+  replyToId?: string;
+  locationContext?: { lat: number; lon: number };
+  contextChips?: ContextChip[];
+} {
+  let content = rawText ?? "";
+  let replyTo: string | undefined;
+  let replyToId: string | undefined;
+  let locationContext: { lat: number; lon: number } | undefined;
+  const chips: ContextChip[] = [];
+
+  const replyPrefixWithId = content.match(
+    /^\[Replying to id:([^\s\]]+)\s+text:\s*"([\s\S]*?)"\]\s*\n\n([\s\S]*)$/,
+  );
+  if (replyPrefixWithId) {
+    replyToId = replyPrefixWithId[1]?.trim();
+    replyTo = replyPrefixWithId[2]?.trim();
+    content = replyPrefixWithId[3] ?? "";
+  }
+
+  const replyPrefix = content.match(
+    /^\[Replying to:\s*"([\s\S]*?)"\]\s*\n\n([\s\S]*)$/,
+  );
+  if (!replyTo && replyPrefix) {
+    replyTo = replyPrefix[1]?.trim();
+    content = replyPrefix[2] ?? "";
+  }
+
+  // Extract mapPin location before stripping tags
+  const mapPinMatch = content.match(/\[mapPin:([\d.\-]+),([\d.\-]+)\]/);
+  if (mapPinMatch) {
+    const lat = parseFloat(mapPinMatch[1]);
+    const lon = parseFloat(mapPinMatch[2]);
+    if (!isNaN(lat) && !isNaN(lon)) {
+      locationContext = { lat, lon };
+      chips.push({
+        type: "location",
+        label: `${lat.toFixed(4)}°N, ${lon.toFixed(4)}°E`,
+        data: { lat, lon },
+      });
+    }
+  }
+
+  // Extract groupId for history chip
+  const groupIdMatch = content.match(/\[groupId:([^\]]+)\]/);
+  if (groupIdMatch) {
+    chips.push({
+      type: "history",
+      label: `Catch #${groupIdMatch[1].slice(0, 8)}`,
+      data: { groupId: groupIdMatch[1] },
+    });
+  }
+
+  // Extract scan/species for upload chip
+  const scanMatch = content.match(/\[scan:([^\]]+)\]/);
+  const speciesMatch = content.match(/\[species:([^\]]+)\]/);
+  if (scanMatch) {
+    chips.push({
+      type: "upload",
+      label: speciesMatch ? `Scan · ${speciesMatch[1]}` : "Scan results",
+      data: { summary: scanMatch[1], species: speciesMatch?.[1] },
+    });
+  }
+
+  // Extract page for analytics chip
+  const pageMatch = content.match(/\[page:analytics\]/i);
+  if (pageMatch) {
+    chips.push({ type: "analytics", label: "Analytics", data: {} });
+  }
+
+  // Strip all context bracket tags
+  content = content.replace(
+    /\[(?:page|lang|userLoc|groupId|species|imgIdx|mapPin|mapZoom|scan|offline|group|image):[^\]]*\]\s*/gi,
+    "",
+  );
+
+  return {
+    content: content.trim(),
+    replyTo,
+    replyToId,
+    locationContext,
+    contextChips: chips.length > 0 ? chips : undefined,
+  };
+}
+
+export const chatStreamClient = new ChatStreamClient();
+
+/**
+ * Strip context bracket tags (e.g. [page:...], [userLoc:...]) from a raw
+ * user message so only the human-readable text remains for UI display.
+ */
+export function stripContextTags(text: string): string {
+  return text
+    .replace(
+      /\[(?:Replying to(?:\s+id:[^\s\]]+\s+text:)?\s*:"[\s\S]*?")\]\s*\n\n/gi,
+      "",
+    )
     .replace(
       /\[(?:page|lang|userLoc|groupId|species|imgIdx|mapPin|mapZoom|scan|offline|group|image):[^\]]*\]\s*/gi,
       "",
     )
     .trim();
 }
-
-export const chatStreamClient = new ChatStreamClient();

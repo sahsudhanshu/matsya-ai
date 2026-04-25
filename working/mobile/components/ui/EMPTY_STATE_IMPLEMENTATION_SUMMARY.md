@@ -78,7 +78,7 @@
     <Text style={styles.emptyChatTitle}>No Conversations Yet</Text>
     <Text style={styles.emptyChatText}>
       Start a new chat to get fishing advice, market insights, and
-      catch analysis from OceanAI Assistant.
+      catch analysis from Matsya AI Assistant.
     </Text>
   </View>
 ) : (

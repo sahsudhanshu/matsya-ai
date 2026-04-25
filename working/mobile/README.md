@@ -1,4 +1,4 @@
-# OceanAI – AI for Bharat 🐟
+# Matsya AI – AI for Bharat 🐟
 
 An offline-capable mobile app that helps Indian fishers identify fish species, detect diseases, and get market insights - all running **on-device** using TFLite models.
 
@@ -30,13 +30,13 @@ mobile/
 │   ├── analysis/           # Technical analysis detail screen
 │   └── auth/               # Login & registration
 ├── assets/
-│   ├── models/             # EMPTY – models are NOT bundled (see models/ below)
+│   ├── models/             # ✅ TFLite models (bundled for on-device inference)
 │   └── ...                 # Icons, splash, fonts
 ├── components/             # Reusable UI components
 │   └── ui/
 ├── lib/                    # Business logic & utilities
-│   ├── detection.ts        # YOLO TFLite inference + model loading from device FS
-│   ├── tflite-inference.ts # Species & disease TFLite inference
+│   ├── detection.ts        # YOLO TFLite inference (bundled asset loading)
+│   ├── tflite-inference.ts # Species & disease classification
 │   ├── offline-inference.ts# Full offline pipeline (detect → classify → GradCAM)
 │   ├── gradcam.ts          # GradCAM visual explanation
 │   ├── api-client.ts       # Backend REST client (AWS API Gateway)
@@ -45,16 +45,11 @@ mobile/
 │   ├── constants.ts        # Shared colours, fonts, config
 │   ├── types.ts            # Shared TypeScript types
 │   └── i18n/               # Internationalisation (6 languages)
-├── models/                 # ✅ TFLite models (bundled in app assets)
+├── models/                 # Source TFLite models
 │   ├── detection_float32.tflite  (~12 MB)
 │   ├── Fish.tflite               (~43 MB)
 │   ├── Fish_disease.tflite       (~43 MB)
 │   └── README.md
-├── assets/
-│   ├── models/             # Bundled TFLite models (copied from models/)
-│   └── ...                 # Icons, splash, fonts
-├── scripts/
-│   └── deploy-models.sh    # (DEPRECATED - models now bundled in app)
 ├── backend/                # Local Python dev server (FastAPI)
 ├── .gitattributes          # Git LFS rules for .tflite files
 ├── .gitignore
@@ -65,133 +60,20 @@ mobile/
 
 ---
 
-## Quick Start
+## On-Device Models
 
-### Prerequisites
+The application comes with all necessary machine learning models bundled directly into the application assets. This ensures that features like fish detection, species identification, and disease analysis work **out-of-the-box** without any additional setup or internet connectivity.
 
-- **Node.js** ≥ 20
-- **Android Studio** + Android SDK (for Android development)
-- **Java 17** (for Gradle)
-- An Android device (USB debug enabled) **or** an emulator
+### Bundled Models
 
-### 1 - Clone & install
+- **Fish Detection**: `detection_float32.tflite`
+- **Species Classification**: `Fish.tflite`
+- **Disease Identification**: `Fish_disease.tflite`
 
-```bash
-git clone https://github.com/<your-org>/ai-for-bharat.git
-cd ai-for-bharat/mobile
-npm install
-```
+No manual deployment via ADB is required for standard use or release builds.
 
-If you use Git LFS (recommended for the model files):
-
-```bash
-git lfs install
-git lfs pull        # downloads models/ into working tree
-```
-
-### 2 - Environment setup
-
-```bash
-cp .env.example .env.local
-# Fill in EXPO_PUBLIC_API_URL, EXPO_PUBLIC_COGNITO_USER_POOL_ID, etc.
-# Leave EXPO_PUBLIC_API_URL empty to run in demo / mock-data mode.
-```
-
-### 3 - Generate native code (Expo CNG)
-
-The `ios/` and `android/` folders are **not committed** - they are generated from
-`app.json` at build time.
-
-```bash
-npx expo prebuild --clean
-```
-
-### 4 - Build & run
-
-```bash
-# Android
-npm run android        # builds debug APK and launches on connected device/emulator
-
-# iOS (macOS only)
-npm run ios
-```
 
 ---
-
-## Deploying Models to Device (ADB)
-
-Models are loaded at runtime from the app's **internal files directory**
-(`DocumentDirectory/models/`). Use one of the approaches below to deploy them.
-
-### Automated script (recommended)
-
-```bash
-# From mobile/
-npm run deploy-models
-
-# With a custom package name:
-./scripts/deploy-models.sh com.aiforbharat.oceanai
-```
-
-The script:
-
-1. Pushes each `.tflite` file from `models/` to `/sdcard/` on the device
-2. Uses `adb shell run-as` to copy it into the app's internal `files/models/` directory
-3. Cleans up the temporary `/sdcard/` copy
-
-### Manual ADB commands
-
-Replace `com.aiforbharat.oceanai` if you changed the package name in `app.json`.
-
-```bash
-# ── Step 1: Create the models directory in app internal storage ──
-adb shell run-as com.aiforbharat.oceanai mkdir -p files/models
-
-# ── Step 2: Deploy each model (repeat for all three) ──
-
-# detection_float32.tflite  (~12 MB)
-adb push models/detection_float32.tflite /sdcard/detection_float32.tflite
-adb shell run-as com.aiforbharat.oceanai sh -c \
-  'cp /sdcard/detection_float32.tflite files/models/detection_float32.tflite && rm /sdcard/detection_float32.tflite'
-
-# Fish.tflite  (~43 MB)
-adb push models/Fish.tflite /sdcard/Fish.tflite
-adb shell run-as com.aiforbharat.oceanai sh -c \
-  'cp /sdcard/Fish.tflite files/models/Fish.tflite && rm /sdcard/Fish.tflite'
-
-# Fish_disease.tflite  (~43 MB)
-adb push models/Fish_disease.tflite /sdcard/Fish_disease.tflite
-adb shell run-as com.aiforbharat.oceanai sh -c \
-  'cp /sdcard/Fish_disease.tflite files/models/Fish_disease.tflite && rm /sdcard/Fish_disease.tflite'
-
-# ── Step 3: Verify ──
-adb shell run-as com.aiforbharat.oceanai ls -lh files/models/
-```
-
-Expected output after verify:
-
-```
--rw------- 1 u0_a... u0_a... 12.0M ... detection_float32.tflite
--rw------- 1 u0_a... u0_a... 43.0M ... Fish.tflite
--rw------- 1 u0_a... u0_a... 43.0M ... Fish_disease.tflite
-```
-
-### Re-deploying & troubleshooting
-
-```bash
-# Check if models exist on device
-adb shell run-as com.aiforbharat.oceanai ls -lh files/models/
-
-# Remove and re-deploy a specific model
-adb shell run-as com.aiforbharat.oceanai rm files/models/Fish.tflite
-# then re-push as above
-
-# View live app logs (filter for model loading)
-adb logcat | grep -i "TFLite\|Detection\|model"
-```
-
-> **Note:** `adb shell run-as` only works on **debug** builds.  
-> For release builds, use a different delivery mechanism (e.g., download from server on first launch).
 
 ---
 

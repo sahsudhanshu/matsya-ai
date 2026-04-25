@@ -1,7 +1,7 @@
 /**
  * Color System - Mobile Application
  *
- * This file defines the complete color palette for the OceanAI mobile application,
+ * This file defines the complete color palette for the Matsya AI mobile application,
  * matching the web application's color scheme for design consistency.
  *
  * Usage:

@@ -1,5 +1,5 @@
 /**
- * Shared types for the OceanAI app.
+ * Shared types for the Matsya AI app.
  */
 
 export interface FishAnalysisResult {

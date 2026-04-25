@@ -1,5 +1,5 @@
 /**
- * Weight Inference - on-device XGBoost regressor + LWR formula (pure TypeScript)
+ * Weight Inference — on-device XGBoost regressor + LWR formula (pure TypeScript)
  *
  * Two prediction methods are blended:
  *   1. XGBoost model: base_score + Σ leaf_value(tree_i, features)
@@ -35,10 +35,10 @@ const _lwrMap: Map<string, LWREntry> = new Map(
  * Compute weight via the Length-Weight Relationship: W = a · L^b
  * Returns null when the species has no LWR entry.
  */
-function lwrPredict(speciesName: string, lengthCm: number): number | null {
+function lwrPredict(speciesName: string, length1Cm: number): number | null {
   const entry = _lwrMap.get(speciesName.trim().toLowerCase());
   if (!entry) return null;
-  return entry.constant_a * Math.pow(lengthCm, entry.constant_b);
+  return entry.constant_a * Math.pow(length1Cm, entry.constant_b);
 }
 
 // ── Types for the JSON tree format ────────────────────────────────────────────
@@ -211,7 +211,7 @@ export interface WeightInputs {
 }
 
 export interface WeightResult {
-  /** Final predicted weight - average of XGBoost and LWR (or XGBoost alone if LWR unavailable). */
+  /** Final predicted weight — average of XGBoost and LWR (or XGBoost alone if LWR unavailable). */
   predictedWeightG: number;
   /** Raw XGBoost model output (g). */
   xgboostWeightG: number;
@@ -252,7 +252,7 @@ export async function predictWeight(
     inputs.width,
   ];
 
-  // Sum leaf values across all trees (reg:squarederror - no sigmoid/log transform)
+  // Sum leaf values across all trees (reg:squarederror — no sigmoid/log transform)
   let leafSum = 0;
   for (const tree of model.trees) {
     leafSum += walkTree(tree, features, featureIndex);
@@ -260,8 +260,8 @@ export async function predictWeight(
 
   const xgboostWeightG = Math.max(0, model.base_score + leafSum);
 
-  // LWR: W = a · Length3^b  (species-specific constants from weight.json)
-  const rawLwr = lwrPredict(inputs.species, inputs.length3);
+  // LWR: W = a · Length1^b  (species-specific constants from weight.json)
+  const rawLwr = lwrPredict(inputs.species, inputs.length1);
   const lwrWeightG = rawLwr !== null ? Math.max(0, rawLwr) : null;
 
   // Final weight: average of both methods (or XGBoost alone as fallback)

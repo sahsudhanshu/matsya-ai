@@ -27,11 +27,11 @@ import {
   translateFishName,
   translateDiseaseName,
 } from "../../lib/i18n/species-i18n";
-import { getAnalysisData, updateOfflineWeight } from "../../lib/analysis-store";
-import { updateLocalDetectionWeight } from "../../lib/local-history";
+import { getAnalysisData } from "../../lib/analysis-store";
 import type { OfflineDetectionResult } from "../../lib/offline-inference";
 import type { MLCropResult } from "../../lib/types";
 import { WeightEstimateModal } from "../../components/WeightEstimateModal";
+import { SyncService } from "../../lib/sync-service";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const SCREEN_HEIGHT = Dimensions.get("window").height;
@@ -609,17 +609,13 @@ function OfflineFishDetail({
     setEstimatedWeightG(wg);
     setWeightModalVisible(false);
     await AsyncStorage.setItem(storageKey, String(wg));
-    // Update in-memory analysis store so the upload summary card refreshes on focus.
-    updateOfflineWeight(index, wg);
-    // Patch the persisted local history record so History tab shows the correct weight.
-    const stored = getAnalysisData();
-    if (stored?.mode === "offline" && stored.localRecordId) {
-      updateLocalDetectionWeight(stored.localRecordId, index, wg).catch(
-        (e) => console.warn("[Detail] Failed to patch local history weight:", e),
-      );
-    }
-    // Weight will be pushed to the backend as part of syncLocalHistory once
-    // the offline session is committed and a cloud groupId is available.
+    await SyncService.queueChange("weight_estimate", {
+      imageUri,
+      fishIndex: index,
+      species: det.species,
+      weightG: wg,
+      timestamp: new Date().toISOString(),
+    });
   };
 
   const { locale } = useLanguage();
@@ -643,7 +639,6 @@ function OfflineFishDetail({
         onConfirm={handleConfirmWeight}
         species={det.species}
         fishIndex={index}
-        forceOffline
       />
       {viewerUri && (
         <FullscreenImageViewer

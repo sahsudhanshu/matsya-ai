@@ -261,6 +261,15 @@ export default function MapScreen() {
         accuracy: Location.Accuracy.Balanced,
       });
       setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      mapRef.current?.animateToRegion(
+        {
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+          latitudeDelta: 1.5,
+          longitudeDelta: 1.5,
+        },
+        800,
+      );
     })();
   }, []);
 
@@ -704,14 +713,20 @@ export default function MapScreen() {
             fishingSpots.map((spot, i) => (
               <React.Fragment key={`spot-${i}`}>
                 <MapCircle
-                  center={{ latitude: spot.latitude, longitude: spot.longitude }}
+                  center={{
+                    latitude: spot.latitude,
+                    longitude: spot.longitude,
+                  }}
                   radius={600}
                   fillColor={spot.color + "88"}
                   strokeColor={spot.color}
                   strokeWidth={1.5}
                 />
                 <Marker
-                  coordinate={{ latitude: spot.latitude, longitude: spot.longitude }}
+                  coordinate={{
+                    latitude: spot.latitude,
+                    longitude: spot.longitude,
+                  }}
                   tracksViewChanges={false}
                   anchor={{ x: 0.5, y: 0.5 }}
                   onPress={() => {
@@ -720,7 +735,17 @@ export default function MapScreen() {
                     setSelectedMarker(null);
                   }}
                 >
-                  <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: spot.color, borderWidth: 2, borderColor: "#fff", opacity: 0.85 }} />
+                  <View
+                    style={{
+                      width: 24,
+                      height: 24,
+                      borderRadius: 12,
+                      backgroundColor: spot.color,
+                      borderWidth: 2,
+                      borderColor: "#fff",
+                      opacity: 0.85,
+                    }}
+                  />
                 </Marker>
               </React.Fragment>
             ))}
@@ -1108,7 +1133,12 @@ export default function MapScreen() {
                         longitude: s.longitude,
                       }));
                       mapRef.current.fitToCoordinates(coords, {
-                        edgePadding: { top: 80, right: 60, bottom: 200, left: 60 },
+                        edgePadding: {
+                          top: 80,
+                          right: 60,
+                          bottom: 200,
+                          left: 60,
+                        },
                         animated: true,
                       });
                     }
@@ -1546,7 +1576,7 @@ const styles = StyleSheet.create({
 
   // Map
   mapContainer: { flex: 1, position: "relative" },
-  map: { flex: 1 },
+  map: { ...StyleSheet.absoluteFillObject },
   dot: {
     width: 28,
     height: 28,

@@ -1,5 +1,5 @@
 /**
- * API client for OceanAI backend - React Native port of the web api-client.ts
+ * API client for Mastya AI backend - React Native port of the web api-client.ts
  * Uses AsyncStorage for token management. Demo mode when EXPO_PUBLIC_API_URL not set.
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -215,6 +215,26 @@ async function apiFetch<T>(
       ...(options.headers as Record<string, string>),
     };
 
+    const headersForLog = { ...headers };
+    if (headersForLog.Authorization) {
+      headersForLog.Authorization = "[REDACTED]";
+    }
+
+    console.log(
+      "--- Sending request to agent ---",
+      JSON.stringify(
+        {
+          url,
+          options: {
+            ...options,
+            headers: headersForLog,
+          },
+        },
+        null,
+        2,
+      ),
+    );
+
     const res = await fetch(url, { ...options, headers });
 
     if (!res.ok) {
@@ -272,6 +292,41 @@ async function agentFetch<T>(
       Authorization: `Bearer ${token}`,
       ...(options.headers as Record<string, string>),
     };
+
+    const headersForLog = { ...headers };
+    if (headersForLog.Authorization) {
+      headersForLog.Authorization = "[REDACTED]";
+    }
+
+    let requestType = "none";
+    if (options.body && typeof options.body === "string") {
+      try {
+        const parsed = JSON.parse(options.body);
+        if (parsed.message) {
+          const matches = parsed.message.match(/\[(.*?)\]/g);
+          if (matches) {
+            requestType = matches.join(" ");
+          }
+        }
+      } catch (e) {}
+    }
+
+    console.log(
+      "--- Sending request to agent ---",
+      JSON.stringify(
+        {
+          url,
+          requestType,
+          options: {
+            ...options,
+            headers: headersForLog,
+            body: options.body ? JSON.parse(options.body as string) : undefined,
+          },
+        },
+        null,
+        2,
+      ),
+    );
 
     const res = await fetch(url, { ...options, headers });
 
@@ -517,6 +572,7 @@ export async function sendChat(
   location?: { latitude: number; longitude: number },
   replyToMessageId?: string,
   analysisId?: string,
+  groupId?: string,
 ): Promise<SendChatResponse> {
   if (!message || !message.trim()) {
     throw new ApiError(400, "Message is required");
@@ -534,6 +590,9 @@ export async function sendChat(
         }
         if (analysisId) {
           payload.analysisId = analysisId;
+        }
+        if (groupId) {
+          payload.groupId = groupId;
         }
 
         console.log("----------------------------------------");
@@ -578,6 +637,9 @@ export async function sendChat(
       }
       if (analysisId) {
         payload.analysisId = analysisId;
+      }
+      if (groupId) {
+        payload.groupId = groupId;
       }
 
       console.log("----------------------------------------");
@@ -643,6 +705,15 @@ export async function sendChat(
   }
 }
 
+export class ChatError extends Error {
+  constructor(
+    public status: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = "ChatError";
+  }
+}
 export async function getChatHistory(
   limit = 30,
   overrideChatId?: string,
@@ -650,42 +721,31 @@ export async function getChatHistory(
   if (IS_AGENT_CONFIGURED) {
     try {
       if (overrideChatId) {
-        const res = await retryWithBackoff(
-          () =>
-            agentFetch<{ messages: ConversationMessage[] }>(
-              `/conversations/${overrideChatId}/messages?limit=${limit}`,
-            ),
-          {
-            ...RETRY_PRESETS.FAST,
-            onRetry: (attempt, error) => {
-              console.log(
-                `Retrying get chat history (attempt ${attempt}):`,
-                error.message,
-              );
-            },
-          },
+        const res = await retryWithBackoff(() =>
+          agentFetch<any>(
+            `/conversations/${overrideChatId}/messages?limit=${limit}`,
+          ),
         );
-        return res.messages.map((m) => ({
-          id: m.messageId,
-          role: m.role,
-          text: m.content,
-          timestamp: m.timestamp,
-          uiActions: m.metadata?.ui,
-        }));
+        const fetchedMessages = Array.isArray(res.messages)
+          ? res.messages
+          : res.success && Array.isArray(res.response)
+            ? res.response
+            : null;
+        if (fetchedMessages) {
+          return fetchedMessages.map((m: any) => ({
+            id: m.messageId || m.id,
+            role: m.role,
+            text: m.content || m.text,
+            timestamp: m.timestamp || new Date().toISOString(),
+            uiActions: m.metadata?.ui,
+          }));
+        }
+        return [];
       }
 
       // Fallback for old /chat endpoint
-      const oldLog = await retryWithBackoff(
-        () => agentFetch<ChatMessage[]>(`/chat?limit=${limit}`),
-        {
-          ...RETRY_PRESETS.FAST,
-          onRetry: (attempt, error) => {
-            console.log(
-              `Retrying get chat history (attempt ${attempt}):`,
-              error.message,
-            );
-          },
-        },
+      const oldLog = await retryWithBackoff(() =>
+        agentFetch<ChatMessage[]>(`/chat?limit=${limit}`),
       );
       return oldLog.map((m) => ({
         id: m.chatId,
@@ -705,18 +765,8 @@ export async function getChatHistory(
   }
 
   try {
-    const apiLog = await retryWithBackoff(
-      () =>
-        apiFetch<ChatMessage[]>(`${ENDPOINTS.getChatHistory}?limit=${limit}`),
-      {
-        ...RETRY_PRESETS.FAST,
-        onRetry: (attempt, error) => {
-          console.log(
-            `Retrying get chat history (attempt ${attempt}):`,
-            error.message,
-          );
-        },
-      },
+    const apiLog = await retryWithBackoff(() =>
+      apiFetch<ChatMessage[]>(`${ENDPOINTS.getChatHistory}?limit=${limit}`),
     );
     return apiLog.map((m) => ({
       id: m.chatId,
@@ -1245,7 +1295,7 @@ export async function getUserProfile(): Promise<UserProfile> {
   if (IS_DEMO_MODE) {
     return {
       userId: "demo-user",
-      email: "demo@oceanai.com",
+      email: "demo@mastyaai.com",
       name: "Demo Fisherman",
       phone: "+91 9876543210",
       port: "Mumbai",
@@ -1434,8 +1484,7 @@ export async function generatePublicSlug(): Promise<{
       .replace(/-+/g, "-")
       .slice(0, 20);
     const slug = `${base}-${id.slice(0, 8)}`;
-    const baseUrl =
-      process.env.EXPO_PUBLIC_WEB_URL || "https://oceanai.app";
+    const baseUrl = process.env.EXPO_PUBLIC_WEB_URL || "https://mastyaai.app";
     const url = `${baseUrl}/profile/${slug}`;
 
     // Persist the slug on the user profile

@@ -29,7 +29,7 @@ const STEPS: OnboardingStep[] = [
   {
     type: "info",
     agentMessage:
-      "Namaste! 🙏 I'm SagarMitra, your AI fishing assistant. I can help with weather, market prices, catch analysis, finding fishing zones, and much more.",
+      "Namaste! 🙏 I'm Matsya AI, your AI fishing assistant. I can help with weather, market prices, catch analysis, finding fishing zones, and much more.",
   },
   {
     type: "choice",
@@ -142,7 +142,7 @@ export function AgentOnboarding({ onComplete }: Props) {
           <Ionicons name="chatbubble" size={20} color="#fff" />
         </View>
         <View>
-          <Text style={styles.agentName}>SagarMitra</Text>
+          <Text style={styles.agentName}>Matsya AI</Text>
           <Text style={styles.agentSub}>Your AI Fishing Assistant</Text>
         </View>
         <TouchableOpacity
@@ -254,16 +254,16 @@ export async function shouldShowOnboarding(): Promise<boolean> {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.bgDark,
+    backgroundColor: "#0D1724",
+    paddingTop: 50,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
     paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    paddingBottom: SPACING.md,
+    paddingTop: SPACING.sm,
   },
   agentAvatar: {
     width: 44,
@@ -311,14 +311,12 @@ const styles = StyleSheet.create({
   },
   agentBubble: {
     alignSelf: "flex-start",
-    backgroundColor: COLORS.bgCard,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderBottomLeftRadius: 4,
+    backgroundColor: "#1D2A3D",
+    borderWidth: 0,
   },
   userBubble: {
     alignSelf: "flex-end",
-    backgroundColor: COLORS.primary,
+    backgroundColor: "#3B82F6",
     borderBottomRightRadius: 4,
   },
   bubbleAvatar: {
@@ -345,8 +343,8 @@ const styles = StyleSheet.create({
     paddingBottom: SPACING.xl,
     paddingTop: SPACING.md,
     borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-    backgroundColor: COLORS.bgCard,
+    borderTopColor: "rgba(255,255,255,0.08)",
+    backgroundColor: "#131F30",
   },
   optionsGrid: {
     flexDirection: "row",
@@ -368,12 +366,13 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   optionIcon: {
-    fontSize: 18,
+    fontSize: 20,
   },
   optionLabel: {
     fontSize: FONTS.sizes.sm,
     fontWeight: FONTS.weights.semibold,
     color: COLORS.textPrimary,
+    flex: 1,
   },
 
   continueBtn: {

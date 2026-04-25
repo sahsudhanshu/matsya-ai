@@ -39,7 +39,7 @@ export function ToolTransparency({ toolsCalled, isWorking }: Props) {
     <View style={styles.container}>
       <View style={styles.header}>
         <Ionicons name="sparkles" size={12} color={COLORS.primaryLight} />
-        <Text style={styles.headerText}>SagarMitra is working...</Text>
+        <Text style={styles.headerText}>Matsya AI is working...</Text>
       </View>
       {toolsCalled.map((tool, i) => {
         const meta = TOOL_NAMES[tool] || {

@@ -97,7 +97,7 @@ export function InlineMapWidget({
               style={styles.miniMap}
               provider={PROVIDER_DEFAULT}
               initialRegion={miniRegion}
-              mapType="none"
+              mapType="satellite"
               scrollEnabled={false}
               zoomEnabled={false}
               rotateEnabled={false}
@@ -105,12 +105,6 @@ export function InlineMapWidget({
               toolbarEnabled={false}
               loadingEnabled={false}
             >
-              <UrlTile
-                urlTemplate={SATELLITE_URL}
-                maximumZ={20}
-                minimumZ={2}
-                tileSize={TILE_SIZE}
-              />
               <Marker
                 coordinate={{ latitude, longitude }}
                 pinColor={COLORS.primary}
@@ -166,7 +160,7 @@ export function InlineMapWidget({
               style={styles.fullMap}
               provider={PROVIDER_DEFAULT}
               initialRegion={fullRegion}
-              mapType="none"
+              mapType="satellite"
               showsUserLocation
               showsCompass
               showsMyLocationButton={false}
@@ -179,12 +173,6 @@ export function InlineMapWidget({
               toolbarEnabled={false}
               loadingEnabled={false}
             >
-              <UrlTile
-                urlTemplate={SATELLITE_URL}
-                maximumZ={20}
-                minimumZ={2}
-                tileSize={TILE_SIZE}
-              />
               <Marker
                 coordinate={{ latitude, longitude }}
                 title="Fishing location"

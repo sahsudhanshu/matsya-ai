@@ -3,13 +3,13 @@ import {
   View,
   Text,
   StyleSheet,
+  ScrollView,
   TouchableOpacity,
   TextInput,
   Linking,
   Alert,
   Platform,
 } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -69,7 +69,7 @@ export default function HelpScreen() {
 
       await MailComposer.composeAsync({
         recipients: ["support@oceanai.app"],
-        subject: "OceanAI Support Request",
+        subject: "Matsya AI Support Request",
         body: `\n\n---\nApp Version: 1.0.0\nPlatform: ${Platform.OS} ${Platform.Version}\n`,
       });
     } catch (error) {
@@ -93,7 +93,7 @@ export default function HelpScreen() {
   };
 
   const handleTelegramSupport = async () => {
-    const telegramUrl = "https://t.me/OceanAIBot";
+    const telegramUrl = "https://t.me/Matsya AIBot";
     const canOpen = await Linking.canOpenURL(telegramUrl);
 
     if (canOpen) {
@@ -101,7 +101,7 @@ export default function HelpScreen() {
     } else {
       Alert.alert(
         "Telegram Not Installed",
-        "Please install Telegram to use this feature, or visit t.me/OceanAIBot in your browser.",
+        "Please install Telegram to use this feature, or visit t.me/Matsya AIBot in your browser.",
         [
           { text: "Cancel", style: "cancel" },
           {
@@ -141,11 +141,10 @@ export default function HelpScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <KeyboardAwareScrollView
+      <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
-        enableOnAndroid={true}
       >
         {/* Header */}
         <View style={styles.header}>
@@ -232,7 +231,7 @@ export default function HelpScreen() {
             </View>
             <View style={styles.contactInfo}>
               <Text style={styles.contactTitle}>Telegram Bot</Text>
-              <Text style={styles.contactSubtitle}>@OceanAIBot</Text>
+              <Text style={styles.contactSubtitle}>@Matsya AIBot</Text>
             </View>
             <Ionicons
               name="chevron-forward"
@@ -391,14 +390,14 @@ export default function HelpScreen() {
 
         {/* App Info */}
         <Card style={styles.appInfoCard}>
-          <Text style={styles.appInfoTitle}>OceanAI</Text>
+          <Text style={styles.appInfoTitle}>Matsya AI</Text>
           <Text style={styles.appInfoVersion}>Version 1.0.0</Text>
           <Text style={styles.appInfoSubtext}>
             Build {Platform.OS === "ios" ? "iOS" : "Android"} · AWS AI for
             Bharat Challenge
           </Text>
         </Card>
-      </KeyboardAwareScrollView>
+      </ScrollView>
     </SafeAreaView>
   );
 }

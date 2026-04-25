@@ -62,9 +62,7 @@ export class WeatherService {
     const month = date.getMonth() + 1;
     const day = date.getDate();
 
-    // Simplified moon phase calculation
-    const c = Math.floor((year - 2000) / 100);
-    const e = 2 * (year - 2000) - c;
+    // Simplified moon phase calculation (Julian Day Number)
     const jd = Math.floor(365.25 * (year + 4716)) + Math.floor(30.6001 * (month + 1)) + day - 1524.5;
     const daysSinceNew = (jd - 2451549.5) % 29.53;
     const phase = daysSinceNew / 29.53;

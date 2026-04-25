@@ -57,10 +57,10 @@ function formatLastSync(iso: string): string {
 }
 
 const LOG_LEVEL_COLOR: Record<SyncLogEntry["level"], string> = {
-  info:    "#94a3b8",
+  info: "#94a3b8",
   success: "#4ade80",
-  warn:    "#fbbf24",
-  error:   "#f87171",
+  warn: "#fbbf24",
+  error: "#f87171",
 };
 
 export default function SettingsScreen() {
@@ -104,7 +104,10 @@ export default function SettingsScreen() {
     });
     setSyncLogs(syncLogger.getEntries());
     const unsubLogs = syncLogger.subscribe(setSyncLogs);
-    return () => { unsubStatus(); unsubLogs(); };
+    return () => {
+      unsubStatus();
+      unsubLogs();
+    };
   }, []);
 
   const loadPublicProfile = async () => {
@@ -160,7 +163,7 @@ export default function SettingsScreen() {
       // generate one client-side (matching frontend approach)
       let slug = publicProfile.slug || undefined;
       if (value && !slug) {
-        const name = (user?.name || publicProfile.name || "fisherman");
+        const name = user?.name || publicProfile.name || "fisherman";
         const base = name
           .toLowerCase()
           .replace(/[^a-z0-9]/g, "-")
@@ -205,7 +208,7 @@ export default function SettingsScreen() {
     if (!publicProfile) return;
 
     const url = `https://oceanai.app/profile/${publicProfile.slug}`;
-    const message = `Check out my fishing profile on OceanAI!\n\n${publicProfile.name}\n${publicProfile.role || "Fisherman"}\n`;
+    const message = `Check out my fishing profile on Matsya AI!\n\n${publicProfile.name}\n${publicProfile.role || "Fisherman"}\n`;
 
     try {
       await ShareService.shareUrl(url, message);
@@ -240,7 +243,9 @@ export default function SettingsScreen() {
     } catch (err) {
       Alert.alert(
         "Sync Failed",
-        err instanceof Error ? err.message : "No internet connection. Please try again when online.",
+        err instanceof Error
+          ? err.message
+          : "No internet connection. Please try again when online.",
       );
     }
   };
@@ -512,28 +517,78 @@ export default function SettingsScreen() {
 
         {/* Data Sync */}
         <Text style={styles.sectionLabel}>Data Sync</Text>
-        <Card padding={SPACING.md} style={[styles.menuCard, { padding: SPACING.md }]}>
+        <Card
+          padding={SPACING.md}
+          style={[styles.menuCard, { padding: SPACING.md }]}
+        >
           {/* Status row */}
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: SPACING.sm }}>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: SPACING.sm,
+            }}
+          >
             <View>
-              <Text style={{ fontSize: FONTS.sizes.sm, color: COLORS.textPrimary, fontWeight: FONTS.weights.semibold }}>
+              <Text
+                style={{
+                  fontSize: FONTS.sizes.sm,
+                  color: COLORS.textPrimary,
+                  fontWeight: FONTS.weights.semibold,
+                }}
+              >
                 Last synced
               </Text>
-              <Text style={{ fontSize: FONTS.sizes.xs, color: COLORS.textMuted, marginTop: 2 }}>
-                {syncStatus?.lastSync ? formatLastSync(syncStatus.lastSync) : "Never synced"}
+              <Text
+                style={{
+                  fontSize: FONTS.sizes.xs,
+                  color: COLORS.textMuted,
+                  marginTop: 2,
+                }}
+              >
+                {syncStatus?.lastSync
+                  ? formatLastSync(syncStatus.lastSync)
+                  : "Never synced"}
               </Text>
             </View>
             <View style={{ flexDirection: "row", gap: SPACING.xs }}>
               {(syncStatus?.pending ?? 0) > 0 && (
-                <View style={{ backgroundColor: COLORS.primary + "25", borderRadius: RADIUS.sm, paddingHorizontal: SPACING.sm, paddingVertical: 2 }}>
-                  <Text style={{ fontSize: FONTS.sizes.xs, color: COLORS.primaryLight, fontWeight: FONTS.weights.semibold }}>
+                <View
+                  style={{
+                    backgroundColor: COLORS.primary + "25",
+                    borderRadius: RADIUS.sm,
+                    paddingHorizontal: SPACING.sm,
+                    paddingVertical: 2,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: FONTS.sizes.xs,
+                      color: COLORS.primaryLight,
+                      fontWeight: FONTS.weights.semibold,
+                    }}
+                  >
                     {syncStatus!.pending} pending
                   </Text>
                 </View>
               )}
               {(syncStatus?.failed ?? 0) > 0 && (
-                <View style={{ backgroundColor: COLORS.error + "25", borderRadius: RADIUS.sm, paddingHorizontal: SPACING.sm, paddingVertical: 2 }}>
-                  <Text style={{ fontSize: FONTS.sizes.xs, color: COLORS.error, fontWeight: FONTS.weights.semibold }}>
+                <View
+                  style={{
+                    backgroundColor: COLORS.error + "25",
+                    borderRadius: RADIUS.sm,
+                    paddingHorizontal: SPACING.sm,
+                    paddingVertical: 2,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: FONTS.sizes.xs,
+                      color: COLORS.error,
+                      fontWeight: FONTS.weights.semibold,
+                    }}
+                  >
                     {syncStatus!.failed} failed
                   </Text>
                 </View>
@@ -556,11 +611,18 @@ export default function SettingsScreen() {
             disabled={isSyncing}
             activeOpacity={0.8}
           >
-            {isSyncing
-              ? <ActivityIndicator size="small" color="#fff" />
-              : <Ionicons name="sync" size={16} color="#fff" />
-            }
-            <Text style={{ fontSize: FONTS.sizes.sm, color: "#fff", fontWeight: FONTS.weights.semibold }}>
+            {isSyncing ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Ionicons name="sync" size={16} color="#fff" />
+            )}
+            <Text
+              style={{
+                fontSize: FONTS.sizes.sm,
+                color: "#fff",
+                fontWeight: FONTS.weights.semibold,
+              }}
+            >
               {isSyncing ? "Syncing…" : "Sync Now"}
             </Text>
           </TouchableOpacity>
@@ -568,19 +630,47 @@ export default function SettingsScreen() {
 
         {/* Sync Logs toggle */}
         <TouchableOpacity
-          style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: SPACING.xs, paddingHorizontal: SPACING.xs, marginBottom: SPACING.xs }}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            paddingVertical: SPACING.xs,
+            paddingHorizontal: SPACING.xs,
+            marginBottom: SPACING.xs,
+          }}
           onPress={() => setShowSyncLogs((v) => !v)}
           activeOpacity={0.7}
         >
-          <Text style={{ fontSize: FONTS.sizes.xs, color: COLORS.textSubtle, textTransform: "uppercase", letterSpacing: 0.6 }}>
+          <Text
+            style={{
+              fontSize: FONTS.sizes.xs,
+              color: COLORS.textSubtle,
+              textTransform: "uppercase",
+              letterSpacing: 0.6,
+            }}
+          >
             Sync Logs{syncLogs.length > 0 ? ` (${syncLogs.length})` : ""}
           </Text>
-          <Ionicons name={showSyncLogs ? "chevron-up" : "chevron-down"} size={14} color={COLORS.textSubtle} />
+          <Ionicons
+            name={showSyncLogs ? "chevron-up" : "chevron-down"}
+            size={14}
+            color={COLORS.textSubtle}
+          />
         </TouchableOpacity>
         {showSyncLogs && (
-          <Card padding={SPACING.sm} style={[styles.menuCard, { maxHeight: 300 }]}>
+          <Card
+            padding={SPACING.sm}
+            style={[styles.menuCard, { maxHeight: 300 }]}
+          >
             {syncLogs.length === 0 ? (
-              <Text style={{ fontSize: FONTS.sizes.xs, color: COLORS.textSubtle, textAlign: "center", padding: SPACING.sm }}>
+              <Text
+                style={{
+                  fontSize: FONTS.sizes.xs,
+                  color: COLORS.textSubtle,
+                  textAlign: "center",
+                  padding: SPACING.sm,
+                }}
+              >
                 No sync events yet
               </Text>
             ) : (
@@ -590,11 +680,50 @@ export default function SettingsScreen() {
                 style={{ maxHeight: 240 }}
                 showsVerticalScrollIndicator={true}
                 renderItem={({ item }) => (
-                  <View style={{ flexDirection: "row", alignItems: "flex-start", paddingVertical: 3, gap: 6 }}>
-                    <Text style={{ fontSize: 10, color: LOG_LEVEL_COLOR[item.level], marginTop: 1 }}>●</Text>
-                    <Text style={{ fontSize: 10, color: COLORS.textSubtle, width: 52 }}>{item.time}</Text>
-                    <Text style={{ fontSize: 10, color: COLORS.textMuted, width: 76 }}>[{item.source}]</Text>
-                    <Text style={{ fontSize: 10, color: COLORS.textSecondary, flex: 1 }}>{item.message}</Text>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "flex-start",
+                      paddingVertical: 3,
+                      gap: 6,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 10,
+                        color: LOG_LEVEL_COLOR[item.level],
+                        marginTop: 1,
+                      }}
+                    >
+                      ●
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 10,
+                        color: COLORS.textSubtle,
+                        width: 52,
+                      }}
+                    >
+                      {item.time}
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 10,
+                        color: COLORS.textMuted,
+                        width: 76,
+                      }}
+                    >
+                      [{item.source}]
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 10,
+                        color: COLORS.textSecondary,
+                        flex: 1,
+                      }}
+                    >
+                      {item.message}
+                    </Text>
                   </View>
                 )}
               />
@@ -602,9 +731,19 @@ export default function SettingsScreen() {
             {syncLogs.length > 0 && (
               <TouchableOpacity
                 onPress={() => syncLogger.clear()}
-                style={{ alignItems: "center", paddingTop: SPACING.xs, marginTop: SPACING.xs, borderTopWidth: 1, borderTopColor: COLORS.border }}
+                style={{
+                  alignItems: "center",
+                  paddingTop: SPACING.xs,
+                  marginTop: SPACING.xs,
+                  borderTopWidth: 1,
+                  borderTopColor: COLORS.border,
+                }}
               >
-                <Text style={{ fontSize: FONTS.sizes.xs, color: COLORS.textSubtle }}>Clear logs</Text>
+                <Text
+                  style={{ fontSize: FONTS.sizes.xs, color: COLORS.textSubtle }}
+                >
+                  Clear logs
+                </Text>
               </TouchableOpacity>
             )}
           </Card>
@@ -642,7 +781,7 @@ export default function SettingsScreen() {
 
         {/* App Info */}
         <Text style={styles.appInfo}>
-          OceanAI v1.0.0 · AWS AI for Bharat Challenge
+          Matsya AI v1.0.0 · AWS AI for Bharat Challenge
         </Text>
       </KeyboardAwareScrollView>
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -9,13 +9,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  ActivityIndicator,
   Keyboard,
   Modal,
   Animated,
   Dimensions,
   Alert,
   Image,
-  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -31,13 +31,12 @@ import { useLocalSearchParams, useNavigation, router } from "expo-router";
 import * as Speech from "expo-speech";
 import * as Location from "expo-location";
 import { Audio } from "expo-av";
-import {
-  synthesizeSpeech,
-  type OnlineWeightResult,
-} from "../../lib/api-client";
+import { synthesizeSpeech } from "../../lib/api-client";
 import { chatStreamClient } from "../../lib/chat-stream-client";
 import { StreamingText } from "../../components/chat/StreamingText";
+import Markdown from "react-native-markdown-display";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { EmptyState } from "../../components/ui/EmptyState";
 import { AnalysisPicker } from "../../components/chat/AnalysisPicker";
 import { TelegramIntegrationModal } from "../../components/chat/TelegramIntegrationModal";
 import { WeightEstimateModal } from "../../components/WeightEstimateModal";
@@ -57,20 +56,12 @@ import {
   generateSuggestions,
 } from "../../components/chat/SuggestionChips";
 import { ScanResultCard } from "../../components/chat/ScanResultCard";
-import {
-  FishPickerModal,
-  type FishItem,
-} from "../../components/chat/FishPickerModal";
-import { GroupFishPickerModal } from "../../components/chat/GroupFishPickerModal";
 import { useAgentContext } from "../../lib/agent-context";
-import { getAnalysisData } from "../../lib/analysis-store";
-import {
-  sanitiseAgentText,
-  stripContextTags,
-} from "../../lib/chat-stream-client";
-import type { AgentUIActions } from "../../lib/chat-stream-client";
+import { sanitiseAgentText } from "../../lib/chat-stream-client";
+import { useVoiceInput } from "../../hooks/useVoiceInput";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
+
 const CONVERSATIONS_STORAGE_KEY = "@chat/conversations";
 
 interface UIMessage {
@@ -78,15 +69,22 @@ interface UIMessage {
   role: "user" | "assistant";
   text: string;
   timestamp: Date;
-  replyTo?: { id: string; text: string; role: "user" | "assistant" };
+  replyTo?: {
+    id: string;
+    text: string;
+    role: "user" | "assistant";
+  };
   referencedAnalysis?: {
     id: string;
     imageUrl: string;
     species?: string;
     type: "single" | "group";
   };
+  /** UI actions returned by the agent for this message */
   uiActions?: AgentUIActions;
+  /** Tool names called during generation */
   toolsCalled?: string[];
+  /** Scan result data for post-scan agent takeover */
   scanResult?: {
     fishCount: number;
     detections: Array<{
@@ -106,91 +104,22 @@ interface StoredConversation {
   lastMessageTime: string;
 }
 
-type AgentCapability = {
-  icon: React.ComponentProps<typeof Ionicons>["name"];
-  label: string;
-  prompt?: string;
-  action?: string;
-  color: string;
-  desc: string;
-};
-
-const AGENT_CAPABILITIES: AgentCapability[] = [
-  {
-    icon: "sunny",
-    label: "Daily Briefing",
-    prompt:
-      "Give me my daily fishing briefing - weather conditions, best fishing zones near me, today's market prices, and any active safety alerts for my area.",
-    color: COLORS.secondary,
-    desc: "Weather, zones & alerts",
-  },
-  {
-    icon: "camera",
-    label: "Analyze Catch",
-    action: "openCamera",
-    color: COLORS.primary,
-    desc: "Identify species & health",
-  },
-  {
-    icon: "scale",
-    label: "Estimate Weight",
-    action: "openWeightEstimator",
-    color: "#f59e0b",
-    desc: "On-device weight model",
-  },
-  {
-    icon: "analytics",
-    label: "My Analytics",
-    prompt:
-      "Show me my catch analytics - total earnings, top species caught, quality grade breakdown, and recent trends.",
-    color: "#7c3aed",
-    desc: "Earnings & catch stats",
-  },
-  {
-    icon: "navigate",
-    label: "Fishing Zones",
-    prompt:
-      "What are the best fishing zones near me right now? Consider current weather, recent catch reports, and seasonal patterns.",
-    color: COLORS.accent,
-    desc: "Best spots near you",
-  },
-  {
-    icon: "cash",
-    label: "Market Prices",
-    prompt:
-      "What are today's market prices for fish in my area? Which species are trending up in price?",
-    color: "#06b6d4",
-    desc: "Real-time price intel",
-  },
-  {
-    icon: "warning",
-    label: "Safety Alerts",
-    prompt:
-      "Are there any active safety alerts, cyclone warnings, or dangerous weather conditions near my location?",
-    color: "#ef4444",
-    desc: "Warnings & advisories",
-  },
-  {
-    icon: "leaf",
-    label: "Sustainability",
-    prompt:
-      "How is my sustainability score? Am I within legal catch limits for my recently caught species?",
-    color: "#10b981",
-    desc: "Eco score & regulations",
-  },
-];
-
 export default function ChatScreen() {
   const { user } = useAuth();
-  const { t, locale, speechCode, isLoaded } = useLanguage();
-  const { effectiveMode, connectionQuality } = useNetwork();
+  const { t, speechCode, locale } = useLanguage();
+  const { effectiveMode } = useNetwork();
   const agentCtx = useAgentContext();
+
+  const { isListening, startListening, stopListening } = useVoiceInput({
+    lang: speechCode || "en-IN",
+    onResult: (transcript) => {
+      if (transcript)
+        setInputText((prev) => (prev ? prev + " " + transcript : transcript));
+    },
+  });
+
   const params = useLocalSearchParams();
   const navigation = useNavigation();
-
-  const hour = new Date().getHours();
-  const greeting =
-    hour < 12 ? "Good Morning" : hour < 17 ? "Good Afternoon" : "Good Evening";
 
   const QUICK_ACTIONS = [
     t("chat.actionFishToday"),
@@ -201,8 +130,91 @@ export default function ChatScreen() {
     t("chat.actionTips"),
   ];
 
-  // ── State ─────────────────────────────────────────────────────────────────
-  const [messages, setMessages] = useState<UIMessage[]>([]);
+  const QUICK_ACTION_ANALYZE = "Analyze this catch";
+
+  // Agent capability definitions for the hub grid
+  type AgentCapability = {
+    icon: React.ComponentProps<typeof Ionicons>["name"];
+    label: string;
+    prompt?: string;
+    action?: string;
+    color: string;
+    desc: string;
+  };
+
+  const AGENT_CAPABILITIES: AgentCapability[] = [
+    {
+      icon: "sunny",
+      label: "Daily Briefing",
+      prompt:
+        "Give me my daily fishing briefing - weather conditions, best fishing zones near me, today's market prices, and any active safety alerts for my area.",
+      color: COLORS.secondary,
+      desc: "Weather, zones & alerts",
+    },
+    {
+      icon: "camera",
+      label: "Analyze Catch",
+      action: "openCamera",
+      color: COLORS.primary,
+      desc: "Identify species & health",
+    },
+    {
+      icon: "scale",
+      label: "Estimate Weight",
+      action: "openWeightEstimator",
+      color: "#f59e0b",
+      desc: "On-device weight model",
+    },
+    {
+      icon: "analytics",
+      label: "My Analytics",
+      prompt:
+        "Show me my catch analytics - total earnings, top species caught, quality grade breakdown, and recent trends.",
+      color: "#7c3aed",
+      desc: "Earnings & catch stats",
+    },
+    {
+      icon: "navigate",
+      label: "Fishing Zones",
+      prompt:
+        "What are the best fishing zones near me right now? Consider current weather conditions, recent catch reports, and seasonal patterns.",
+      color: COLORS.accent,
+      desc: "Best spots near you",
+    },
+    {
+      icon: "cash",
+      label: "Market Prices",
+      prompt:
+        "What are today's market prices for fish in my area? Which species are trending up in price? What should I target for maximum earnings?",
+      color: "#06b6d4",
+      desc: "Real-time price intel",
+    },
+    {
+      icon: "warning",
+      label: "Safety Alerts",
+      prompt:
+        "Are there any active safety alerts, cyclone warnings, tsunami advisories, or dangerous weather conditions near my location?",
+      color: "#ef4444",
+      desc: "Warnings & advisories",
+    },
+    {
+      icon: "leaf",
+      label: "Sustainability",
+      prompt:
+        "How is my sustainability score? Am I within legal catch limits for my recently caught species? What are the current size regulations?",
+      color: "#10b981",
+      desc: "Eco score & regulations",
+    },
+  ];
+
+  const [messages, setMessages] = useState<UIMessage[]>([
+    {
+      id: "welcome",
+      role: "assistant",
+      text: t("chat.welcome"),
+      timestamp: new Date(),
+    },
+  ]);
   const [inputText, setInputText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -227,50 +239,121 @@ export default function ChatScreen() {
     species?: string;
     type: "single" | "group";
   } | null>(null);
+
+  // Weight estimation state
   const [weightModalVisible, setWeightModalVisible] = useState(false);
   const [weightSpecies, setWeightSpecies] = useState("Tilapia");
-  const [showGroupFishPicker, setShowGroupFishPicker] = useState(false);
-  const [selectedGroupForWeight, setSelectedGroupForWeight] = useState<{
-    groupId: string;
-    source: "online" | "offline";
-  } | null>(null);
+
+  // Tool transparency state (live tool calls during streaming)
   const [liveToolCalls, setLiveToolCalls] = useState<string[]>([]);
+  // Last message suggestion chips
   const [lastSuggestions, setLastSuggestions] = useState<
     ReturnType<typeof generateSuggestions>
   >([]);
-  const [showToolsMenu, setShowToolsMenu] = useState(false);
-  const [refreshingChats, setRefreshingChats] = useState(false);
 
-  // ── Scan → Chat weight estimation state ──
-  const [isScanChat, setIsScanChat] = useState(false);
-  const [isScanOffline, setIsScanOffline] = useState(false);
-  const [scanFishList, setScanFishList] = useState<FishItem[]>([]);;
-  const [fishWeights, setFishWeights] = useState<Map<number, number>>(
-    new Map(),
-  );
-  const [showFishPicker, setShowFishPicker] = useState(false);
-  const [weightFishIndex, setWeightFishIndex] = useState(0);
+  // Track agent context screen
+  useEffect(() => {
+    agentCtx.updateScreen("chat");
+  }, []);
 
-  // ── Refs ──────────────────────────────────────────────────────────────────
+  // Handle agent context param (from Ask Agent FAB on other screens)
+  useEffect(() => {
+    if (params.agentContext && !initialMessageSent.current) {
+      initialMessageSent.current = true;
+      setCurrentChatId(null);
+      setMessages([]);
+      setTimeout(() => {
+        sendMessage(params.agentContext as string);
+      }, 500);
+    }
+  }, [params.agentContext]);
+
+  // Greeting based on time of day
+  const hour = new Date().getHours();
+  const greeting =
+    hour < 12 ? "Good Morning" : hour < 17 ? "Good Afternoon" : "Good Evening";
+
   const flatListRef = useRef<FlatList>(null);
-  const handledParamKey = useRef<string | null>(null);
+  const initialMessageSent = useRef(false);
   const sidebarAnim = useRef(new Animated.Value(-SCREEN_WIDTH * 0.75)).current;
   const swipeableRefs = useRef<Map<string, any>>(new Map());
   const dot1Anim = useRef(new Animated.Value(0)).current;
   const dot2Anim = useRef(new Animated.Value(0)).current;
   const dot3Anim = useRef(new Animated.Value(0)).current;
-  const isSendingRef = useRef(false);
-  const abortRef = useRef(false);
 
-  // ── Derived ───────────────────────────────────────────────────────────────
-  // Hub shows when no user has sent any message yet
-  const isEmptyChat = messages.filter((m) => m.role === "user").length === 0;
+  // Format timestamp for display
+  const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
 
-  // ── Effects ───────────────────────────────────────────────────────────────
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString("en-IN", {
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  // Persist conversations to AsyncStorage
+  const persistConversations = async (conversations: StoredConversation[]) => {
+    try {
+      await AsyncStorage.setItem(
+        CONVERSATIONS_STORAGE_KEY,
+        JSON.stringify(conversations),
+      );
+    } catch (error) {
+      console.warn("Failed to persist conversations:", error);
+    }
+  };
+
+  // Load conversations from AsyncStorage
+  const loadStoredConversations = async () => {
+    try {
+      const stored = await AsyncStorage.getItem(CONVERSATIONS_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored) as StoredConversation[];
+        setChats(parsed);
+        return parsed;
+      }
+    } catch (error) {
+      console.warn("Failed to load stored conversations:", error);
+    }
+    return [];
+  };
+
+  // Sync conversations with backend
+  const syncConversations = async () => {
+    if (effectiveMode === "offline") return;
+
+    try {
+      const { getConversationsList } = await import("../../lib/api-client");
+      const backendConversations = await getConversationsList();
+      const stored: StoredConversation[] = backendConversations.map((c) => ({
+        id: c.conversationId,
+        title: c.title,
+        lastMessageTime: c.updatedAt,
+      }));
+      setChats(stored);
+      await persistConversations(stored);
+    } catch (error) {
+      console.warn("Failed to sync conversations:", error);
+    }
+  };
+
+  // Reset initial message flag when component unmounts or chat changes
   useEffect(() => {
-    agentCtx.updateScreen("chat");
-  }, []);
+    return () => {
+      initialMessageSent.current = false;
+    };
+  }, [currentChatId]);
 
+  // Get user location on mount
   useEffect(() => {
     (async () => {
       try {
@@ -284,177 +367,98 @@ export default function ChatScreen() {
             longitude: loc.coords.longitude,
           });
         }
-      } catch {}
+      } catch (error) {
+        console.warn("Failed to get location:", error);
+      }
     })();
   }, []);
 
   useEffect(() => {
-    loadStoredConversations().then(() => syncConversations());
-  }, []);
+    // Reset to new chat when tab is focused
+    const unsubscribe = navigation.addListener("focus", () => {
+      if (!params.initialMessage) {
+        createNewChat();
+      }
+    });
+
+    return unsubscribe;
+  }, [navigation]);
 
   useEffect(() => {
-    if (effectiveMode === "online") syncConversations();
-  }, [effectiveMode]);
+    if (params.initialMessage && !initialMessageSent.current) {
+      initialMessageSent.current = true;
+      setCurrentChatId(null);
+      setMessages([]);
+      setTimeout(() => {
+        sendMessage(params.initialMessage as string);
+      }, 500);
+    }
+  }, [params]);
 
-  // Single consolidated params handler - guarded to prevent double-send
+  // Handle deep link parameters from other screens
   useEffect(() => {
-    const paramKey = [
-      params.agentContext,
-      params.initialMessage,
-      params.analysisId,
-      params.species,
-      params.imageUrl,
-      params.weight,
-      params.catchId,
-      params.catchDate,
-      params.catchWeight,
-      params.zoneName,
-      params.zoneCoordinates,
-      params.markerType,
-      params.markerCoordinates,
-      params.scanComplete,
-    ].join("|");
+    // Analysis context from Upload screen
+    if (params.analysisId && params.species && params.imageUrl) {
+      setReferencedAnalysis({
+        id: params.analysisId as string,
+        imageUrl: params.imageUrl as string,
+        species: params.species as string,
+        type: "single",
+      });
 
-    if (!paramKey.replace(/\|/g, "").trim()) return;
-    if (paramKey === handledParamKey.current) return;
-    handledParamKey.current = paramKey;
-
-    const run = async () => {
-      if (params.agentContext) {
-        createNewChat();
-        await delay(300);
-        sendMessage(params.agentContext as string);
-        return;
-      }
-      // Scan → Chat: load fish list from analysis store and send summary
-      if (params.scanComplete && params.initialMessage) {
-        createNewChat();
-        setIsScanChat(true);
-        setIsScanOffline(params.scanMode !== "online");
-
-        // Build fish list from analysis store
-        const analysisData = getAnalysisData();
-        const fishList: FishItem[] = [];
-
-        if (analysisData?.mode === "online" && analysisData.groupAnalysis) {
-          // Use detections if available, otherwise build from images[].crops
-          let detections = analysisData.groupAnalysis.detections ?? [];
-          if (detections.length === 0) {
-            const built: typeof detections = [];
-            for (const image of analysisData.groupAnalysis.images || []) {
-              if (image.error) continue;
-              for (const crop of Object.values(image.crops || {})) {
-                built.push({
-                  cropUrl: crop.crop_url || "",
-                  species: crop.species?.label || "Unknown",
-                  confidence: crop.species?.confidence || 0,
-                  diseaseStatus: crop.disease?.label || "Healthy",
-                  diseaseConfidence: crop.disease?.confidence || 0,
-                  weight: 0,
-                  value: 0,
-                  gradcamUrls: {
-                    species: crop.species?.gradcam_url || "",
-                    disease: crop.disease?.gradcam_url || "",
-                  },
-                });
-              }
-            }
-            detections = built;
-          }
-          detections.forEach((d, i) => {
-            fishList.push({
-              index: i,
-              species: d.species,
-              confidence: d.confidence,
-              diseaseStatus: d.diseaseStatus,
-              cropUrl: d.cropUrl,
-              measuredWeightG: null,
-            });
-          });
-        } else if (
-          analysisData?.mode === "offline" &&
-          analysisData.offlineResults
-        ) {
-          analysisData.offlineResults.forEach((d, i) => {
-            fishList.push({
-              index: i,
-              species: d.species,
-              confidence: d.speciesConfidence,
-              diseaseStatus: d.disease,
-              cropUrl: d.cropUri,
-              measuredWeightG: d.weightUserEntered ? d.weightG : null,
-            });
-          });
-        }
-
-        setScanFishList(fishList);
-        setFishWeights(new Map());
-
-        await delay(300);
-        sendMessage(params.initialMessage as string);
-        return;
-      }
-      if (params.initialMessage) {
-        createNewChat();
-        await delay(300);
-        sendMessage(params.initialMessage as string);
-        return;
-      }
-      if (params.analysisId && params.species && params.imageUrl) {
-        setReferencedAnalysis({
-          id: params.analysisId as string,
-          imageUrl: params.imageUrl as string,
-          species: params.species as string,
-          type: "single",
-        });
-        if (params.weight) {
-          const weightG = parseFloat(params.weight as string);
-          const kgStr = (weightG / 1000).toFixed(2);
-          await delay(300);
+      // If weight is provided, auto-send context message
+      if (params.weight) {
+        const weightG = parseFloat(params.weight as string);
+        const kgStr = (weightG / 1000).toFixed(2);
+        setTimeout(() => {
           sendMessage(
-            `I just analyzed a ${params.species} and the on-device model estimated its weight at ${kgStr} kg (${weightG.toFixed(0)}g). What is the current market value? Any quality or storage recommendations?`,
+            `I just analyzed a ${params.species} and the on-device model estimated its weight at ${kgStr} kg (${weightG.toFixed(0)}g). What's the current market value for this? Any quality or storage recommendations?`,
           );
-        }
-        return;
+        }, 500);
       }
-      if (params.catchId && params.species) {
-        setReferencedAnalysis({
-          id: params.catchId as string,
-          imageUrl: (params.catchImageUrl as string) || "",
-          species: params.species as string,
-          type: "single",
-        });
-        const catchDate = params.catchDate
-          ? new Date(params.catchDate as string).toLocaleDateString()
-          : "recently";
-        const weightInfo = params.catchWeight
-          ? ` weighing ${params.catchWeight}kg`
-          : "";
-        await delay(300);
-        sendMessage(
-          `I caught a ${params.species}${weightInfo} on ${catchDate}. Can you give me insights about this catch?`,
-        );
-        return;
-      }
-      if (params.zoneName && params.zoneCoordinates) {
-        await delay(300);
-        sendMessage(
-          `Tell me about the fishing zone "${params.zoneName}" at coordinates ${params.zoneCoordinates}. What are the conditions, best species to target, and any regulations?`,
-        );
-        return;
-      }
-      if (params.markerType && params.markerCoordinates) {
-        await delay(300);
-        sendMessage(
-          `I am looking at a ${params.markerType} marker at coordinates ${params.markerCoordinates}. What information can you provide about this location?`,
-        );
-      }
-    };
+    }
 
-    run();
+    // Catch history context from History screen
+    if (params.catchId && params.species) {
+      setReferencedAnalysis({
+        id: params.catchId as string,
+        imageUrl: (params.catchImageUrl as string) || "",
+        species: params.species as string,
+        type: "single",
+      });
+
+      // Auto-send context message
+      const catchDate = params.catchDate
+        ? new Date(params.catchDate as string).toLocaleDateString()
+        : "recently";
+      const weightInfo = params.catchWeight
+        ? ` weighing ${params.catchWeight}kg`
+        : "";
+      setTimeout(() => {
+        sendMessage(
+          `I caught a ${params.species}${weightInfo} on ${catchDate}. Can you give me insights about this catch? What were the market conditions at that time?`,
+        );
+      }, 500);
+    }
+
+    // Zone context from Map screen
+    if (params.zoneName && params.zoneCoordinates) {
+      setTimeout(() => {
+        sendMessage(
+          `Tell me about the fishing zone "${params.zoneName}" at coordinates ${params.zoneCoordinates}. What are the conditions, best species to target, and any regulations I should know about?`,
+        );
+      }, 500);
+    }
+
+    // Marker context from Map screen
+    if (params.markerType && params.markerCoordinates) {
+      setTimeout(() => {
+        sendMessage(
+          `I'm looking at a ${params.markerType} marker at coordinates ${params.markerCoordinates}. What information can you provide about this location?`,
+        );
+      }, 500);
+    }
   }, [
-    params.agentContext,
-    params.initialMessage,
     params.analysisId,
     params.species,
     params.imageUrl,
@@ -466,8 +470,25 @@ export default function ChatScreen() {
     params.zoneCoordinates,
     params.markerType,
     params.markerCoordinates,
-    params.scanComplete,
   ]);
+
+  useEffect(() => {
+    // Load conversations from AsyncStorage first, then sync with backend
+    loadStoredConversations().then((stored) => {
+      if (stored.length > 0 && !params.initialMessage) {
+        loadChat(stored[0].id);
+      }
+      // Sync with backend when online
+      syncConversations();
+    });
+  }, []);
+
+  // Sync conversations when coming back online
+  useEffect(() => {
+    if (effectiveMode === "online") {
+      syncConversations();
+    }
+  }, [effectiveMode]);
 
   useEffect(() => {
     Animated.timing(sidebarAnim, {
@@ -477,6 +498,7 @@ export default function ChatScreen() {
     }).start();
   }, [showSidebar]);
 
+  // Animated typing dots
   useEffect(() => {
     if (!isTyping && !isStreaming) {
       dot1Anim.setValue(0);
@@ -484,10 +506,10 @@ export default function ChatScreen() {
       dot3Anim.setValue(0);
       return;
     }
-    const makeBounce = (anim: Animated.Value, d: number) =>
+    const makeBounce = (anim: Animated.Value, delay: number) =>
       Animated.loop(
         Animated.sequence([
-          Animated.delay(d),
+          Animated.delay(delay),
           Animated.timing(anim, {
             toValue: -6,
             duration: 260,
@@ -498,7 +520,7 @@ export default function ChatScreen() {
             duration: 260,
             useNativeDriver: true,
           }),
-          Animated.delay(Math.max(0, 780 - d - 520)),
+          Animated.delay(Math.max(0, 780 - delay - 520)),
         ]),
       );
     const a1 = makeBounce(dot1Anim, 0);
@@ -514,317 +536,17 @@ export default function ChatScreen() {
     };
   }, [isTyping, isStreaming]);
 
-  useEffect(() => {
-    return () => {
-      sound?.unloadAsync();
-    };
-  }, [sound]);
-
-  // ── Helpers ───────────────────────────────────────────────────────────────
-  const delay = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
-
-  const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-    if (diffMins < 1) return "Just now";
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString("en-IN", { month: "short", day: "numeric" });
-  };
-
-  const persistConversations = async (conversations: StoredConversation[]) => {
-    try {
-      await AsyncStorage.setItem(
-        CONVERSATIONS_STORAGE_KEY,
-        JSON.stringify(conversations),
-      );
-    } catch {}
-  };
-
-  const loadStoredConversations = async () => {
-    try {
-      const stored = await AsyncStorage.getItem(CONVERSATIONS_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored) as StoredConversation[];
-        setChats(parsed);
-        return parsed;
-      }
-    } catch {}
-    return [];
-  };
-
-  const syncConversations = async () => {
-    if (effectiveMode === "offline") return;
-    try {
-      const { getConversationsList } = await import("../../lib/api-client");
-      const list = await getConversationsList();
-      const stored: StoredConversation[] = list.map((c) => ({
-        id: c.conversationId,
-        title: c.title,
-        lastMessageTime: c.updatedAt,
-      }));
-      setChats(stored);
-      await persistConversations(stored);
-    } catch {}
-  };
-
-  const handleRefreshChats = async () => {
-    setRefreshingChats(true);
-    await syncConversations();
-    setRefreshingChats(false);
-  };
-
-  // ── Actions ───────────────────────────────────────────────────────────────
-  const createNewChat = useCallback(() => {
-    setCurrentChatId(null);
-    setMessages([]);
-    setShowSidebar(false);
-    setReplyingTo(null);
-    setReferencedAnalysis(null);
-    setLiveToolCalls([]);
-    setLastSuggestions([]);
-    setIsScanChat(false);
-    setIsScanOffline(false);
-    setScanFishList([]);
-    setFishWeights(new Map());
-    setShowFishPicker(false);
-    Speech.stop();
-    setIsSpeaking(false);
-    sound?.unloadAsync();
-    setSound(null);
-  }, [sound]);
-
-  const loadChat = async (chatId: string) => {
-    setCurrentChatId(chatId);
-    setShowSidebar(false);
-    setMessages([]);
-    setIsTyping(true);
-    sound?.unloadAsync();
-    setSound(null);
-    setIsSpeaking(false);
-    try {
-      const { getChatHistory } = await import("../../lib/api-client");
-      const history = await getChatHistory(50, chatId);
-      const formatted: UIMessage[] = history.map((msg) => ({
-        id: msg.id,
-        role: msg.role as "user" | "assistant",
-        text: msg.role === "assistant" ? sanitiseAgentText(msg.text) : msg.text,
-        timestamp: new Date(msg.timestamp),
-        uiActions: msg.uiActions,
-      }));
-      setMessages(formatted);
-    } catch (e) {
-      console.warn(e);
-    } finally {
-      setIsTyping(false);
-    }
-  };
-
-  const handleReply = (message: UIMessage) => setReplyingTo(message);
-
-  const handleSelectAnalysis = (
-    id: string,
-    imageUrl: string,
-    species?: string,
-  ) => setReferencedAnalysis({ id, imageUrl, species, type: "single" });
-
-  const handleSelectGroup = (id: string, groupName: string) =>
-    setReferencedAnalysis({
-      id,
-      imageUrl: "",
-      species: groupName,
-      type: "group",
-    });
-
-  const handleWeightResult = (
-    weightG: number,
-    fullResult?: OnlineWeightResult,
-  ) => {
-    setWeightModalVisible(false);
-
-    if (isScanChat) {
-      // Store weight for the specific fish
-      setFishWeights((prev) => {
-        const next = new Map(prev);
-        next.set(weightFishIndex, weightG);
-        return next;
-      });
-      // Update the fish list to reflect the measurement
-      setScanFishList((prev) =>
-        prev.map((f) =>
-          f.index === weightFishIndex ? { ...f, measuredWeightG: weightG } : f,
-        ),
-      );
-
-      // Persist weight to analysis store for offline detail page
-      try {
-        const { updateOfflineWeight } = require("../../lib/analysis-store");
-        updateOfflineWeight(weightFishIndex, weightG);
-      } catch {}
-
-      const species =
-        scanFishList.find((f) => f.index === weightFishIndex)?.species ||
-        weightSpecies;
-
-      if (fullResult) {
-        // Online mode: results are already shown in the modal.
-        // Save to backend DB immediately (groupId is available from analysis store).
-        const analysisData = getAnalysisData();
-        const groupId = analysisData?.mode === "online" ? analysisData.groupId : undefined;
-        if (groupId) {
-          const { saveWeightEstimate } = require("../../lib/api-client");
-          saveWeightEstimate({
-            groupId,
-            imageUri: analysisData?.mode === "online" ? (analysisData.imageUris?.[0] || "") : "",
-            fishIndex: weightFishIndex,
-            species,
-            weightG,
-            timestamp: new Date().toISOString(),
-            fullEstimate: fullResult,
-          }).catch((e: unknown) => console.warn("[handleWeightResult] Save weight failed:", e));
-        }
-      } else {
-        const kgStr = (weightG / 1000).toFixed(2);
-        sendMessage(
-          `I measured Fish #${weightFishIndex + 1} (${species}): estimated weight is ${kgStr} kg (${weightG.toFixed(0)}g). What is the current market price for this fish? Any storage or quality recommendations?`,
-        );
-      }
-    } else {
-      // ── Standalone weight estimation (from group/fish picker) ──
-      const species = weightSpecies;
-      const groupId = selectedGroupForWeight?.groupId;
-      const source = selectedGroupForWeight?.source;
-
-      if (fullResult) {
-        // Online: save weight to backend DB
-        if (groupId && source === "online") {
-          const { saveWeightEstimate } = require("../../lib/api-client");
-          saveWeightEstimate({
-            groupId,
-            imageUri: "",
-            fishIndex: weightFishIndex,
-            species,
-            weightG,
-            timestamp: new Date().toISOString(),
-            fullEstimate: fullResult,
-          }).catch((e: unknown) => console.warn("[handleWeightResult] Save weight failed:", e));
-        }
-        // For offline groups, update local history
-        if (groupId && source === "offline") {
-          import("../../lib/local-history").then(({ updateLocalDetectionWeight }) => {
-            updateLocalDetectionWeight(groupId, weightFishIndex, weightG)
-              .catch((e) => console.warn("[handleWeightResult] Local weight update failed:", e));
-          });
-        }
-        // Send a confirmation message to chat
-        const kgStr = (weightG / 1000).toFixed(2);
-        sendMessage(
-          `I just weighed Fish #${weightFishIndex + 1} (${species}) - estimated weight: ${kgStr} kg (${weightG.toFixed(0)}g). The weight has been saved to my records. What is the market value for this fish?`,
-        );
-      } else {
-        // Offline inference: save to local history
-        if (groupId && source === "offline") {
-          import("../../lib/local-history").then(({ updateLocalDetectionWeight }) => {
-            updateLocalDetectionWeight(groupId, weightFishIndex, weightG)
-              .catch((e) => console.warn("[handleWeightResult] Local weight update failed:", e));
-          });
-        }
-        // For online groups with offline inference, queue the weight estimate
-        if (groupId && source === "online") {
-          const { saveWeightEstimate } = require("../../lib/api-client");
-          saveWeightEstimate({
-            groupId,
-            imageUri: "",
-            fishIndex: weightFishIndex,
-            species,
-            weightG,
-            timestamp: new Date().toISOString(),
-          }).catch((e: unknown) => console.warn("[handleWeightResult] Save weight failed:", e));
-        }
-        const kgStr = (weightG / 1000).toFixed(2);
-        sendMessage(
-          `I just weighed Fish #${weightFishIndex + 1} (${species}) - estimated weight: ${kgStr} kg (${weightG.toFixed(0)}g). The weight has been saved. What is the current market value? Any quality or storage recommendations?`,
-        );
-      }
-      // Reset selection state
-      setSelectedGroupForWeight(null);
-    }
-  };
-
-  /** Called when user picks a fish from the scan-context FishPickerModal */
-  const handleFishSelected = (fishIndex: number, species: string) => {
-    setShowFishPicker(false);
-    setWeightFishIndex(fishIndex);
-    setWeightSpecies(species);
-    setWeightModalVisible(true);
-  };
-
-  /** Called when user picks a specific fish from the GroupFishPickerModal (standalone tool) */
-  const handleGroupFishSelected = (params: {
-    groupId: string;
-    source: "online" | "offline";
-    fishIndex: number;
-    species: string;
-    cropUrl?: string;
-  }) => {
-    setShowGroupFishPicker(false);
-    setSelectedGroupForWeight({ groupId: params.groupId, source: params.source });
-    setWeightFishIndex(params.fishIndex);
-    setWeightSpecies(params.species);
-    setWeightModalVisible(true);
-  };
-
-  const handleCapabilityPress = (cap: AgentCapability) => {
-    if (cap.action === "openCamera") router.push("/(tabs)/upload");
-    else if (cap.action === "openWeightEstimator") setShowGroupFishPicker(true);
-    else if (cap.prompt) sendMessage(cap.prompt);
-  };
-
-  const deleteChat = async (chatId: string) => {
-    Alert.alert(
-      "Delete Conversation",
-      "Are you sure you want to delete this conversation?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              if (effectiveMode === "online") {
-                const { deleteConversation } =
-                  await import("../../lib/api-client");
-                await deleteConversation(chatId);
-              }
-              const updated = chats.filter((c) => c.id !== chatId);
-              setChats(updated);
-              await persistConversations(updated);
-              if (currentChatId === chatId) createNewChat();
-            } catch {
-              Alert.alert(
-                "Error",
-                "Failed to delete conversation. Please try again.",
-              );
-            }
-          },
-        },
-      ],
-    );
-  };
-
   const speakMessage = async (text: string) => {
     if (isSpeaking) {
-      sound?.stopAsync();
-      sound?.unloadAsync();
-      setSound(null);
+      if (sound) {
+        await sound.stopAsync();
+        await sound.unloadAsync();
+        setSound(null);
+      }
       setIsSpeaking(false);
       return;
     }
+
     setIsSpeaking(true);
     try {
       const res = await synthesizeSpeech(text, speechCode || "en-IN");
@@ -845,87 +567,347 @@ export default function ChatScreen() {
       } else {
         setIsSpeaking(false);
       }
-    } catch {
+    } catch (error) {
+      console.warn("TTS Error:", error);
       setIsSpeaking(false);
     }
   };
 
+  useEffect(() => {
+    return sound
+      ? () => {
+          sound.unloadAsync();
+        }
+      : undefined;
+  }, [sound]);
+
+  const loadChat = async (chatId: string) => {
+    setCurrentChatId(chatId);
+    setShowSidebar(false);
+    setMessages([]);
+    setIsTyping(true);
+    if (sound) {
+      sound.unloadAsync();
+      setSound(null);
+    }
+    setIsSpeaking(false);
+    try {
+      const { getChatHistory } = await import("../../lib/api-client");
+      const history = await getChatHistory(50, chatId);
+      const formatted = history.map((msg) => ({
+        id: msg.id,
+        role: msg.role as "user" | "assistant",
+        text: msg.role === "assistant" ? sanitiseAgentText(msg.text) : msg.text,
+        timestamp: new Date(msg.timestamp),
+      }));
+      setMessages(
+        formatted.length > 0
+          ? formatted
+          : [
+              {
+                id: "welcome",
+                role: "assistant",
+                text: t("chat.welcome"),
+                timestamp: new Date(),
+              },
+            ],
+      );
+    } catch (e) {
+      console.warn(e);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  const createNewChat = () => {
+    setCurrentChatId(null);
+    setMessages([
+      {
+        id: "welcome",
+        role: "assistant",
+        text: t("chat.welcome"),
+        timestamp: new Date(),
+      },
+    ]);
+    setShowSidebar(false);
+    Speech.stop();
+    setIsSpeaking(false);
+    setReplyingTo(null);
+    setReferencedAnalysis(null);
+  };
+
+  const handleReply = (message: UIMessage) => {
+    setReplyingTo(message);
+    // Focus the input (on mobile this will show the keyboard)
+  };
+
+  const handleSelectAnalysis = (
+    analysisId: string,
+    imageUrl: string,
+    species?: string,
+  ) => {
+    setReferencedAnalysis({
+      id: analysisId,
+      imageUrl,
+      species,
+      type: "single",
+    });
+  };
+
+  const handleSelectGroup = (groupId: string, groupName: string) => {
+    setReferencedAnalysis({
+      id: groupId,
+      imageUrl: "", // Groups don't have a single image URL in this context
+      species: groupName,
+      type: "group",
+    });
+  };
+
+  const handleWeightResult = (weightG: number) => {
+    setWeightModalVisible(false);
+    const kgStr = (weightG / 1000).toFixed(2);
+    sendMessage(
+      `I just measured a ${weightSpecies} and the on-device model estimated its weight at ${kgStr} kg (${weightG.toFixed(0)}g). What's the current market value for this? Any quality or storage recommendations?`,
+    );
+  };
+
+  const handleCapabilityPress = (cap: AgentCapability) => {
+    if (cap.action === "openCamera") {
+      router.push("/(tabs)/upload");
+    } else if (cap.action === "openWeightEstimator") {
+      setWeightModalVisible(true);
+    } else if (cap.prompt) {
+      sendMessage(cap.prompt);
+    }
+  };
+
+  const deleteChat = async (chatId: string) => {
+    Alert.alert(
+      t("chat.deleteTitle") || "Delete Conversation",
+      t("chat.deleteMessage") ||
+        "Are you sure you want to delete this conversation? This action cannot be undone.",
+      [
+        {
+          text: t("common.cancel") || "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              // Delete from backend if online
+              if (effectiveMode === "online") {
+                const { deleteConversation } =
+                  await import("../../lib/api-client");
+                await deleteConversation(chatId);
+              }
+
+              // Remove from local state
+              const updatedChats = chats.filter((c) => c.id !== chatId);
+              setChats(updatedChats);
+              await persistConversations(updatedChats);
+
+              // If deleted chat was active, create new chat
+              if (currentChatId === chatId) {
+                createNewChat();
+              }
+            } catch (error) {
+              console.warn("Failed to delete conversation:", error);
+              Alert.alert(
+                t("common.error") || "Error",
+                t("chat.deleteError") ||
+                  "Failed to delete conversation. Please try again.",
+              );
+            }
+          },
+        },
+      ],
+    );
+  };
+
   const exportConversation = async () => {
     if (messages.length === 0) {
-      Alert.alert("No Messages", "There are no messages to export.");
+      Alert.alert(
+        "No Messages",
+        "There are no messages to export in this conversation.",
+      );
       return;
     }
-    Alert.alert("Export Conversation", "Choose export format:", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Text File", onPress: exportAsText },
-      { text: "JSON File", onPress: exportAsJSON },
-    ]);
+
+    try {
+      // Show format selection
+      Alert.alert("Export Conversation", "Choose export format:", [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Text File",
+          onPress: () => exportAsText(),
+        },
+        {
+          text: "JSON File",
+          onPress: () => exportAsJSON(),
+        },
+      ]);
+    } catch (error) {
+      console.error("Failed to export conversation:", error);
+      Alert.alert(
+        "Export Failed",
+        "Failed to export conversation. Please try again.",
+      );
+    }
   };
 
   const exportAsText = async () => {
     try {
-      const title = currentChatId
+      // Generate text content
+      const conversationTitle = currentChatId
         ? chats.find((c) => c.id === currentChatId)?.title || "Chat Export"
         : "Chat Export";
-      let content = `${title}\nExported: ${new Date().toLocaleString()}\n${"=".repeat(50)}\n\n`;
+
+      let textContent = `${conversationTitle}\n`;
+      textContent += `Exported: ${new Date().toLocaleString()}\n`;
+      textContent += `Total Messages: ${messages.length}\n`;
+      textContent += `${"=".repeat(50)}\n\n`;
+
       messages.forEach((msg) => {
-        content += `[${new Date(msg.timestamp).toLocaleString()}] ${msg.role === "user" ? "You" : "Assistant"}:\n${msg.text}\n\n`;
+        const timestamp = new Date(msg.timestamp).toLocaleString();
+        const role = msg.role === "user" ? "You" : "Assistant";
+
+        textContent += `[${timestamp}] ${role}:\n`;
+
+        // Add reply context if present
+        if (msg.replyTo) {
+          textContent += `  (Replying to ${msg.replyTo.role === "user" ? "You" : "Assistant"}: "${msg.replyTo.text.substring(0, 50)}...")\n`;
+        }
+
+        // Add referenced analysis if present
+        if (msg.referencedAnalysis) {
+          textContent += `  (Referenced Analysis: ${msg.referencedAnalysis.species || "Unknown"})\n`;
+        }
+
+        textContent += `${msg.text}\n\n`;
       });
-      const uri = `${FileSystem.cacheDirectory}chat-export-${Date.now()}.txt`;
-      await FileSystem.writeAsStringAsync(uri, content);
-      if (await Sharing.isAvailableAsync())
-        await Sharing.shareAsync(uri, {
+
+      // Create file
+      const fileName = `chat-export-${Date.now()}.txt`;
+      const fileUri = `${FileSystem.cacheDirectory}${fileName}`;
+      await FileSystem.writeAsStringAsync(fileUri, textContent);
+
+      // Share file
+      const isAvailable = await Sharing.isAvailableAsync();
+      if (isAvailable) {
+        await Sharing.shareAsync(fileUri, {
           mimeType: "text/plain",
           dialogTitle: "Export Conversation",
         });
+      } else {
+        Alert.alert("Export Complete", `Conversation exported to: ${fileUri}`);
+      }
+
+      // Cleanup after 5 minutes
       setTimeout(
         async () => {
-          const info = await FileSystem.getInfoAsync(uri);
-          if (info.exists)
-            await FileSystem.deleteAsync(uri, { idempotent: true });
+          try {
+            const fileInfo = await FileSystem.getInfoAsync(fileUri);
+            if (fileInfo.exists) {
+              await FileSystem.deleteAsync(fileUri, { idempotent: true });
+            }
+          } catch (error) {
+            console.warn("Failed to cleanup temp file:", error);
+          }
         },
         5 * 60 * 1000,
       );
-    } catch {
-      Alert.alert("Export Failed", "Failed to export conversation as text.");
+    } catch (error) {
+      console.error("Failed to export as text:", error);
+      Alert.alert(
+        "Export Failed",
+        "Failed to export conversation as text. Please try again.",
+      );
     }
   };
 
   const exportAsJSON = async () => {
     try {
-      const title = currentChatId
+      // Generate JSON content
+      const conversationTitle = currentChatId
         ? chats.find((c) => c.id === currentChatId)?.title || "Chat Export"
         : "Chat Export";
-      const data = {
-        title,
+
+      const exportData = {
+        title: conversationTitle,
         conversationId: currentChatId,
         exportedAt: new Date().toISOString(),
         messageCount: messages.length,
-        messages: messages.map((m) => ({
-          id: m.id,
-          role: m.role,
-          content: m.text,
-          timestamp: m.timestamp.toISOString(),
+        messages: messages.map((msg) => ({
+          id: msg.id,
+          role: msg.role,
+          content: msg.text,
+          timestamp: msg.timestamp.toISOString(),
+          replyTo: msg.replyTo
+            ? {
+                id: msg.replyTo.id,
+                role: msg.replyTo.role,
+                content: msg.replyTo.text,
+              }
+            : undefined,
+          referencedAnalysis: msg.referencedAnalysis
+            ? {
+                id: msg.referencedAnalysis.id,
+                species: msg.referencedAnalysis.species,
+                type: msg.referencedAnalysis.type,
+              }
+            : undefined,
         })),
       };
-      const uri = `${FileSystem.cacheDirectory}chat-export-${Date.now()}.json`;
-      await FileSystem.writeAsStringAsync(uri, JSON.stringify(data, null, 2));
-      if (await Sharing.isAvailableAsync())
-        await Sharing.shareAsync(uri, {
+
+      const jsonContent = JSON.stringify(exportData, null, 2);
+
+      // Create file
+      const fileName = `chat-export-${Date.now()}.json`;
+      const fileUri = `${FileSystem.cacheDirectory}${fileName}`;
+      await FileSystem.writeAsStringAsync(fileUri, jsonContent);
+
+      // Share file
+      const isAvailable = await Sharing.isAvailableAsync();
+      if (isAvailable) {
+        await Sharing.shareAsync(fileUri, {
           mimeType: "application/json",
           dialogTitle: "Export Conversation",
         });
+      } else {
+        Alert.alert("Export Complete", `Conversation exported to: ${fileUri}`);
+      }
+
+      // Cleanup after 5 minutes
       setTimeout(
         async () => {
-          const info = await FileSystem.getInfoAsync(uri);
-          if (info.exists)
-            await FileSystem.deleteAsync(uri, { idempotent: true });
+          try {
+            const fileInfo = await FileSystem.getInfoAsync(fileUri);
+            if (fileInfo.exists) {
+              await FileSystem.deleteAsync(fileUri, { idempotent: true });
+            }
+          } catch (error) {
+            console.warn("Failed to cleanup temp file:", error);
+          }
         },
         5 * 60 * 1000,
       );
-    } catch {
-      Alert.alert("Export Failed", "Failed to export conversation as JSON.");
+    } catch (error) {
+      console.error("Failed to export as JSON:", error);
+      Alert.alert(
+        "Export Failed",
+        "Failed to export conversation as JSON. Please try again.",
+      );
     }
+  };
+
+  const handleOpenTelegram = async () => {
+    // Show the integration modal first
+    setShowTelegramModal(true);
   };
 
   const openTelegramApp = async () => {
@@ -935,61 +917,51 @@ export default function ChatScreen() {
         userLocation?.latitude,
         userLocation?.longitude,
       );
-    } catch {
+    } catch (error) {
+      console.error("Failed to open Telegram:", error);
       Alert.alert("Error", "Failed to open Telegram. Please try again.");
     }
   };
 
-  // ── Core send ─────────────────────────────────────────────────────────────
   const sendMessage = async (text: string) => {
     const trimmed = text.trim();
-    if (
-      !trimmed ||
-      isTyping ||
-      isStreaming ||
-      isSendingRef.current
-    )
-      return;
-    isSendingRef.current = true;
+    if (!trimmed || isTyping || isStreaming) return;
 
     Speech.stop();
     setIsSpeaking(false);
     setInputText("");
     Keyboard.dismiss();
 
-    const finalUserText = trimmed;
-    // Strip bracket context tags ([page:...], [userLoc:...], etc.) for display.
-    // The full text (with tags) is still sent to the API via messagePayload.
-    const displayText = stripContextTags(finalUserText);
-
     const userMsg: UIMessage = {
       id: `user_${Date.now()}`,
       role: "user",
-      text: displayText || finalUserText,
+      text: trimmed,
       timestamp: new Date(),
       replyTo: replyingTo
-        ? { id: replyingTo.id, text: replyingTo.text, role: replyingTo.role }
+        ? {
+            id: replyingTo.id,
+            text: replyingTo.text,
+            role: replyingTo.role,
+          }
         : undefined,
       referencedAnalysis: referencedAnalysis || undefined,
     };
+    setMessages((prev) => [...prev, userMsg]);
 
-    // Only show the user bubble if there is visible text after stripping context tags.
-    // Pure-context auto-sends (e.g. from AskAgentFAB with no custom prompt) remain hidden.
-    if (displayText) {
-      setMessages((prev) => [...prev, userMsg]);
-    }
+    // Clear reply and analysis context after sending
     setReplyingTo(null);
     const analysisIdToSend = referencedAnalysis?.id;
     setReferencedAnalysis(null);
 
-    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 80);
+    setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
 
+    // Create conversation if needed
     let targetChatId = currentChatId;
     if (!targetChatId) {
       try {
         const { createConversation } = await import("../../lib/api-client");
         const newConv = await createConversation(
-          (displayText || finalUserText).substring(0, 40),
+          trimmed.substring(0, 40),
           locale,
         );
         targetChatId = newConv.conversationId;
@@ -997,33 +969,35 @@ export default function ChatScreen() {
         if (targetChatId) {
           const newChat: StoredConversation = {
             id: targetChatId,
-            title: (displayText || finalUserText).substring(0, 40),
+            title: trimmed.substring(0, 40),
             lastMessageTime: new Date().toISOString(),
           };
-          const updated = [newChat, ...chats];
-          setChats(updated);
-          await persistConversations(updated);
+          const updatedChats = [newChat, ...chats];
+          setChats(updatedChats);
+          await persistConversations(updatedChats);
         }
-      } catch {}
+      } catch (e) {
+        console.warn("Failed to create conversation", e);
+      }
     } else {
-      const updated = chats.map((c) =>
+      // Update last message time for existing conversation
+      const updatedChats = chats.map((c) =>
         c.id === targetChatId
           ? { ...c, lastMessageTime: new Date().toISOString() }
           : c,
       );
-      setChats(updated);
-      await persistConversations(updated);
+      setChats(updatedChats);
+      await persistConversations(updatedChats);
     }
 
-    isSendingRef.current = false;
-    abortRef.current = false;
-
+    // Try streaming first
     const botMsgId = `bot_${Date.now()}`;
     setStreamingMessageId(botMsgId);
     setIsStreaming(true);
     setLiveToolCalls([]);
     setLastSuggestions([]);
 
+    // Add empty assistant message that will be filled with tokens
     const botMsg: UIMessage = {
       id: botMsgId,
       role: "assistant",
@@ -1037,18 +1011,17 @@ export default function ChatScreen() {
     let streamSuccess = false;
     let collectedToolCalls: string[] = [];
 
-    const messagePayload = trimmed;
-
     try {
       await chatStreamClient.streamMessage({
         conversationId: targetChatId ?? undefined,
-        message: messagePayload || finalUserText,
+        message: trimmed,
         language: locale,
         location: userLocation ?? undefined,
         replyToMessageId: replyingTo?.id,
         analysisId: analysisIdToSend,
         onToken: (token: string) => {
           streamedText += token;
+          // Sanitise during streaming so leaked JSON/noise is never shown
           const displayText = sanitiseAgentText(streamedText);
           setMessages((prev) =>
             prev.map((msg) =>
@@ -1069,7 +1042,9 @@ export default function ChatScreen() {
           setIsStreaming(false);
           setStreamingMessageId(null);
           setLiveToolCalls([]);
+          // Sanitise final text - strip any leaked JSON/memory noise
           const cleanText = sanitiseAgentText(streamedText);
+          // Update message with cleaned text, UI actions and tool calls
           setMessages((prev) =>
             prev.map((msg) =>
               msg.id === botMsgId
@@ -1082,25 +1057,39 @@ export default function ChatScreen() {
                 : msg,
             ),
           );
+          // Generate suggestion chips
           setLastSuggestions(
             generateSuggestions(collectedToolCalls, cleanText),
           );
         },
-        onError: () => {
+        onError: (error) => {
+          console.error("Streaming error:", error);
           setIsStreaming(false);
           setStreamingMessageId(null);
         },
       });
-      if (streamSuccess || abortRef.current) return;
-    } catch {}
 
+      if (streamSuccess) {
+        return; // Streaming completed successfully
+      }
+    } catch (streamError) {
+      console.warn(
+        "Streaming failed, falling back to non-streaming:",
+        streamError,
+      );
+    }
+
+    // Fallback to non-streaming if streaming failed
     setIsStreaming(false);
     setStreamingMessageId(null);
-    setMessages((prev) => prev.filter((msg) => msg.id !== botMsgId));
     setIsTyping(true);
+
+    // Remove the empty streaming message
+    setMessages((prev) => prev.filter((msg) => msg.id !== botMsgId));
 
     try {
       const { sendChat } = await import("../../lib/api-client");
+
       const res = await sendChat(
         trimmed,
         targetChatId ?? undefined,
@@ -1109,6 +1098,7 @@ export default function ChatScreen() {
         replyingTo?.id,
         analysisIdToSend,
       );
+
       if (!targetChatId && res.chatId) {
         setCurrentChatId(res.chatId);
         const newChat: StoredConversation = {
@@ -1116,19 +1106,18 @@ export default function ChatScreen() {
           title: trimmed,
           lastMessageTime: new Date().toISOString(),
         };
-        const updated = [newChat, ...chats];
-        setChats(updated);
-        await persistConversations(updated);
+        const updatedChats = [newChat, ...chats];
+        setChats(updatedChats);
+        await persistConversations(updatedChats);
       }
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `bot_${Date.now()}`,
-          role: "assistant",
-          text: sanitiseAgentText(res.response),
-          timestamp: new Date(res.timestamp),
-        },
-      ]);
+
+      const fallbackBotMsg: UIMessage = {
+        id: `bot_${Date.now()}`,
+        role: "assistant",
+        text: sanitiseAgentText(res.response),
+        timestamp: new Date(res.timestamp),
+      };
+      setMessages((prev) => [...prev, fallbackBotMsg]);
     } catch {
       setMessages((prev) => [
         ...prev,
@@ -1148,11 +1137,17 @@ export default function ChatScreen() {
     }
   };
 
-  // ── Render message ────────────────────────────────────────────────────────
   const renderMessage = ({ item }: { item: UIMessage }) => {
     const isUser = item.role === "user";
-    if (!isUser && item.id === streamingMessageId && item.text === "")
+
+    // The hub greeting replaces the welcome message when the empty state is shown
+    if (item.id === "welcome" && isEmptyChat) return null;
+
+    // Don't render the placeholder bubble while waiting for the first token -
+    // the typing indicator in the footer already covers this state.
+    if (!isUser && item.id === streamingMessageId && item.text === "") {
       return null;
+    }
 
     const renderRightActions = (
       progress: Animated.AnimatedInterpolation<number>,
@@ -1199,6 +1194,7 @@ export default function ChatScreen() {
             isUser ? styles.messageRowUser : styles.messageRowBot,
           ]}
         >
+          {/* Bot avatar */}
           {!isUser && (
             <View style={styles.botAvatar}>
               <Ionicons
@@ -1208,24 +1204,30 @@ export default function ChatScreen() {
               />
             </View>
           )}
+
           <View
             style={[
               styles.messageContent,
               isUser ? styles.messageContentUser : styles.messageContentBot,
             ]}
           >
+            {/* Reply context */}
             {item.replyTo && (
               <View
                 style={[styles.replyContext, isUser && styles.replyContextUser]}
               >
-                <Text style={styles.replyAuthor}>
-                  {item.replyTo.role === "user" ? "You" : "Assistant"}
-                </Text>
-                <Text style={styles.replyText} numberOfLines={2}>
-                  {item.replyTo.text}
-                </Text>
+                <View style={styles.replyContent}>
+                  <Text style={styles.replyAuthor}>
+                    {item.replyTo.role === "user" ? "You" : "Assistant"}
+                  </Text>
+                  <Text style={styles.replyText} numberOfLines={2}>
+                    {item.replyTo.text}
+                  </Text>
+                </View>
               </View>
             )}
+
+            {/* Analysis reference */}
             {item.referencedAnalysis && (
               <View style={styles.analysisReference}>
                 {item.referencedAnalysis.imageUrl ? (
@@ -1255,6 +1257,8 @@ export default function ChatScreen() {
                 </View>
               </View>
             )}
+
+            {/* Message text */}
             {isUser ? (
               <Text style={styles.userText}>{item.text}</Text>
             ) : (
@@ -1265,6 +1269,8 @@ export default function ChatScreen() {
                 plainStyle={markdownStyles.body}
               />
             )}
+
+            {/* Inline UI widgets from agent response */}
             {!isUser &&
               item.uiActions?.map &&
               item.uiActions.mapLat &&
@@ -1274,7 +1280,7 @@ export default function ChatScreen() {
                   longitude={item.uiActions.mapLon}
                   onSendLocation={(lat, lon) =>
                     sendMessage(
-                      `Tell me about the fishing conditions at ${lat.toFixed(4)}N, ${lon.toFixed(4)}E`,
+                      `Tell me about the fishing conditions at ${lat.toFixed(4)}°N, ${lon.toFixed(4)}°E`,
                     )
                   }
                 />
@@ -1289,85 +1295,38 @@ export default function ChatScreen() {
               />
             )}
             {!isUser && item.uiActions?.upload && <InlineUploadCard />}
+
+            {/* Scan result card */}
             {!isUser && item.scanResult && (
               <ScanResultCard
                 fishCount={item.scanResult.fishCount}
                 detections={item.scanResult.detections}
                 totalValue={item.scanResult.totalValue}
                 onAction={(action) => {
-                  if (action === "ask")
+                  if (action === "ask") {
                     sendMessage(
                       `Tell me more about my latest scan with ${item.scanResult!.fishCount} fish. Any storage or selling recommendations?`,
                     );
-                  else if (action === "buyers")
+                  } else if (action === "buyers") {
                     sendMessage(`Help me find buyers for this catch`);
-                  else if (action === "compare")
+                  } else if (action === "compare") {
                     sendMessage(
                       `Compare selling prices at different ports for this catch`,
                     );
+                  }
                 }}
               />
             )}
-            {/* Weight estimation button for scan→chat flow */}
-            {!isUser &&
-              isScanChat &&
-              scanFishList.length > 0 &&
-              streamingMessageId !== item.id &&
-              item.text.length > 0 &&
-              (() => {
-                // Show only on the first or latest non-streaming assistant message
-                const assistantMsgs = messages.filter(
-                  (m) => m.role === "assistant" && m.text.length > 0,
-                );
-                const lastAssistant = assistantMsgs[assistantMsgs.length - 1];
-                if (lastAssistant?.id !== item.id) return null;
 
-                const measuredCount = scanFishList.filter(
-                  (f) => f.measuredWeightG !== null,
-                ).length;
-                const totalFish = scanFishList.length;
-                const totalWeightKg =
-                  measuredCount > 0
-                    ? scanFishList
-                        .filter((f) => f.measuredWeightG !== null)
-                        .reduce((sum, f) => sum + f.measuredWeightG!, 0) / 1000
-                    : 0;
-
-                return (
-                  <TouchableOpacity
-                    style={styles.weightEstimateCard}
-                    onPress={() => setShowFishPicker(true)}
-                    activeOpacity={0.8}
-                  >
-                    <View style={styles.weightEstimateIcon}>
-                      <Ionicons name="scale" size={18} color="#fff" />
-                    </View>
-                    <View style={styles.weightEstimateContent}>
-                      <Text style={styles.weightEstimateTitle}>
-                        {measuredCount > 0
-                          ? `${measuredCount}/${totalFish} Fish Measured - ${totalWeightKg.toFixed(2)} kg`
-                          : "Estimate Weight & Price"}
-                      </Text>
-                      <Text style={styles.weightEstimateSub}>
-                        {measuredCount > 0
-                          ? "Tap to measure more fish"
-                          : `Measure ${totalFish} detected fish for market pricing`}
-                      </Text>
-                    </View>
-                    <Ionicons
-                      name="chevron-forward"
-                      size={18}
-                      color="rgba(255,255,255,0.6)"
-                    />
-                  </TouchableOpacity>
-                );
-              })()}
+            {/* Tool transparency badge (collapsed) */}
             {!isUser &&
               item.toolsCalled &&
               item.toolsCalled.length > 0 &&
               streamingMessageId !== item.id && (
                 <ToolsBadge count={item.toolsCalled.length} />
               )}
+
+            {/* Footer */}
             <View
               style={[styles.messageFooter, isUser && styles.messageFooterUser]}
             >
@@ -1399,74 +1358,14 @@ export default function ChatScreen() {
     );
   };
 
-  // ── Render hub (empty state) ───────────────────────────────────────────────
-  const renderHub = () => (
-    <View style={styles.capabilityHub}>
-      <View style={styles.hubHeader}>
-        <View style={styles.hubIconWrap}>
-          <Ionicons name="hardware-chip" size={20} color="#fff" />
-        </View>
-        <View style={styles.hubHeaderText}>
-          <Text style={styles.hubGreeting}>
-            {greeting}, {user?.name ?? "Captain"}
-          </Text>
-          <Text style={styles.hubSubtitle}>What can I help you with?</Text>
-        </View>
-      </View>
-      <View style={styles.capGrid}>
-        {AGENT_CAPABILITIES.map((cap) => (
-          <TouchableOpacity
-            key={cap.label}
-            style={styles.capCard}
-            onPress={() => handleCapabilityPress(cap)}
-            activeOpacity={0.7}
-            disabled={isTyping || isStreaming}
-          >
-            <View
-              style={[
-                styles.capIconWrap,
-                { backgroundColor: cap.color + "18" },
-              ]}
-            >
-              <Ionicons name={cap.icon} size={18} color={cap.color} />
-            </View>
-            <Text style={styles.capLabel} numberOfLines={1}>
-              {cap.label}
-            </Text>
-            <Text style={styles.capDesc} numberOfLines={1}>
-              {cap.desc}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.chipRow}
-        keyboardShouldPersistTaps="always"
-      >
-        {QUICK_ACTIONS.map((action) => (
-          <TouchableOpacity
-            key={action}
-            style={styles.chip}
-            onPress={() => sendMessage(action)}
-            activeOpacity={0.7}
-            disabled={isTyping || isStreaming}
-          >
-            <Ionicons name="sparkles" size={13} color={COLORS.primaryLight} />
-            <Text style={styles.chipText}>{action}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-    </View>
-  );
-
-  // ── Main render ───────────────────────────────────────────────────────────
   if (!isLoaded) return null;
+
+  const isEmptyChat = messages.length <= 1;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaView style={styles.safe} edges={["top"]}>
+      <SafeAreaView style={styles.safe}>
+        {/* Offline overlay */}
         {effectiveMode === "offline" && (
           <View style={styles.offlineOverlay}>
             <View style={styles.offlineCard}>
@@ -1493,7 +1392,7 @@ export default function ChatScreen() {
           </View>
         )}
 
-        {/* Sidebar */}
+        {/* Sidebar Modal */}
         <Modal
           visible={showSidebar}
           transparent
@@ -1521,6 +1420,7 @@ export default function ChatScreen() {
                   <Ionicons name="close" size={22} color={COLORS.textMuted} />
                 </TouchableOpacity>
               </View>
+
               <TouchableOpacity
                 style={styles.newChatBtn}
                 onPress={createNewChat}
@@ -1529,17 +1429,10 @@ export default function ChatScreen() {
                 <Ionicons name="add" size={18} color="#fff" />
                 <Text style={styles.newChatText}>New Chat</Text>
               </TouchableOpacity>
+
               <ScrollView
                 style={styles.chatListScroll}
                 showsVerticalScrollIndicator={false}
-                refreshControl={
-                  <RefreshControl
-                    refreshing={refreshingChats}
-                    onRefresh={handleRefreshChats}
-                    tintColor={COLORS.primaryLight}
-                    colors={[COLORS.primaryLight]}
-                  />
-                }
               >
                 {chats.length === 0 ? (
                   <View style={styles.emptyChatList}>
@@ -1613,38 +1506,31 @@ export default function ChatScreen() {
           </TouchableOpacity>
         </Modal>
 
+        {/* Analysis Picker Modal */}
         <AnalysisPicker
           visible={showAnalysisPicker}
           onClose={() => setShowAnalysisPicker(false)}
           onSelectAnalysis={handleSelectAnalysis}
           onSelectGroup={handleSelectGroup}
         />
+
+        {/* Telegram Integration Modal */}
         <TelegramIntegrationModal
           visible={showTelegramModal}
           onClose={() => setShowTelegramModal(false)}
           onOpenTelegram={openTelegramApp}
         />
+
+        {/* Weight Estimation Modal */}
         <WeightEstimateModal
           visible={weightModalVisible}
           onClose={() => setWeightModalVisible(false)}
           onConfirm={handleWeightResult}
           species={weightSpecies}
-          fishIndex={weightFishIndex}
-          forceOffline={isScanOffline}
-        />
-        <FishPickerModal
-          visible={showFishPicker}
-          onClose={() => setShowFishPicker(false)}
-          onSelectFish={handleFishSelected}
-          fish={scanFishList}
-        />
-        <GroupFishPickerModal
-          visible={showGroupFishPicker}
-          onClose={() => setShowGroupFishPicker(false)}
-          onSelectFish={handleGroupFishSelected}
+          fishIndex={0}
         />
 
-        {/* Header */}
+        {/* ─── Header ─────────────────────────────────────── */}
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => setShowSidebar(true)}
@@ -1657,6 +1543,7 @@ export default function ChatScreen() {
               color={COLORS.textSecondary}
             />
           </TouchableOpacity>
+
           <View style={styles.headerCenter}>
             <View style={styles.headerLogo}>
               <Ionicons
@@ -1665,16 +1552,17 @@ export default function ChatScreen() {
                 color={COLORS.primaryLight}
               />
             </View>
-            <Text style={styles.headerTitle} numberOfLines={1}>
+            <Text style={styles.headerTitle}>
               {currentChatId
                 ? chats.find((c) => c.id === currentChatId)?.title ||
                   "AI Assistant"
                 : "New Chat"}
             </Text>
           </View>
+
           <View style={styles.headerActions}>
             <TouchableOpacity
-              onPress={() => setShowTelegramModal(true)}
+              onPress={handleOpenTelegram}
               style={styles.headerBtn}
               hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
             >
@@ -1704,11 +1592,12 @@ export default function ChatScreen() {
           </View>
         </View>
 
-        {/* Body */}
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.flex}
+          keyboardVerticalOffset={0}
         >
+          {/* ─── Message List ─────────────────────────────── */}
           <FlatList
             ref={flatListRef}
             data={messages}
@@ -1719,9 +1608,86 @@ export default function ChatScreen() {
             onContentSizeChange={() =>
               flatListRef.current?.scrollToEnd({ animated: true })
             }
-            ListHeaderComponent={isEmptyChat ? renderHub() : null}
+            ListHeaderComponent={
+              isEmptyChat ? (
+                <View style={styles.capabilityHub}>
+                  {/* Hero greeting */}
+                  <View style={styles.hubHeader}>
+                    <View style={styles.hubIconWrap}>
+                      <Ionicons name="hardware-chip" size={20} color="#fff" />
+                    </View>
+                    <View style={styles.hubHeaderText}>
+                      <Text style={styles.hubGreeting}>
+                        {greeting}, {user?.name ?? "Captain"}
+                      </Text>
+                      <Text style={styles.hubSubtitle}>
+                        What can I help you with?
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Capability grid */}
+                  <View style={styles.capGrid}>
+                    {AGENT_CAPABILITIES.map((cap) => (
+                      <TouchableOpacity
+                        key={cap.label}
+                        style={styles.capCard}
+                        onPress={() => handleCapabilityPress(cap)}
+                        activeOpacity={0.7}
+                        disabled={isTyping || isStreaming}
+                      >
+                        <View
+                          style={[
+                            styles.capIconWrap,
+                            { backgroundColor: cap.color + "18" },
+                          ]}
+                        >
+                          <Ionicons
+                            name={cap.icon}
+                            size={18}
+                            color={cap.color}
+                          />
+                        </View>
+                        <Text style={styles.capLabel} numberOfLines={1}>
+                          {cap.label}
+                        </Text>
+                        <Text style={styles.capDesc} numberOfLines={1}>
+                          {cap.desc}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+
+                  {/* Quick suggestion pills */}
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.chipRow}
+                    keyboardShouldPersistTaps="always"
+                  >
+                    {QUICK_ACTIONS.map((action) => (
+                      <TouchableOpacity
+                        key={action}
+                        style={styles.chip}
+                        onPress={() => sendMessage(action)}
+                        activeOpacity={0.7}
+                        disabled={isTyping || isStreaming}
+                      >
+                        <Ionicons
+                          name="sparkles"
+                          size={13}
+                          color={COLORS.primaryLight}
+                        />
+                        <Text style={styles.chipText}>{action}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              ) : null
+            }
             ListFooterComponent={
               <>
+                {/* Live tool transparency during streaming */}
                 {isStreaming && liveToolCalls.length > 0 && (
                   <View style={{ paddingHorizontal: 56 }}>
                     <ToolTransparency
@@ -1730,12 +1696,17 @@ export default function ChatScreen() {
                     />
                   </View>
                 )}
+
+                {/* Typing / Streaming indicator */}
                 {(isTyping || isStreaming) &&
                   (() => {
                     const streamingMsg = messages.find(
                       (m) => m.id === streamingMessageId,
                     );
-                    const showDots = isTyping || !streamingMsg?.text;
+                    const hasContent = Boolean(streamingMsg?.text);
+                    // Once tokens are flowing the ▌ cursor in the bubble signals
+                    // progress - only show the stop button, not the typing dots.
+                    const showDots = isTyping || !hasContent;
                     return (
                       <View style={styles.typingRow}>
                         <View style={styles.botAvatar}>
@@ -1776,7 +1747,6 @@ export default function ChatScreen() {
                           <TouchableOpacity
                             style={styles.stopBtn}
                             onPress={() => {
-                              abortRef.current = true;
                               chatStreamClient.stopStreaming();
                               setIsStreaming(false);
                               setStreamingMessageId(null);
@@ -1792,10 +1762,11 @@ export default function ChatScreen() {
                       </View>
                     );
                   })()}
+                {/* Contextual suggestion chips */}
                 {!isTyping &&
                   !isStreaming &&
                   lastSuggestions.length > 0 &&
-                  messages.length > 1 && (
+                  messages.length > 2 && (
                     <SuggestionChips
                       suggestions={lastSuggestions}
                       onSelect={(prompt) => sendMessage(prompt)}
@@ -1806,8 +1777,9 @@ export default function ChatScreen() {
             }
           />
 
-          {/* Input area */}
+          {/* ─── Input Bar ────────────────────────────────── */}
           <View style={styles.inputArea}>
+            {/* Reply preview */}
             {replyingTo && (
               <View style={styles.replyPreview}>
                 <View style={styles.replyPreviewBar} />
@@ -1835,6 +1807,8 @@ export default function ChatScreen() {
                 </TouchableOpacity>
               </View>
             )}
+
+            {/* Analysis reference preview */}
             {referencedAnalysis && (
               <View style={styles.analysisPreview}>
                 <View style={styles.replyPreviewBar} />
@@ -1879,15 +1853,12 @@ export default function ChatScreen() {
               </View>
             )}
 
-            {/* Inline tools popup - vertical list above send button */}
-            {showToolsMenu && (
-              <View style={styles.toolsPopup}>
+            {/* Action bar - quick context tools */}
+            {!isEmptyChat && (
+              <View style={styles.actionBar}>
                 <TouchableOpacity
-                  style={styles.toolsPopupItem}
-                  onPress={() => {
-                    setShowToolsMenu(false);
-                    setShowAnalysisPicker(true);
-                  }}
+                  style={styles.actionBarBtn}
+                  onPress={() => setShowAnalysisPicker(true)}
                   disabled={isTyping || isStreaming}
                 >
                   <Ionicons
@@ -1895,134 +1866,107 @@ export default function ChatScreen() {
                     size={18}
                     color={COLORS.primaryLight}
                   />
-                  <Text style={styles.toolsPopupLabel}>Reference Analysis</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.toolsPopupItem}
-                  onPress={() => {
-                    setShowToolsMenu(false);
-                    router.push("/(tabs)/upload");
-                  }}
+                  style={styles.actionBarBtn}
+                  onPress={() => router.push("/(tabs)/upload")}
                 >
                   <Ionicons
                     name="camera-outline"
                     size={18}
-                    color={COLORS.secondary}
+                    color={COLORS.primaryLight}
                   />
-                  <Text style={styles.toolsPopupLabel}>Scan Fish</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.toolsPopupItem}
-                  onPress={() => {
-                    setShowToolsMenu(false);
-                    setShowGroupFishPicker(true);
-                  }}
+                  style={styles.actionBarBtn}
+                  onPress={() => setWeightModalVisible(true)}
                 >
-                  <Ionicons name="scale-outline" size={18} color="#f59e0b" />
-                  <Text style={styles.toolsPopupLabel}>Weight Estimator</Text>
+                  <Ionicons
+                    name="scale-outline"
+                    size={18}
+                    color={COLORS.primaryLight}
+                  />
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.toolsPopupItem}
+                  style={styles.actionBarBtn}
                   onPress={() => {
-                    setShowToolsMenu(false);
-                    sendMessage(
-                      userLocation
-                        ? `Show me the current fishing conditions and safety status at my location (${userLocation.latitude.toFixed(2)}N, ${userLocation.longitude.toFixed(2)}E).`
-                        : "What are the current fishing conditions near me?",
-                    );
+                    if (userLocation) {
+                      sendMessage(
+                        `Show me the current fishing conditions and safety status at my location (${userLocation.latitude.toFixed(2)}°N, ${userLocation.longitude.toFixed(2)}°E).`,
+                      );
+                    } else {
+                      sendMessage(
+                        "What are the current fishing conditions near me?",
+                      );
+                    }
                   }}
                   disabled={isTyping || isStreaming}
                 >
                   <Ionicons
                     name="location-outline"
                     size={18}
-                    color={COLORS.accent}
+                    color={COLORS.primaryLight}
                   />
-                  <Text style={styles.toolsPopupLabel}>
-                    Location Conditions
-                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.toolsPopupItem}
-                  onPress={() => {
-                    setShowToolsMenu(false);
+                  style={styles.actionBarBtn}
+                  onPress={() =>
                     sendMessage(
                       "Show me my recent catch analytics and earnings summary.",
-                    );
-                  }}
+                    )
+                  }
                   disabled={isTyping || isStreaming}
                 >
                   <Ionicons
                     name="bar-chart-outline"
                     size={18}
-                    color="#7c3aed"
+                    color={COLORS.primaryLight}
                   />
-                  <Text style={styles.toolsPopupLabel}>My Analytics</Text>
                 </TouchableOpacity>
               </View>
             )}
 
+            {/* Input row */}
             <View style={styles.inputRow}>
               <TouchableOpacity
                 style={styles.attachBtn}
-                onPress={() => setShowAnalysisPicker(true)}
+                onPress={isListening ? stopListening : startListening}
                 disabled={isTyping || isStreaming}
               >
                 <Ionicons
-                  name={referencedAnalysis ? "images" : "images-outline"}
+                  name={isListening ? "mic" : "mic-outline"}
                   size={22}
-                  color={
-                    referencedAnalysis ? COLORS.primaryLight : COLORS.textSubtle
-                  }
+                  color={isListening ? COLORS.error : COLORS.textSubtle}
                 />
               </TouchableOpacity>
+
               <TextInput
                 style={styles.textInput}
                 value={inputText}
-                onChangeText={(t) => {
-                  setInputText(t);
-                  if (showToolsMenu) setShowToolsMenu(false);
-                }}
-                placeholder={t("chat.placeholder")}
-                placeholderTextColor={COLORS.textSubtle}
+                onChangeText={setInputText}
+                placeholder={
+                  isListening ? "Listening..." : t("chat.placeholder")
+                }
+                placeholderTextColor={
+                  isListening ? COLORS.primary : COLORS.textSubtle
+                }
                 multiline
                 maxLength={1000}
                 returnKeyType="send"
                 onSubmitEditing={() => sendMessage(inputText)}
               />
+
               <TouchableOpacity
                 style={[
                   styles.sendBtn,
-                  (!inputText.trim() ||
-                    isTyping ||
-                    isStreaming) &&
+                  (!inputText.trim() || isTyping || isStreaming) &&
                     styles.sendBtnDisabled,
                 ]}
                 onPress={() => sendMessage(inputText)}
-                disabled={
-                  !inputText.trim() ||
-                  isTyping ||
-                  isStreaming
-                }
+                disabled={!inputText.trim() || isTyping || isStreaming}
                 activeOpacity={0.75}
               >
                 <Ionicons name="arrow-up" size={20} color="#fff" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.toolsToggleBtn,
-                  showToolsMenu && styles.toolsToggleBtnActive,
-                ]}
-                onPress={() => setShowToolsMenu((v) => !v)}
-                hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
-              >
-                <Ionicons
-                  name={showToolsMenu ? "close" : "apps"}
-                  size={20}
-                  color={
-                    showToolsMenu ? COLORS.primaryLight : COLORS.textSubtle
-                  }
-                />
               </TouchableOpacity>
             </View>
           </View>
@@ -2032,8 +1976,15 @@ export default function ChatScreen() {
   );
 }
 
+/* ═══════════════════════════════════════════════════════════
+   Markdown Styles
+   ═══════════════════════════════════════════════════════════ */
 const markdownStyles = StyleSheet.create({
-  body: { color: COLORS.textSecondary, fontSize: 14, lineHeight: 22 },
+  body: {
+    color: COLORS.textSecondary,
+    fontSize: 14,
+    lineHeight: 22,
+  },
   heading1: {
     color: COLORS.textPrimary,
     fontSize: 20,
@@ -2055,9 +2006,17 @@ const markdownStyles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 4,
   },
-  paragraph: { marginTop: 0, marginBottom: 8 },
-  strong: { fontWeight: "700", color: COLORS.textPrimary },
-  em: { fontStyle: "italic" as const },
+  paragraph: {
+    marginTop: 0,
+    marginBottom: 8,
+  },
+  strong: {
+    fontWeight: "700",
+    color: COLORS.textPrimary,
+  },
+  em: {
+    fontStyle: "italic" as const,
+  },
   code_inline: {
     backgroundColor: "rgba(0,0,0,0.25)",
     color: COLORS.primaryLight,
@@ -2084,9 +2043,15 @@ const markdownStyles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.textSecondary,
   },
-  bullet_list: { marginVertical: 4 },
-  ordered_list: { marginVertical: 4 },
-  list_item: { marginVertical: 2 },
+  bullet_list: {
+    marginVertical: 4,
+  },
+  ordered_list: {
+    marginVertical: 4,
+  },
+  list_item: {
+    marginVertical: 2,
+  },
   blockquote: {
     backgroundColor: "rgba(0,0,0,0.15)",
     borderLeftWidth: 3,
@@ -2105,20 +2070,38 @@ const markdownStyles = StyleSheet.create({
     borderRadius: 6,
     marginVertical: 8,
   },
-  thead: { backgroundColor: "rgba(0,0,0,0.2)" },
+  thead: {
+    backgroundColor: "rgba(0,0,0,0.2)",
+  },
   th: {
     padding: 6,
     borderWidth: 1,
     borderColor: COLORS.border,
     fontWeight: "700",
   },
-  td: { padding: 6, borderWidth: 1, borderColor: COLORS.border },
-  hr: { backgroundColor: COLORS.border, height: 1, marginVertical: 12 },
+  td: {
+    padding: 6,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  hr: {
+    backgroundColor: COLORS.border,
+    height: 1,
+    marginVertical: 12,
+  },
 });
 
+/* ═══════════════════════════════════════════════════════════
+   Styles - ChatGPT-inspired clean layout
+   ═══════════════════════════════════════════════════════════ */
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.bgDark },
+  safe: {
+    flex: 1,
+    backgroundColor: COLORS.bgDark,
+  },
   flex: { flex: 1 },
+
+  /* ── Header ───────────────────────────────────────────── */
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -2156,16 +2139,37 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
     maxWidth: SCREEN_WIDTH * 0.45,
   },
-  headerActions: { flexDirection: "row", alignItems: "center", gap: 2 },
-  messageList: { paddingTop: 8, paddingBottom: 12 },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2,
+  },
+
+  /* ── Message List ─────────────────────────────────────── */
+  messageList: {
+    paddingTop: 8,
+    paddingBottom: 12,
+  },
+  messageListEmpty: {
+    flexGrow: 1,
+    justifyContent: "flex-end",
+  },
+
+  /* ── Message Row ──────────────────────────────────────── */
   messageRow: {
     paddingHorizontal: 16,
     paddingVertical: 6,
     flexDirection: "row",
     alignItems: "flex-start",
   },
-  messageRowBot: { gap: 10 },
-  messageRowUser: { justifyContent: "flex-end" },
+  messageRowBot: {
+    gap: 10,
+  },
+  messageRowUser: {
+    justifyContent: "flex-end",
+  },
+
+  /* Bot avatar */
   botAvatar: {
     width: 30,
     height: 30,
@@ -2178,8 +2182,15 @@ const styles = StyleSheet.create({
     marginTop: 2,
     flexShrink: 0,
   },
-  messageContent: { maxWidth: SCREEN_WIDTH * 0.78, flexShrink: 1 },
-  messageContentBot: { flex: 1 },
+
+  /* ── Message Content ──────────────────────────────────── */
+  messageContent: {
+    maxWidth: SCREEN_WIDTH * 0.78,
+    flexShrink: 1,
+  },
+  messageContentBot: {
+    flex: 1,
+  },
   messageContentUser: {
     backgroundColor: COLORS.primary,
     borderRadius: 18,
@@ -2193,17 +2204,36 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 3,
   },
-  userText: { color: "#e0ecff", fontSize: 14, lineHeight: 21 },
+
+  /* ── User text ────────────────────────────────────────── */
+  userText: {
+    color: "#e0ecff",
+    fontSize: 14,
+    lineHeight: 21,
+  },
+
+  /* ── Message Footer ───────────────────────────────────── */
   messageFooter: {
     flexDirection: "row",
     alignItems: "center",
     marginTop: 4,
     gap: 8,
   },
-  messageFooterUser: { justifyContent: "flex-end" },
-  messageTime: { fontSize: 10, color: COLORS.textSubtle },
-  messageTimeUser: { color: "rgba(191,219,254,0.55)" },
-  ttsBtn: { padding: 2 },
+  messageFooterUser: {
+    justifyContent: "flex-end",
+  },
+  messageTime: {
+    fontSize: 10,
+    color: COLORS.textSubtle,
+  },
+  messageTimeUser: {
+    color: "rgba(191,219,254,0.55)",
+  },
+  ttsBtn: {
+    padding: 2,
+  },
+
+  /* ── Reply context inside message ──────────────────────── */
   replyContext: {
     backgroundColor: "rgba(255,255,255,0.06)",
     borderRadius: 8,
@@ -2213,14 +2243,23 @@ const styles = StyleSheet.create({
     borderLeftWidth: 2,
     borderLeftColor: COLORS.primaryLight,
   },
-  replyContextUser: { backgroundColor: "rgba(255,255,255,0.12)" },
+  replyContextUser: {
+    backgroundColor: "rgba(255,255,255,0.12)",
+  },
+  replyContent: { flex: 1 },
   replyAuthor: {
     fontSize: 11,
     fontWeight: "600",
     color: COLORS.primaryLight,
     marginBottom: 1,
   },
-  replyText: { fontSize: 11, color: COLORS.textMuted, lineHeight: 15 },
+  replyText: {
+    fontSize: 11,
+    color: COLORS.textMuted,
+    lineHeight: 15,
+  },
+
+  /* ── Analysis reference inside message ─────────────────── */
   analysisReference: {
     flexDirection: "row",
     alignItems: "center",
@@ -2239,7 +2278,10 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     backgroundColor: COLORS.bgDark,
   },
-  analysisThumbPlaceholder: { justifyContent: "center", alignItems: "center" },
+  analysisThumbPlaceholder: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
   analysisInfo: { flex: 1 },
   analysisLabel: {
     fontSize: 11,
@@ -2247,7 +2289,12 @@ const styles = StyleSheet.create({
     color: COLORS.primaryLight,
     marginBottom: 1,
   },
-  analysisSpecies: { fontSize: 11, color: COLORS.textMuted },
+  analysisSpecies: {
+    fontSize: 11,
+    color: COLORS.textMuted,
+  },
+
+  /* ── Swipe action ──────────────────────────────────────── */
   swipeReplyAction: {
     justifyContent: "center",
     alignItems: "center",
@@ -2264,6 +2311,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+
+  /* ── Typing indicator ──────────────────────────────────── */
   typingRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -2282,146 +2331,159 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
   },
-  typingDots: { flexDirection: "row", alignItems: "center", gap: 4 },
-  typingLabel: { color: COLORS.textMuted, fontSize: 12 },
+  typingDots: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  typingLabel: {
+    color: COLORS.textMuted,
+    fontSize: 12,
+  },
   dot: {
     width: 6,
     height: 6,
     borderRadius: 3,
     backgroundColor: COLORS.primaryLight,
   },
-  stopBtn: { padding: 4, marginLeft: 2 },
-  capabilityHub: { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 20 },
+  stopBtn: {
+    padding: 4,
+    marginLeft: 2,
+  },
+
+  /* ── Agent Capability Hub ────────────────────────────────── */
+  capabilityHub: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 10,
+    backgroundColor: COLORS.bgDark,
+  },
   hubHeader: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 20,
-    gap: 14,
+    marginBottom: 14,
+    gap: 12,
   },
   hubIconWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     backgroundColor: COLORS.primary,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: COLORS.primaryLight,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
   },
-  hubHeaderText: { flex: 1 },
+  hubHeaderText: {
+    flex: 1,
+  },
   hubGreeting: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: "700",
     color: COLORS.textPrimary,
-    letterSpacing: 0.3,
-    marginBottom: 4,
+    letterSpacing: 0.2,
   },
-  hubSubtitle: { fontSize: 14, color: COLORS.textSubtle, marginTop: 1 },
+  hubSubtitle: {
+    fontSize: 12,
+    color: COLORS.textMuted,
+    marginTop: 1,
+  },
   capGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between",
-    gap: 12,
-    marginBottom: 16,
+    gap: 8,
+    marginBottom: 12,
   },
   capCard: {
-    width: "48%",
+    width: "23.5%",
     backgroundColor: COLORS.bgCard,
-    borderRadius: 16,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: COLORS.border,
-    paddingVertical: 14,
-    paddingHorizontal: 14,
-    alignItems: "flex-start",
-    gap: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 5,
-    elevation: 3,
+    paddingVertical: 10,
+    paddingHorizontal: 6,
+    alignItems: "center",
+    gap: 4,
   },
   capIconWrap: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
+    width: 34,
+    height: 34,
+    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 4,
+    marginBottom: 2,
   },
   capLabel: {
-    fontSize: 14,
+    fontSize: 10,
     fontWeight: "600",
     color: COLORS.textPrimary,
-    textAlign: "left",
-    lineHeight: 18,
+    textAlign: "center",
+    lineHeight: 13,
   },
   capDesc: {
-    fontSize: 11,
+    fontSize: 8,
     color: COLORS.textSubtle,
-    textAlign: "left",
-    lineHeight: 15,
+    textAlign: "center",
+    lineHeight: 10,
   },
-  chipRow: { gap: 10, paddingBottom: 6 },
+
+  /* ── Action Bar ────────────────────────────────────────── */
+  actionBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+    marginBottom: 8,
+  },
+  actionBarBtn: {
+    width: 36,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: COLORS.bgCard,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  chipRow: {
+    gap: 8,
+    paddingBottom: 2,
+  },
   chip: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    backgroundColor: COLORS.bgCard,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.15)",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    gap: 6,
-  },
-  chipText: { color: COLORS.textSecondary, fontSize: 13, fontWeight: "500" },
-  inputArea: { paddingHorizontal: 12, paddingTop: 6, paddingBottom: 10 },
-  toolsPopup: {
-    backgroundColor: COLORS.bgCard,
-    borderRadius: 14,
-    borderWidth: 1,
     borderColor: COLORS.border,
-    marginBottom: 8,
-    overflow: "hidden",
-    alignSelf: "flex-end",
-    minWidth: 200,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    gap: 5,
   },
-  toolsPopupItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.border,
-  },
-  toolsPopupLabel: {
-    fontSize: 13,
+  chipText: {
+    color: COLORS.textSecondary,
+    fontSize: 12,
     fontWeight: "500",
-    color: COLORS.textPrimary,
+  },
+
+  /* ── Input Area ────────────────────────────────────────── */
+  inputArea: {
+    backgroundColor: COLORS.bgDark,
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    paddingBottom: 10,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: COLORS.border,
   },
   inputRow: {
     flexDirection: "row",
     alignItems: "flex-end",
     backgroundColor: COLORS.bgCard,
-    borderRadius: 24,
+    borderRadius: 22,
     borderWidth: 1,
     borderColor: COLORS.border,
     paddingLeft: 6,
     paddingRight: 5,
     paddingVertical: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 5,
   },
   attachBtn: {
     width: 38,
@@ -2447,16 +2509,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  sendBtnDisabled: { backgroundColor: COLORS.bgSurface, opacity: 0.4 },
-  toolsToggleBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: 2,
+  sendBtnDisabled: {
+    backgroundColor: COLORS.bgSurface,
+    opacity: 0.4,
   },
-  toolsToggleBtnActive: { backgroundColor: COLORS.primary + "22" },
+
+  /* ── Reply / Analysis Preview ──────────────────────────── */
   replyPreview: {
     flexDirection: "row",
     alignItems: "center",
@@ -2491,7 +2549,11 @@ const styles = StyleSheet.create({
     color: COLORS.primaryLight,
     marginBottom: 1,
   },
-  replyPreviewMessage: { fontSize: 11, color: COLORS.textMuted },
+  replyPreviewMessage: {
+    fontSize: 11,
+    color: COLORS.textMuted,
+  },
+
   analysisPreview: {
     flexDirection: "row",
     alignItems: "center",
@@ -2526,8 +2588,16 @@ const styles = StyleSheet.create({
     color: COLORS.primaryLight,
     marginBottom: 1,
   },
-  analysisPreviewSpecies: { fontSize: 11, color: COLORS.textMuted },
-  sidebarOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.55)" },
+  analysisPreviewSpecies: {
+    fontSize: 11,
+    color: COLORS.textMuted,
+  },
+
+  /* ── Sidebar ───────────────────────────────────────────── */
+  sidebarOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.55)",
+  },
   sidebar: {
     position: "absolute",
     left: 0,
@@ -2566,8 +2636,16 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     gap: 6,
   },
-  newChatText: { color: "#fff", fontSize: 13, fontWeight: "600" },
-  chatListScroll: { flex: 1, paddingHorizontal: 10, paddingTop: 6 },
+  newChatText: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  chatListScroll: {
+    flex: 1,
+    paddingHorizontal: 10,
+    paddingTop: 6,
+  },
   chatListItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -2589,10 +2667,23 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   chatListItemText: { flex: 1 },
-  chatListText: { color: COLORS.textSecondary, fontSize: 13, lineHeight: 18 },
-  chatListTextActive: { color: COLORS.primaryLight, fontWeight: "600" },
-  chatListTime: { color: COLORS.textSubtle, fontSize: 10, marginTop: 2 },
-  deleteBtn: { padding: 6 },
+  chatListText: {
+    color: COLORS.textSecondary,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  chatListTextActive: {
+    color: COLORS.primaryLight,
+    fontWeight: "600",
+  },
+  chatListTime: {
+    color: COLORS.textSubtle,
+    fontSize: 10,
+    marginTop: 2,
+  },
+  deleteBtn: {
+    padding: 6,
+  },
   emptyChatList: {
     alignItems: "center",
     justifyContent: "center",
@@ -2613,6 +2704,8 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 18,
   },
+
+  /* ── Offline overlay ───────────────────────────────────── */
   offlineOverlay: {
     position: "absolute",
     top: 0,
@@ -2620,62 +2713,31 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: "rgba(15,23,42,0.95)",
-    zIndex: 100,
+    zIndex: 1000,
     justifyContent: "center",
     alignItems: "center",
+    padding: 32,
   },
   offlineCard: {
     backgroundColor: COLORS.bgCard,
-    borderRadius: 20,
-    padding: 32,
+    borderRadius: 16,
+    padding: 28,
     alignItems: "center",
-    width: SCREEN_WIDTH * 0.8,
+    maxWidth: 300,
     borderWidth: 1,
     borderColor: COLORS.border,
-    gap: 12,
   },
   offlineTitle: {
-    fontSize: 18,
-    fontWeight: "700",
+    fontSize: 15,
+    fontWeight: "600",
     color: COLORS.textPrimary,
-    textAlign: "center",
+    marginTop: 12,
+    marginBottom: 6,
   },
   offlineText: {
     fontSize: 13,
     color: COLORS.textMuted,
     textAlign: "center",
-    lineHeight: 20,
-  },
-  weightEstimateCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f59e0b" + "15",
-    borderRadius: 14,
-    padding: 12,
-    marginTop: 10,
-    borderWidth: 1,
-    borderColor: "#f59e0b" + "30",
-    gap: 10,
-  },
-  weightEstimateIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: "#f59e0b",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  weightEstimateContent: {
-    flex: 1,
-  },
-  weightEstimateTitle: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: COLORS.textPrimary,
-  },
-  weightEstimateSub: {
-    fontSize: 11,
-    color: COLORS.textMuted,
-    marginTop: 1,
+    lineHeight: 19,
   },
 });

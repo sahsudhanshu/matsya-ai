@@ -38,8 +38,16 @@ export default function HomeScreen() {
       .catch(() => {});
     // Entrance animation
     const entranceAnimation = Animated.parallel([
-      Animated.timing(fadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
-      Animated.timing(slideAnim, { toValue: 0, duration: 500, useNativeDriver: true }),
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
+      }),
     ]);
 
     entranceAnimation.start();
@@ -133,10 +141,14 @@ export default function HomeScreen() {
 
   // Proactive greeting based on time and context
   const getProactiveGreeting = () => {
-    if (hour < 6) return "Early start today! Here's what I've prepared for your trip.";
-    if (hour < 10) return "Good morning! I've checked the weather and tides for you.";
-    if (hour < 14) return "How's the catch going? I can check market prices for you.";
-    if (hour < 18) return "Afternoon update ready - market prices and tomorrow's forecast.";
+    if (hour < 6)
+      return "Early start today! Here's what I've prepared for your trip.";
+    if (hour < 10)
+      return "Good morning! I've checked the weather and tides for you.";
+    if (hour < 14)
+      return "How's the catch going? I can check market prices for you.";
+    if (hour < 18)
+      return "Afternoon update ready - market prices and tomorrow's forecast.";
     return "Great day on the water! Let me help you log your catch.";
   };
 
@@ -157,7 +169,12 @@ export default function HomeScreen() {
         </View>
 
         {/* Proactive Agent Greeting Bubble */}
-        <Animated.View style={[styles.agentGreeting, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+        <Animated.View
+          style={[
+            styles.agentGreeting,
+            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+          ]}
+        >
           <TouchableOpacity
             style={styles.agentGreetingInner}
             onPress={() => router.push("/(tabs)/chat")}
@@ -171,7 +188,7 @@ export default function HomeScreen() {
             </View>
             <View style={styles.agentGreetingContent}>
               <View style={styles.agentNameRow}>
-                <Text style={styles.agentName}>SagarMitra</Text>
+                <Text style={styles.agentName}>Matsya AI</Text>
                 <View style={styles.aiTag}>
                   <Text style={styles.aiTagText}>AI</Text>
                 </View>
@@ -204,9 +221,15 @@ export default function HomeScreen() {
               </View>
               <View style={styles.promptTextWrap}>
                 <Text style={styles.promptLabel}>{p.label}</Text>
-                <Text style={styles.promptDesc} numberOfLines={1}>{p.prompt.split("?")[0]}?</Text>
+                <Text style={styles.promptDesc} numberOfLines={1}>
+                  {p.prompt.split("?")[0]}?
+                </Text>
               </View>
-              <Ionicons name="chevron-forward" size={14} color={COLORS.textMuted} />
+              <Ionicons
+                name="chevron-forward"
+                size={14}
+                color={COLORS.textMuted}
+              />
             </TouchableOpacity>
           ))}
         </View>
@@ -218,7 +241,11 @@ export default function HomeScreen() {
           activeOpacity={0.7}
         >
           <Text style={styles.sectionTitle}>{t("home.overview")}</Text>
-          <Ionicons name={showStats ? "chevron-up" : "chevron-down"} size={16} color={COLORS.textMuted} />
+          <Ionicons
+            name={showStats ? "chevron-up" : "chevron-down"}
+            size={16}
+            color={COLORS.textMuted}
+          />
         </TouchableOpacity>
 
         {showStats && (
@@ -263,7 +290,9 @@ export default function HomeScreen() {
           <View style={styles.statsStrip}>
             <View style={styles.stripItem}>
               <Ionicons name="cash" size={14} color={COLORS.secondary} />
-              <Text style={styles.stripValue}>₹{(analytics.totalEarnings / 1000).toFixed(0)}K</Text>
+              <Text style={styles.stripValue}>
+                ₹{(analytics.totalEarnings / 1000).toFixed(0)}K
+              </Text>
             </View>
             <View style={styles.stripDivider} />
             <View style={styles.stripItem}>

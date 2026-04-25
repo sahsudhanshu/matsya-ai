@@ -27,3 +27,5 @@ scripts/venv/
 
 # Node modules (already excluded by default but being explicit)
 node_modules/
+android/
+ios/

@@ -6,8 +6,8 @@
       "faqs": [
         {
           "id": "what-is-oceanai",
-          "question": "What is OceanAI?",
-          "answer": "OceanAI is an AI-powered mobile application designed to help Indian fishermen identify fish species, detect diseases, estimate catch weight, assess freshness, and gain market insights through smartphone photos. It combines machine learning with real-time ocean data to support sustainable fishing practices."
+          "question": "What is Matsya AI?",
+          "answer": "Matsya AI is an AI-powered mobile application designed to help Indian fishermen identify fish species, detect diseases, estimate catch weight, assess freshness, and gain market insights through smartphone photos. It combines machine learning with real-time ocean data to support sustainable fishing practices."
         },
         {
           "id": "how-to-upload",
@@ -16,8 +16,8 @@
         },
         {
           "id": "offline-mode",
-          "question": "Can I use OceanAI offline?",
-          "answer": "Yes! OceanAI supports offline mode for basic fish detection using on-device AI models. Your uploads will be queued and automatically synced when you're back online. However, features like chat, map data, and analytics require an internet connection."
+          "question": "Can I use Matsya AI offline?",
+          "answer": "Yes! Matsya AI supports offline mode for basic fish detection using on-device AI models. Your uploads will be queued and automatically synced when you're back online. However, features like chat, map data, and analytics require an internet connection."
         }
       ]
     },
@@ -37,8 +37,8 @@
         },
         {
           "id": "disease-detection",
-          "question": "What diseases can OceanAI detect?",
-          "answer": "OceanAI can detect common fish diseases including bacterial infections, fungal infections, parasites, and physical damage. The system provides a confidence score and severity level for each detection. Always consult with a fish health expert for serious disease concerns."
+          "question": "What diseases can Matsya AI detect?",
+          "answer": "Matsya AI can detect common fish diseases including bacterial infections, fungal infections, parasites, and physical damage. The system provides a confidence score and severity level for each detection. Always consult with a fish health expert for serious disease concerns."
         },
         {
           "id": "group-analysis",
@@ -59,7 +59,7 @@
         {
           "id": "disaster-alerts",
           "question": "How do disaster alerts work?",
-          "answer": "OceanAI displays live disaster alerts for cyclones, tsunamis, storms, and floods affecting Indian coastal waters. Alerts are color-coded by severity (low, medium, high, critical) and show affected areas on the map. You'll receive push notifications for critical alerts near your location."
+          "answer": "Matsya AI displays live disaster alerts for cyclones, tsunamis, storms, and floods affecting Indian coastal waters. Alerts are color-coded by severity (low, medium, high, critical) and show affected areas on the map. You'll receive push notifications for critical alerts near your location."
         },
         {
           "id": "fishing-times",
@@ -85,7 +85,7 @@
         {
           "id": "telegram-bot",
           "question": "How do I connect to the Telegram bot?",
-          "answer": "Tap the Telegram icon in the chat screen to open the OceanAI bot in Telegram. This allows you to get fishing advice and analysis results directly in Telegram, which can be more convenient when you're at sea with limited data."
+          "answer": "Tap the Telegram icon in the chat screen to open the Matsya AI bot in Telegram. This allows you to get fishing advice and analysis results directly in Telegram, which can be more convenient when you're at sea with limited data."
         }
       ]
     },
@@ -96,7 +96,7 @@
         {
           "id": "change-language",
           "question": "How do I change the app language?",
-          "answer": "Go to Settings > Language and select your preferred language. OceanAI supports English, Hindi, Bengali, Tamil, Telugu, and Marathi. The AI assistant will also respond in your selected language."
+          "answer": "Go to Settings > Language and select your preferred language. Matsya AI supports English, Hindi, Bengali, Tamil, Telugu, and Marathi. The AI assistant will also respond in your selected language."
         },
         {
           "id": "public-profile",
@@ -137,7 +137,7 @@
         {
           "id": "notifications-not-working",
           "question": "Why am I not receiving notifications?",
-          "answer": "Check that notifications are enabled in Settings > Preferences and in your device's system settings for OceanAI. For disaster alerts, ensure location permissions are granted so the app can determine if alerts affect your area."
+          "answer": "Check that notifications are enabled in Settings > Preferences and in your device's system settings for Matsya AI. For disaster alerts, ensure location permissions are granted so the app can determine if alerts affect your area."
         }
       ]
     }
