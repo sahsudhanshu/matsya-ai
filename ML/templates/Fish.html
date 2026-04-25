@@ -2,138 +2,608 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>YOLO + Species + Disease + Grad-CAM</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🐟 Fish Detection & Analysis</title>
 
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
+      color: #333;
     }
 
-    img {
-      max-width: 260px;
-      margin: 8px 0;
-      border: 1px solid #ccc;
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
     }
 
-    .crop {
-      border: 1px solid #ddd;
-      padding: 12px;
-      margin: 12px 0;
-      border-radius: 6px;
-      background: #fafafa;
+    .header {
+      text-align: center;
+      color: white;
+      margin-bottom: 40px;
     }
 
-    .images {
+    .header h1 {
+      font-size: 42px;
+      margin-bottom: 10px;
+      font-weight: 700;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .header p {
+      font-size: 16px;
+      opacity: 0.95;
+      font-weight: 300;
+    }
+
+    .upload-section {
+      background: white;
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      margin-bottom: 40px;
+    }
+
+    .upload-area {
+      border: 2px dashed #667eea;
+      border-radius: 12px;
+      padding: 40px;
+      text-align: center;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 20px;
+    }
+
+    .upload-area:hover {
+      border-color: #764ba2;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+      transform: translateY(-2px);
+    }
+
+    .upload-area.dragover {
+      border-color: #667eea;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+    }
+
+    #imageInput {
+      display: none;
+    }
+
+    .upload-icon {
+      font-size: 48px;
+      margin-bottom: 15px;
+    }
+
+    .upload-area p {
+      font-size: 16px;
+      color: #667eea;
+      font-weight: 600;
+      margin: 10px 0;
+    }
+
+    .upload-area span {
+      font-size: 14px;
+      color: #999;
+    }
+
+    .button-group {
       display: flex;
-      gap: 15px;
+      gap: 12px;
+      justify-content: center;
       flex-wrap: wrap;
     }
 
-    .label {
-      font-weight: bold;
+    button {
+      padding: 12px 32px;
       font-size: 16px;
-      margin-top: 5px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    .confidence {
-      font-size: 14px;
-      color: #555;
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
     }
 
-    .disease {
-      margin-top: 6px;
-      padding: 6px;
-      background: #fff3cd;
-      border-left: 4px solid #ffc107;
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 35px rgba(102, 126, 234, 0.6);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: #f0f0f0;
+      color: #333;
+      border: 2px solid #ddd;
+    }
+
+    .btn-secondary:hover {
+      background: #e8e8e8;
+      border-color: #667eea;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 30px;
+    }
+
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .results-section {
+      display: none;
+    }
+
+    .results-section.show {
+      display: block;
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .section-title {
+      background: white;
+      color: #667eea;
+      font-size: 24px;
+      font-weight: 700;
+      padding: 20px 30px;
+      border-radius: 12px 12px 0 0;
+      margin-bottom: 0;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .yolo-container {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+      overflow: hidden;
+    }
+
+    .yolo-container h3 {
+      color: #667eea;
+      margin-bottom: 20px;
+      font-size: 20px;
+    }
+
+    .yolo-container img {
+      max-width: 100%;
+      border-radius: 8px;
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .crops-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 25px;
+    }
+
+    .crop-card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+      transition: all 0.3s ease;
+      animation: slideUp 0.5s ease;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .crop-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+    }
+
+    .crop-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .crop-header .fish-icon {
+      font-size: 28px;
+    }
+
+    .crop-header h4 {
+      font-size: 18px;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .crop-content {
+      padding: 20px;
+    }
+
+    .species-info {
+      margin-bottom: 20px;
+    }
+
+    .info-label {
+      font-size: 13px;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .info-value {
+      font-size: 15px;
+      color: #333;
+      font-weight: 600;
+    }
+
+    .confidence-bar {
+      background: #f0f0f0;
+      border-radius: 4px;
+      height: 6px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+
+    .confidence-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      transition: width 0.3s ease;
+    }
+
+    .disease-alert {
+      background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+      border-left: 4px solid #ff6b6b;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+    }
+
+    .disease-alert .label {
+      font-size: 12px;
+      color: #e63946;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-bottom: 5px;
+    }
+
+    .disease-alert .value {
+      font-size: 16px;
+      color: #d32f2f;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .disease-alert .confidence {
+      font-size: 12px;
+      color: #c62828;
+    }
+
+    .yolo-confidence {
+      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+      padding: 12px;
+      border-radius: 6px;
+      border-left: 4px solid #3b82f6;
+      font-size: 13px;
+      color: #1e40af;
+    }
+
+    .images-preview {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .image-box {
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #f5f5f5;
+    }
+
+    .image-box p {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      z-index: 10;
+    }
+
+    .image-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      border-radius: 8px;
+      transition: transform 0.3s ease;
+    }
+
+    .image-box:hover img {
+      transform: scale(1.05);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #999;
+    }
+
+    .empty-state p {
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 32px;
+      }
+
+      .upload-section {
+        padding: 25px;
+      }
+
+      .upload-area {
+        padding: 25px;
+      }
+
+      .crops-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .images-preview {
+        grid-template-columns: 1fr;
+      }
+
+      button {
+        padding: 10px 24px;
+        font-size: 14px;
+      }
+    }
+
+    #fileName {
+      color: #667eea;
+      font-weight: 600;
+      margin-top: 10px;
       font-size: 14px;
     }
   </style>
 </head>
 
 <body>
+  <div class="container">
+    <div class="header">
+      <h1>🐟 Fish Detection & Analysis</h1>
+      <p>Advanced AI-powered fish species identification, disease detection, and visual analysis</p>
+    </div>
 
-  <h2>🐟 YOLO + Species + Disease + Grad-CAM (Localhost)</h2>
+    <div class="upload-section">
+      <div class="upload-area" id="uploadArea" onclick="document.getElementById('imageInput').click()">
+        <div class="upload-icon">📸</div>
+        <p>Click to upload or drag and drop</p>
+        <span>PNG, JPG, GIF up to 10MB</span>
+      </div>
+      <input type="file" id="imageInput" accept="image/*" />
+      <div id="fileName"></div>
+      <div class="button-group">
+        <button class="btn-primary" id="sendBtn" onclick="sendImage()" disabled>
+          ⚡ Analyze Image
+        </button>
+        <button class="btn-secondary" onclick="clearForm()">
+          🔄 Clear
+        </button>
+      </div>
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>Analyzing image... This may take a moment</p>
+      </div>
+    </div>
 
-  <input type="file" id="imageInput" />
-  <br><br>
-  <button onclick="sendImage()">Send Image</button>
-
-  <hr>
-
-  <h3>YOLO Full Image</h3>
-  <div id="yoloResult"></div>
-
-  <h3>Detected Fish</h3>
-  <div id="cropsResult"></div>
+    <div id="resultsContainer"></div>
+  </div>
 
   <script>
-    const BASE_URL = "https://localhost:3000";
+    const BASE_URL = "https://kyanmahajan-fish-pred.hf.space";
+    const imageInput = document.getElementById("imageInput");
+    const uploadArea = document.getElementById("uploadArea");
+    const sendBtn = document.getElementById("sendBtn");
+    const loading = document.getElementById("loading");
+    const resultsContainer = document.getElementById("resultsContainer");
+    const fileNameDisplay = document.getElementById("fileName");
+
+    // Drag and drop functionality
+    uploadArea.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      uploadArea.classList.add("dragover");
+    });
+
+    uploadArea.addEventListener("dragleave", () => {
+      uploadArea.classList.remove("dragover");
+    });
+
+    uploadArea.addEventListener("drop", (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove("dragover");
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        imageInput.files = files;
+        onImageSelected();
+      }
+    });
+
+    imageInput.addEventListener("change", onImageSelected);
+
+    function onImageSelected() {
+      if (imageInput.files.length > 0) {
+        const fileName = imageInput.files[0].name;
+        const fileSize = (imageInput.files[0].size / (1024 * 1024)).toFixed(2);
+        fileNameDisplay.textContent = `✓ Selected: ${fileName} (${fileSize}MB)`;
+        sendBtn.disabled = false;
+      }
+    }
+
+    function clearForm() {
+      imageInput.value = "";
+      fileNameDisplay.textContent = "";
+      sendBtn.disabled = true;
+      resultsContainer.innerHTML = "";
+    }
 
     async function sendImage() {
-      const input = document.getElementById("imageInput");
-      if (!input.files.length) {
+      if (!imageInput.files.length) {
         alert("Please select an image");
         return;
       }
 
-      const formData = new FormData();
-      formData.append("image", input.files[0]);
+      sendBtn.disabled = true;
+      loading.style.display = "block";
+      resultsContainer.innerHTML = "";
 
-      const response = await fetch(`${BASE_URL}/predict`, {
-        method: "POST",
-        body: formData
-      });
+      try {
+        const formData = new FormData();
+        formData.append("image", imageInput.files[0]);
 
-      const data = await response.json();
-      console.log(data);
+        const response = await fetch(`${BASE_URL}/predict`, {
+          method: "POST",
+          body: formData
+        });
 
-      // Show YOLO annotated image
-      document.getElementById("yoloResult").innerHTML = `
-        <img src="${BASE_URL}${data.yolo_image_url}" />
-      `;
+        if (!response.ok) throw new Error("API request failed");
 
-      const cropsDiv = document.getElementById("cropsResult");
-      cropsDiv.innerHTML = "";
+        const data = await response.json();
+        console.log(data);
 
-      for (const crop of Object.values(data.crops)) {
-        const div = document.createElement("div");
-        div.className = "crop";
-
-        div.innerHTML = `
-          <div class="label">🐟 Species: ${crop.species.label}</div>
-          <div class="confidence">
-            Species Confidence: ${(crop.species.confidence * 100).toFixed(2)}%
-          </div>
-
-          <div class="disease">
-            🦠 Disease: <strong>${crop.disease.label}</strong><br>
-            Confidence: ${(crop.disease.confidence * 100).toFixed(2)}%
-          </div>
-
-          <div class="confidence">
-            YOLO Confidence: ${(crop.yolo_confidence * 100).toFixed(2)}%
-          </div>
-
-          <div class="images">
-            <div>
-              <p>Crop</p>
-              <img src="${BASE_URL}${crop.crop_url}" />
-            </div>
-
-            <div>
-              <p>Species Grad-CAM</p>
-              <img src="${BASE_URL}${crop.species.gradcam_url}" />
-            </div>
-
-            <div>
-              <p>Disease Grad-CAM</p>
-              <img src="${BASE_URL}${crop.disease.gradcam_url}" />
-            </div>
+        // Build results HTML
+        let resultsHTML = `
+          <div class="yolo-container">
+            <h3>🎯 Full Image Detection</h3>
+            <img src="${BASE_URL}${data.yolo_image_url}" alt="YOLO Detection" />
           </div>
         `;
 
-        cropsDiv.appendChild(div);
+        if (Object.keys(data.crops).length > 0) {
+          resultsHTML += `<div style="background: white; border-radius: 12px; padding: 30px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15); margin-bottom: 30px;">
+            <h3 style="color: #667eea; margin-bottom: 20px; font-size: 22px;">🐟 Detected Fish (${Object.keys(data.crops).length})</h3>
+            <div class="crops-grid">`;
+
+          for (const [index, crop] of Object.entries(data.crops)) {
+            const speciesConf = (crop.species.confidence * 100).toFixed(2);
+            const diseaseConf = (crop.disease.confidence * 100).toFixed(2);
+            const yoloConf = (crop.yolo_confidence * 100).toFixed(2);
+
+            resultsHTML += `
+              <div class="crop-card">
+                <div class="crop-header">
+                  <span class="fish-icon">🐠</span>
+                  <h4>${crop.species.label}</h4>
+                </div>
+                <div class="crop-content">
+                  <div class="species-info">
+                    <div class="info-label">Species</div>
+                    <div class="info-value">${crop.species.label}</div>
+                    <div class="confidence-bar">
+                      <div class="confidence-fill" style="width: ${speciesConf}%"></div>
+                    </div>
+                    <div class="info-label" style="margin-top: 8px;">Confidence: ${speciesConf}%</div>
+                  </div>
+
+                  <div class="disease-alert">
+                    <div class="label">🦠 Disease Status</div>
+                    <div class="value">${crop.disease.label}</div>
+                    <div class="confidence">Confidence: ${diseaseConf}%</div>
+                  </div>
+
+                  <div class="yolo-confidence">
+                    <strong>Detection Confidence:</strong> ${yoloConf}%
+                  </div>
+
+                  <div class="images-preview">
+                    <div class="image-box">
+                      <p>Crop</p>
+                      <img src="${BASE_URL}${crop.crop_url}" alt="Fish Crop" loading="lazy" />
+                    </div>
+                    <div class="image-box">
+                      <p>Species Analysis</p>
+                      <img src="${BASE_URL}${crop.species.gradcam_url}" alt="Species Grad-CAM" loading="lazy" />
+                    </div>
+                    <div class="image-box">
+                      <p>Disease Analysis</p>
+                      <img src="${BASE_URL}${crop.disease.gradcam_url}" alt="Disease Grad-CAM" loading="lazy" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+
+          resultsHTML += `</div></div>`;
+        } else {
+          resultsHTML += `
+            <div class="empty-state">
+              <p>ℹ️ No fish detected in this image</p>
+              <p style="font-size: 14px;">Try uploading an image with fish for analysis</p>
+            </div>
+          `;
+        }
+
+        resultsContainer.innerHTML = resultsHTML;
+        resultsContainer.classList.add("show");
+      } catch (error) {
+        resultsContainer.innerHTML = `
+          <div style="background: white; border-radius: 12px; padding: 30px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15); text-align: center; color: #e63946;">
+            <p style="font-size: 18px; font-weight: 600;">❌ Error during analysis</p>
+            <p>${error.message}</p>
+          </div>
+        `;
+        resultsContainer.classList.add("show");
+      } finally {
+        loading.style.display = "none";
+        sendBtn.disabled = false;
       }
     }
   </script>

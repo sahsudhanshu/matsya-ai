@@ -6,8 +6,8 @@ CORS(app)
 
 @app.route("/")
 def index():
-    return render_template("Fish.html")
+    return render_template("Weight.html")
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=7861)
+    app.run(host="0.0.0.0", port=7862)
 
