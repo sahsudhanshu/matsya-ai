@@ -1,0 +1,30 @@
+{
+  "name": "ai-for-bharat-backend",
+  "version": "1.0.0",
+  "description": "Node.js Lambda backend for AI-Powered Fisherman's Assistant",
+  "main": "index.js",
+  "scripts": {
+    "go": "nodemon server.js",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-polly": "^3.1000.0",
+    "@aws-sdk/client-s3": "^3.0.0",
+    "@aws-sdk/s3-request-presigner": "^3.0.0",
+    "aws-jwt-verify": "^4.0.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "mysql2": "^3.22.2",
+    "serverless-http": "^4.0.0",
+    "uuid": "^9.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "devDependencies": {
+    "fast-check": "^4.5.3",
+    "jest": "^30.2.0",
+    "nodemon": "^3.1.14"
+  }
+}

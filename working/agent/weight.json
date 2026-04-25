@@ -1,0 +1,219 @@
+[
+  {
+    "id": 0,
+    "common_name": "Bangus",
+    "constant_a": 0.008,
+    "constant_b": 3.01,
+    "growth_type": "Isometric"
+  },
+  {
+    "id": 1,
+    "common_name": "Big Head Carp",
+    "constant_a": 0.010,
+    "constant_b": 3.02,
+    "growth_type": "Isometric"
+  },
+  {
+    "id": 2,
+    "common_name": "Black Spotted Barb",
+    "constant_a": 0.015,
+    "constant_b": 3.00,
+    "growth_type": "Isometric"
+  },
+  {
+    "id": 3,
+    "common_name": "Catfish",
+    "constant_a": 0.007,
+    "constant_b": 3.05,
+    "growth_type": "Positive Allometric"
+  },
+  {
+    "id": 4,
+    "common_name": "Climbing Perch",
+    "constant_a": 0.017,
+    "constant_b": 3.05,
+    "growth_type": "Positive Allometric"
+  },
+  {
+    "id": 5,
+    "common_name": "Fourfinger Threadfin",
+    "constant_a": 0.007,
+    "constant_b": 3.04,
+    "growth_type": "Isometric"
+  },
+  {
+    "id": 6,
+    "common_name": "Freshwater Eel",
+    "constant_a": 0.001,
+    "constant_b": 3.20,
+    "growth_type": "Positive Allometric"
+  },
+  {
+    "id": 7,
+    "common_name": "Glass Perchlet",
+    "constant_a": 0.011,
+    "constant_b": 3.08,
+    "growth_type": "Positive Allometric"
+  },
+  {
+    "id": 8,
+    "common_name": "Goby",
+    "constant_a": 0.008,
+    "constant_b": 3.00,
+    "growth_type": "Isometric"
+  },
+  {
+    "id": 9,
+    "common_name": "Gold Fish",
+    "constant_a": 0.015,
+    "constant_b": 3.02,
+    "growth_type": "Isometric"
+  },
+  {
+    "id": 10,
+    "common_name": "Gourami",
+    "constant_a": 0.013,
+    "constant_b": 3.01,
+    "growth_type": "Isometric"
+  },
+  {
+    "id": 11,
+    "common_name": "Grass Carp",
+    "constant_a": 0.011,
+    "constant_b": 3.00,
+    "growth_type": "Isometric"
+  },
+  {
+    "id": 12,
+    "common_name": "Green Spotted Puffer",
+    "constant_a": 0.021,
+    "constant_b": 2.90,
+    "growth_type": "Negative Allometric"
+  },
+  {
+    "id": 13,
+    "common_name": "Indian Carp",
+    "constant_a": 0.010,
+    "constant_b": 3.05,
+    "growth_type": "Positive Allometric"
+  },
+  {
+    "id": 14,
+    "common_name": "Indo-Pacific Tarpon",
+    "constant_a": 0.006,
+    "constant_b": 3.10,
+    "growth_type": "Positive Allometric"
+  },
+  {
+    "id": 15,
+    "common_name": "Jaguar Guapote",
+    "constant_a": 0.015,
+    "constant_b": 3.12,
+    "growth_type": "Positive Allometric"
+  },
+  {
+    "id": 16,
+    "common_name": "Janitor Fish",
+    "constant_a": 0.018,
+    "constant_b": 2.91,
+    "growth_type": "Negative Allometric"
+  },
+  {
+    "id": 17,
+    "common_name": "Knifefish",
+    "constant_a": 0.005,
+    "constant_b": 3.10,
+    "growth_type": "Positive Allometric"
+  },
+  {
+    "id": 18,
+    "common_name": "Long-Snouted Pipefish",
+    "constant_a": 0.0005,
+    "constant_b": 3.30,
+    "growth_type": "Positive Allometric"
+  },
+  {
+    "id": 19,
+    "common_name": "Mosquito Fish",
+    "constant_a": 0.008,
+    "constant_b": 3.13,
+    "growth_type": "Positive Allometric"
+  },
+  {
+    "id": 20,
+    "common_name": "Mudfish",
+    "constant_a": 0.008,
+    "constant_b": 3.01,
+    "growth_type": "Isometric"
+  },
+  {
+    "id": 21,
+    "common_name": "Mullet",
+    "constant_a": 0.009,
+    "constant_b": 2.95,
+    "growth_type": "Negative Allometric"
+  },
+  {
+    "id": 22,
+    "common_name": "Pangasius",
+    "constant_a": 0.008,
+    "constant_b": 3.05,
+    "growth_type": "Positive Allometric"
+  },
+  {
+    "id": 23,
+    "common_name": "Perch",
+    "constant_a": 0.010,
+    "constant_b": 3.01,
+    "growth_type": "Isometric"
+  },
+  {
+    "id": 24,
+    "common_name": "Scat Fish",
+    "constant_a": 0.017,
+    "constant_b": 2.95,
+    "growth_type": "Negative Allometric"
+  },
+  {
+    "id": 25,
+    "common_name": "Silver Barb",
+    "constant_a": 0.013,
+    "constant_b": 3.04,
+    "growth_type": "Isometric"
+  },
+  {
+    "id": 26,
+    "common_name": "Silver Carp",
+    "constant_a": 0.011,
+    "constant_b": 2.98,
+    "growth_type": "Isometric"
+  },
+  {
+    "id": 27,
+    "common_name": "Silver Perch",
+    "constant_a": 0.010,
+    "constant_b": 3.12,
+    "growth_type": "Positive Allometric"
+  },
+  {
+    "id": 28,
+    "common_name": "Snakehead",
+    "constant_a": 0.007,
+    "constant_b": 3.03,
+    "growth_type": "Isometric"
+  },
+  {
+    "id": 29,
+    "common_name": "Tenpounder",
+    "constant_a": 0.005,
+    "constant_b": 3.02,
+    "growth_type": "Isometric"
+  },
+  {
+    "id": 30,
+    "common_name": "Tilapia",
+    "constant_a": 0.016,
+    "constant_b": 3.02,
+    "growth_type": "Isometric"
+  }
+]

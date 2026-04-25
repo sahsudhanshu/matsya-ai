@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>YOLO + Species + Disease + Grad-CAM</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+
+    img {
+      max-width: 260px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+    }
+
+    .crop {
+      border: 1px solid #ddd;
+      padding: 12px;
+      margin: 12px 0;
+      border-radius: 6px;
+      background: #fafafa;
+    }
+
+    .images {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .label {
+      font-weight: bold;
+      font-size: 16px;
+      margin-top: 5px;
+    }
+
+    .confidence {
+      font-size: 14px;
+      color: #555;
+    }
+
+    .disease {
+      margin-top: 6px;
+      padding: 6px;
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h2>🐟 YOLO + Species + Disease + Grad-CAM (Localhost)</h2>
+
+  <input type="file" id="imageInput" />
+  <br><br>
+  <button onclick="sendImage()">Send Image</button>
+
+  <hr>
+
+  <h3>YOLO Full Image</h3>
+  <div id="yoloResult"></div>
+
+  <h3>Detected Fish</h3>
+  <div id="cropsResult"></div>
+
+  <script>
+    const BASE_URL = "https://localhost:3000";
+
+    async function sendImage() {
+      const input = document.getElementById("imageInput");
+      if (!input.files.length) {
+        alert("Please select an image");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("image", input.files[0]);
+
+      const response = await fetch(`${BASE_URL}/predict`, {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await response.json();
+      console.log(data);
+
+      // Show YOLO annotated image
+      document.getElementById("yoloResult").innerHTML = `
+        <img src="${BASE_URL}${data.yolo_image_url}" />
+      `;
+
+      const cropsDiv = document.getElementById("cropsResult");
+      cropsDiv.innerHTML = "";
+
+      for (const crop of Object.values(data.crops)) {
+        const div = document.createElement("div");
+        div.className = "crop";
+
+        div.innerHTML = `
+          <div class="label">🐟 Species: ${crop.species.label}</div>
+          <div class="confidence">
+            Species Confidence: ${(crop.species.confidence * 100).toFixed(2)}%
+          </div>
+
+          <div class="disease">
+            🦠 Disease: <strong>${crop.disease.label}</strong><br>
+            Confidence: ${(crop.disease.confidence * 100).toFixed(2)}%
+          </div>
+
+          <div class="confidence">
+            YOLO Confidence: ${(crop.yolo_confidence * 100).toFixed(2)}%
+          </div>
+
+          <div class="images">
+            <div>
+              <p>Crop</p>
+              <img src="${BASE_URL}${crop.crop_url}" />
+            </div>
+
+            <div>
+              <p>Species Grad-CAM</p>
+              <img src="${BASE_URL}${crop.species.gradcam_url}" />
+            </div>
+
+            <div>
+              <p>Disease Grad-CAM</p>
+              <img src="${BASE_URL}${crop.disease.gradcam_url}" />
+            </div>
+          </div>
+        `;
+
+        cropsDiv.appendChild(div);
+      }
+    }
+  </script>
+
+</body>
+</html>

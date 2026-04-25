@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fish Weight Prediction</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            padding: 40px;
+        }
+        .container {
+            max-width: 420px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            text-align: center;
+        }
+        label {
+            font-weight: bold;
+            margin-top: 10px;
+            display: block;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+        }
+        button {
+            margin-top: 15px;
+            width: 100%;
+            padding: 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 15px;
+            background: #eef;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .error {
+            background: #ffe0e0;
+            color: #900;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🐟 Fish Weight Predictor</h2>
+
+    <label>Species</label>
+    <input id="species" placeholder="e.g. Tilapia, Catfish, Bangus">
+
+    <label>Length1</label>
+    <input id="length1" type="number" step="0.01">
+
+    <label>Length3</label>
+    <input id="length3" type="number" step="0.01">
+
+    <label>Height</label>
+    <input id="height" type="number" step="0.01">
+
+    <label>Width</label>
+    <input id="width" type="number" step="0.01">
+
+    <button onclick="predict()">Predict Weight</button>
+
+    <div id="output" class="result" style="display:none;"></div>
+</div>
+
+<script>
+async function predict() {
+    const output = document.getElementById("output");
+    output.style.display = "none";
+
+    const payload = {
+        species: document.getElementById("species").value,
+        length1: parseFloat(document.getElementById("length1").value),
+        length3: parseFloat(document.getElementById("length3").value),
+        height: parseFloat(document.getElementById("height").value),
+        width: parseFloat(document.getElementById("width").value)
+    };
+
+    try {
+        const response = await fetch("https://localhost:3000", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        output.style.display = "block";
+
+        if (!response.ok) {
+            output.className = "result error";
+            output.innerHTML = `<strong>Error:</strong> ${data.error}`;
+        } else {
+            output.className = "result";
+            output.innerHTML = `
+                <strong>Input Species:</strong> ${data.input_species}<br>
+                <strong>Mapped Species:</strong> ${data.mapped_species}<br>
+                <strong>Predicted Weight:</strong> ${data.predicted_weight_grams} g
+            `;
+        }
+
+    } catch (err) {
+        output.style.display = "block";
+        output.className = "result error";
+        output.innerText = "Could not connect to API.";
+    }
+}
+</script>
+
+</body>
+</html>

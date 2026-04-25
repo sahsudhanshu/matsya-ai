@@ -1,0 +1,52 @@
+{
+  "sections": [
+    {
+      "id": "getting-started",
+      "title": "Getting Started",
+      "icon": "rocket-outline",
+      "content": "# Getting Started with OceanAI\n\nWelcome to OceanAI, your AI-powered fishing assistant! This guide will help you get started with the app.\n\n## Quick Start\n\n1. **Upload a Photo**: Take or select a photo of your catch\n2. **Get Analysis**: Our AI analyzes species, weight, freshness, and quality\n3. **View Insights**: Get market prices, sustainability info, and recommendations\n4. **Track History**: All your catches are saved in the History tab\n\n## Key Features\n\n- **Fish Detection**: Identify species with high accuracy\n- **Disease Detection**: Spot diseases early to protect your catch\n- **Weight Estimation**: Get accurate weight estimates\n- **Freshness Assessment**: Know the quality grade of your fish\n- **Market Insights**: See current market prices\n- **Ocean Data**: Access weather, tides, and fishing zones\n- **AI Assistant**: Chat with our AI for fishing advice"
+    },
+    {
+      "id": "upload-analysis",
+      "title": "Upload & Analysis",
+      "icon": "camera-outline",
+      "content": "# Upload & Analysis\n\n## Single Image Upload\n\n1. Tap the **Upload** tab\n2. Choose **Camera** or **Gallery**\n3. Take/select a clear photo of the fish\n4. Wait for AI analysis (usually 5-10 seconds)\n5. View detailed results\n\n## Group Analysis\n\nFor multiple fish:\n\n1. Tap **Group Upload**\n2. Select 2-20 images\n3. Get aggregate statistics\n4. View individual results\n\n## Best Practices\n\n- Use good lighting\n- Capture the entire fish\n- Avoid blurry images\n- Include a reference object for scale\n- Take photos from the side view"
+    },
+    {
+      "id": "map-features",
+      "title": "Map & Ocean Data",
+      "icon": "map-outline",
+      "content": "# Map & Ocean Data\n\n## Weather Layers\n\nView real-time weather data:\n\n- **Temperature**: Sea surface temperature\n- **Wind**: Wind speed and direction\n- **Pressure**: Atmospheric pressure\n- **Clouds**: Cloud coverage\n\n## Disaster Alerts\n\n- View active cyclone, tsunami, and storm warnings\n- Check your safety status\n- Get notifications for nearby alerts\n\n## Fisherman Tools\n\n- **Sunrise/Sunset**: Plan your fishing trips\n- **Moon Phase**: Track lunar cycles\n- **Tides**: High and low tide times\n- **Best Fishing Times**: AI-recommended fishing windows\n\n## Zone Insights\n\n- View fishing recommendations by zone\n- See recent catch activity\n- Check target species and conditions"
+    },
+    {
+      "id": "chat-assistant",
+      "title": "AI Chat Assistant",
+      "icon": "chatbubbles-outline",
+      "content": "# AI Chat Assistant\n\n## How to Use\n\n1. Open the **Chat** tab\n2. Type your question or use voice input\n3. Get instant AI-powered responses\n4. Reference your catch analyses in conversations\n\n## What You Can Ask\n\n- Fishing techniques and tips\n- Species identification help\n- Disease treatment advice\n- Market price trends\n- Weather and ocean conditions\n- Sustainability questions\n- Equipment recommendations\n\n## Features\n\n- **Voice Input**: Speak your questions\n- **Text-to-Speech**: Listen to responses\n- **Conversation History**: Review past chats\n- **Analysis References**: Link to your catches\n- **Multilingual**: Chat in your language"
+    },
+    {
+      "id": "analytics",
+      "title": "Analytics & Reports",
+      "icon": "stats-chart-outline",
+      "content": "# Analytics & Reports\n\n## Dashboard Metrics\n\nTrack your fishing performance:\n\n- **Total Earnings**: Revenue from catches\n- **Total Catches**: Number of fish analyzed\n- **Total Weight**: Combined weight of all catches\n- **Top Species**: Your most caught species\n\n## Charts & Trends\n\n- **Weekly Earnings**: Track income over time\n- **Species Breakdown**: Pie chart of species distribution\n- **Quality Distribution**: Grade distribution of catches\n\n## PDF Reports\n\nGenerate professional reports:\n\n1. Open **Analytics** tab\n2. Tap **Export PDF**\n3. Share with buyers or cooperatives\n\nReports include:\n- Summary statistics\n- Species breakdown\n- Weekly trends\n- Catch history"
+    },
+    {
+      "id": "settings",
+      "title": "Settings & Profile",
+      "icon": "settings-outline",
+      "content": "# Settings & Profile\n\n## Profile Management\n\n- Edit your name, phone, and location\n- Upload profile avatar\n- Set fishing port and region\n- Configure public profile\n\n## Preferences\n\n- **Language**: Choose from 6 Indian languages\n- **Units**: Select kg, lb, or grams\n- **Notifications**: Manage alert preferences\n- **Offline Sync**: Auto-sync when online\n\n## Public Profile\n\n- Enable public profile sharing\n- Generate shareable link\n- Show/hide statistics\n- QR code for easy sharing\n\n## Privacy & Security\n\n- Change password\n- Export your data (CSV)\n- Delete account\n- Manage data sync"
+    },
+    {
+      "id": "tips-tricks",
+      "title": "Tips & Tricks",
+      "icon": "bulb-outline",
+      "content": "# Tips & Tricks\n\n## Photography Tips\n\n- **Lighting**: Natural daylight works best\n- **Background**: Use a plain, contrasting surface\n- **Angle**: Side view captures most details\n- **Distance**: Fill 70-80% of frame with fish\n- **Focus**: Ensure the fish is sharp and clear\n\n## Accuracy Tips\n\n- Clean the fish before photographing\n- Include a ruler or coin for scale\n- Capture both sides if possible\n- Avoid shadows on the fish\n- Take multiple photos for group analysis\n\n## Offline Mode\n\n- Download maps for offline use\n- Cache recent analyses\n- Queue uploads when offline\n- Auto-sync when connection restored\n\n## Battery Saving\n\n- Disable unused weather layers\n- Reduce map refresh rate\n- Use offline mode when possible\n- Close unused conversations"
+    },
+    {
+      "id": "faq",
+      "title": "FAQ",
+      "icon": "help-circle-outline",
+      "content": "# Frequently Asked Questions\n\n## General\n\n**Q: Is OceanAI free to use?**\nA: Yes, OceanAI is completely free for fishermen.\n\n**Q: Does it work offline?**\nA: Partial offline support. Analysis requires internet, but you can view cached data offline.\n\n**Q: Which languages are supported?**\nA: English, Hindi, Bengali, Tamil, Telugu, and Marathi.\n\n## Analysis\n\n**Q: How accurate is the species detection?**\nA: Our AI achieves 95%+ accuracy on common Indian fish species.\n\n**Q: Can I analyze multiple fish at once?**\nA: Yes, use Group Upload to analyze 2-20 fish together.\n\n**Q: Why is my analysis taking long?**\nA: Slow internet or server load. Try again in a few moments.\n\n## Privacy\n\n**Q: Is my data secure?**\nA: Yes, all data is encrypted and stored securely on AWS.\n\n**Q: Can I delete my account?**\nA: Yes, go to Settings > Privacy > Delete Account.\n\n**Q: Who can see my catches?**\nA: Only you, unless you enable public profile sharing."
+    }
+  ]
+}

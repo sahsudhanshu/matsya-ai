@@ -1,0 +1,114 @@
+{
+    "Comment": "IAM Policies for AI-Powered Fisherman's Assistant Lambda functions",
+    "LambdaExecutionRole": {
+        "PolicyName": "ai-bharat-lambda-policy",
+        "Description": "Least-privilege IAM policy for all Lambda functions",
+        "PolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Sid": "DynamoDBAccess",
+                    "Effect": "Allow",
+                    "Action": [
+                        "dynamodb:GetItem",
+                        "dynamodb:PutItem",
+                        "dynamodb:UpdateItem",
+                        "dynamodb:DeleteItem",
+                        "dynamodb:Query",
+                        "dynamodb:BatchGetItem"
+                    ],
+                    "Resource": [
+                        "arn:aws:dynamodb:ap-south-1:*:table/ai-bharat-users",
+                        "arn:aws:dynamodb:ap-south-1:*:table/ai-bharat-images",
+                        "arn:aws:dynamodb:ap-south-1:*:table/ai-bharat-images/index/*",
+                        "arn:aws:dynamodb:ap-south-1:*:table/ai-bharat-chats",
+                        "arn:aws:dynamodb:ap-south-1:*:table/ai-bharat-chats/index/*"
+                    ]
+                },
+                {
+                    "Sid": "S3PresignedURLAccess",
+                    "Effect": "Allow",
+                    "Action": [
+                        "s3:PutObject",
+                        "s3:GetObject",
+                        "s3:DeleteObject"
+                    ],
+                    "Resource": "arn:aws:s3:::ai-bharat-fish-images/*"
+                },
+                {
+                    "Sid": "S3BucketAccess",
+                    "Effect": "Allow",
+                    "Action": [
+                        "s3:ListBucket"
+                    ],
+                    "Resource": "arn:aws:s3:::ai-bharat-fish-images"
+                },
+                {
+                    "Sid": "CloudWatchLogs",
+                    "Effect": "Allow",
+                    "Action": [
+                        "logs:CreateLogGroup",
+                        "logs:CreateLogStream",
+                        "logs:PutLogEvents"
+                    ],
+                    "Resource": "arn:aws:logs:ap-south-1:*:log-group:/aws/lambda/*"
+                }
+            ]
+        }
+    },
+    "S3BucketPolicy": {
+        "Comment": "Apply to S3 bucket ai-bharat-fish-images to block public access",
+        "BlockPublicAcls": true,
+        "IgnorePublicAcls": true,
+        "BlockPublicPolicy": true,
+        "RestrictPublicBuckets": true,
+        "CORSConfiguration": {
+            "CORSRules": [
+                {
+                    "AllowedHeaders": [
+                        "*"
+                    ],
+                    "AllowedMethods": [
+                        "GET",
+                        "PUT",
+                        "POST"
+                    ],
+                    "AllowedOrigins": [
+                        "https://your-amplify-domain.amplifyapp.com"
+                    ],
+                    "ExposeHeaders": [
+                        "ETag"
+                    ],
+                    "MaxAgeSeconds": 3000
+                }
+            ]
+        }
+    },
+    "CognitoUserPoolConfig": {
+        "PoolName": "ai-bharat-users",
+        "Mfa": "OFF",
+        "PasswordPolicy": {
+            "MinimumLength": 8,
+            "RequireUppercase": false,
+            "RequireLowercase": true,
+            "RequireNumbers": true,
+            "RequireSymbols": false
+        },
+        "AutoVerifiedAttributes": [],
+        "UsernameAttributes": [
+            "email"
+        ],
+        "Schema": [
+            {
+                "Name": "email",
+                "Required": true,
+                "Mutable": true
+            },
+            {
+                "Name": "name",
+                "Required": false,
+                "Mutable": true
+            }
+        ]
+    }
+}

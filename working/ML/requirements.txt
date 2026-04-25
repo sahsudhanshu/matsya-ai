@@ -1,0 +1,10 @@
+flask
+flask-cors
+torch
+torchvision
+pillow
+numpy
+matplotlib
+opencv-python-headless
+ultralytics
+git+https://github.com/jacobgil/pytorch-grad-cam.git
