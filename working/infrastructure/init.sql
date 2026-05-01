@@ -1,5 +1,3 @@
--- MySQL Schema for AI-Powered Fisherman's Assistant
--- Run this file once to create all tables.
 
 CREATE TABLE IF NOT EXISTS users (
     userId VARCHAR(255) PRIMARY KEY,

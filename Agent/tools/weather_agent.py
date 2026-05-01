@@ -16,8 +16,8 @@ BEAUFORT_DESCRIPTIONS = [
     (5.5, 7.9, "तेज़ बयार (Moderate breeze)", "Small waves, frequent whitecaps"),
     (8.0, 10.7, "ताज़ा हवा (Fresh breeze)", "Moderate waves - be cautious!"),
     (10.8, 13.8, "तेज़ हवा (Strong breeze)", "Large waves - avoid deep sea!"),
-    (13.9, 17.1, "भारी हवा (Near gale)", "⚠️ Dangerous - return to shore!"),
-    (17.2, 100, "तूफ़ान (Gale+)", "🚨 DANGER - DO NOT GO TO SEA!"),
+    (13.9, 17.1, "भारी हवा (Near gale)", " Dangerous - return to shore!"),
+    (17.2, 100, "तूफ़ान (Gale+)", " DANGER - DO NOT GO TO SEA!"),
 ]
 
 def _wind_advisory(speed_ms: float) -> str:
@@ -93,7 +93,7 @@ async def weather_agent(lat:float,long:float,place:Optional[str]=None) -> str:
         final_output.append(f"  🌧️ Rain (last 1h): {rain_1h} mm")
 
     # ── Forecast ─────────────────────────────────────────────────────────
-    final_output.append("\n📅 **Next 12-Hour Forecast**:")
+    final_output.append("\n **Next 12-Hour Forecast**:")
     for entry in forecast_json.get("list", []):
         dt_txt = entry.get("dt_txt", "")
         f_temp = entry["main"]["temp"]

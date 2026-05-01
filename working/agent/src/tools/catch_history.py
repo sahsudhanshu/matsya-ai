@@ -8,7 +8,7 @@ from __future__ import annotations
 import json
 from typing import Optional
 from langchain_core.tools import tool
-
+import asyncio
 from src.config.settings import CATCH_HISTORY_PAGE_SIZE
 from src.utils.db import fetchall
 
@@ -32,7 +32,7 @@ async def get_catch_history(
     Args:
         page: Page number (1-based). Default 1.
         limit: Max results per page. Default from settings.
-        user_id: Auto-injected by the system. Do not provide.
+        user_id: Auto-injected by the system. Do not provide.asyncio.run(get_catch_history(page=1, user_id="f1933d6a-2021-7081-47c5-d51cf609a264"))
     """
     print(f"🐟  [TOOL] get_catch_history called → user_id={user_id!r}, page={page}")
     page_size = limit or CATCH_HISTORY_PAGE_SIZE
@@ -43,6 +43,9 @@ async def get_catch_history(
             "SELECT * FROM images WHERE userId = %s ORDER BY createdAt DESC LIMIT %s",
             (user_id, fetch_limit),
         )
+        print("items")
+
+        print(items)
     except Exception as e:
         return f"⚠️ Could not fetch catch history: {e}"
 
@@ -80,3 +83,4 @@ async def get_catch_history(
         lines.append(f"\n  → More records available. Ask for page {page + 1}.")
 
     return "\n".join(lines)
+asyncio.run(get_catch_history(page=1, user_id="f1933d6a-2021-7081-47c5-d51cf609a264"))

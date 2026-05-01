@@ -12,9 +12,9 @@ def _get_field(item: dict, ar: dict, key: str, default=None):
     """Read from nested analysisResult first, then fall back to top-level (legacy)."""
     return ar.get(key, item.get(key, default))
 
+# async def get_catch_details(image_id: str, user_id: str = "") -> str:
 
-@tool
-async def get_catch_details(image_id: str, user_id: str = "") -> str:
+async def get_catch_details(image_id: str) -> str:
     """
     Get the detailed analysis of a specific catch (fish upload) using its image_id.
     This provides detailed metrics like length, weight, quality grade, and market value.
@@ -28,14 +28,15 @@ async def get_catch_details(image_id: str, user_id: str = "") -> str:
 
     try:
         item = fetchone("SELECT * FROM images WHERE imageId = %s", (image_id,))
+        print(item)
     except Exception as e:
         return f"⚠️ Could not fetch details for catch {image_id}: {e}"
 
     if not item:
         return f"Could not find any catch record with ID {image_id}."
 
-    if item.get("userId") != user_id:
-        return f"You do not have permission to view catch {image_id}."
+    # if item.get("userId") != user_id:
+    #     return f"You do not have permission to view catch {image_id}."
 
     # Parse JSON analysisResult from MySQL
     if item.get("analysisResult") and isinstance(item["analysisResult"], str):
