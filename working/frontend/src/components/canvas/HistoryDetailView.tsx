@@ -253,7 +253,7 @@ export default function HistoryDetailView({
       if (group.latitude && group.longitude) {
         cursorY += 5;
         doc.text(
-          `Location: ${group.latitude.toFixed(6)}, ${group.longitude.toFixed(6)} (Ocean)`,
+          `Location: ${Number(group.latitude).toFixed(6)}, ${Number(group.longitude).toFixed(6)} (Ocean)`,
           14,
           cursorY,
         );
@@ -511,7 +511,7 @@ export default function HistoryDetailView({
             {group.latitude && group.longitude && (
               <div className="absolute top-3 left-3 flex items-center gap-1 px-2 py-1 rounded-full bg-black/40 backdrop-blur-sm text-white text-[9px] font-mono">
                 <MapPin className="w-2.5 h-2.5 text-emerald-400" />
-                {group.latitude.toFixed(4)}°N, {group.longitude.toFixed(4)}°E
+                {Number(group.latitude).toFixed(4)}°N, {Number(group.longitude).toFixed(4)}°E
               </div>
             )}
           </div>
@@ -914,7 +914,7 @@ export default function HistoryDetailView({
                 <CardContent className="p-3">
                   <div className="h-[200px] rounded-xl overflow-hidden border border-border/10 mb-2">
                     <MapContainer
-                      center={[group.latitude, group.longitude]}
+                      center={[Number(group.latitude), Number(group.longitude)]}
                       zoom={10}
                       style={{ height: "100%", width: "100%" }}
                       zoomControl={false}
@@ -923,15 +923,15 @@ export default function HistoryDetailView({
                         url="https://mt1.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}"
                         attribution="Google Maps"
                       />
-                      <Marker position={[group.latitude, group.longitude]}>
+                      <Marker position={[Number(group.latitude), Number(group.longitude)]}>
                         <Popup>Scan location</Popup>
                       </Marker>
                     </MapContainer>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] text-muted-foreground/70 font-mono">
-                      Lat: {group.latitude.toFixed(4)}, Lng:{" "}
-                      {group.longitude.toFixed(4)}
+                      Lat: {Number(group.latitude).toFixed(4)}, Lng:{" "}
+                      {Number(group.longitude).toFixed(4)}
                     </span>
                     <Button
                       variant="ghost"
