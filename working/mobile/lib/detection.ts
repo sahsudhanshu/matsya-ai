@@ -14,13 +14,19 @@ import { loadTensorflowModel, TensorflowModel } from "react-native-fast-tflite";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as jpeg from "jpeg-js";
 import * as FileSystem from "expo-file-system/legacy";
+import { Asset } from "expo-asset";
+
+// ── Bundled model assets (resolved by Metro at build time) ────────────────────
+// Must be top-level static requires so Metro bundles the .tflite files.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const _BUNDLED_DETECTION_MODEL = require('../assets/models/detection_float32.tflite') as number;
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
 const MODEL_INPUT_SIZE = 256;
 const NUM_CLASSES = 4;
 const NUM_DETECTIONS = 1344;
-const CONFIDENCE_THRESHOLD = 0.30;
+const CONFIDENCE_THRESHOLD = 0.3;
 const IOU_THRESHOLD = 0.45;
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -52,37 +58,43 @@ const MAX_RUN_RETRIES = 1;
 
 /**
  * Resolve the on-device path for a model file.
- * Models are deployed via ADB into the app's internal files/models/ directory.
- * Run `npm run deploy-models` (or `scripts/deploy-models.sh`) to push them.
+ * Used as a fallback if bundled models cannot be loaded.
  */
 export function getModelDevicePath(filename: string): string {
   const base =
     FileSystem.documentDirectory ??
-    "file:///data/user/0/com.aiforbharat.oceanai/files/";
+    "file:///data/user/0/com.aiforbharat.mastyaai/files/";
   return `${base}models/${filename}`;
 }
 
 export async function loadModel(): Promise<void> {
   if (_model) return;
-  // Prevent concurrent loads – reuse in-flight promise
   if (_loadingPromise) return _loadingPromise;
+
   _loadingPromise = (async () => {
     try {
+      // Primary: load from Metro-bundled asset
+      console.log('[Detection] Loading bundled detection model...');
+      _model = await loadTensorflowModel(_BUNDLED_DETECTION_MODEL);
+      _loadedModelUri = 'bundled:detection_float32.tflite';
+      console.log('[Detection] Detection model loaded from app bundle');
+    } catch (bundleErr) {
+      // Fallback: device storage (dev ADB-deployed)
+      console.warn('[Detection] Bundle load failed, trying file system fallback...', bundleErr);
       const modelUri = getModelDevicePath(MODEL_FILENAME);
-      const info = await FileSystem.getInfoAsync(modelUri);
-      if (!info.exists) {
-        throw new Error(
-          `Detection model not found at ${modelUri}.\n` +
-            `Deploy models to device first:\n  npm run deploy-models`,
-        );
+      try {
+        const info = await FileSystem.getInfoAsync(modelUri);
+        if (!info.exists) {
+          throw new Error(`Detection model not found in bundle or at ${modelUri}.`);
+        }
+
+        console.log(`[Detection] Loading model from ${modelUri} ...`);
+        _model = await loadTensorflowModel({ url: modelUri });
+        _loadedModelUri = modelUri;
+      } catch (fallbackErr) {
+        console.error("[Detection] Failed to load model from all sources:", fallbackErr);
+        throw fallbackErr;
       }
-      console.log(`[Detection] Loading model from ${modelUri}`);
-      _model = await loadTensorflowModel({ url: modelUri });
-      _loadedModelUri = modelUri;
-      console.log(`[Detection] TFLite model loaded successfully`);
-    } catch (err) {
-      console.error("[Detection] Failed to load model:", err);
-      throw err;
     } finally {
       _loadingPromise = null;
     }
@@ -160,7 +172,7 @@ async function imageToTensor(imageUri: string): Promise<Float32Array> {
     formatAsRGBA: false, // returns RGB (3 bytes/pixel)
   });
 
-  // 3. Normalise to [0, 1] - input shape [1, 256, 256, 3]
+  // 3. Normalise to [0, 1] — input shape [1, 256, 256, 3]
   const float32 = new Float32Array(MODEL_INPUT_SIZE * MODEL_INPUT_SIZE * 3);
   for (let i = 0; i < pixels.length; i++) {
     float32[i] = pixels[i] / 255.0;
@@ -273,21 +285,44 @@ export async function runDetection(imageUri: string): Promise<BoundingBox[]> {
 
   const tStart = Date.now();
   const inputTensor = await imageToTensor(imageUri);
+
+  if (!inputTensor || inputTensor.length === 0) {
+    throw new Error("Produced empty input tensor for detection");
+  }
+
   const tPre = Date.now();
 
-  let outputs: Awaited<ReturnType<TensorflowModel["run"]>>;
+  let outputs: any[];
   for (let attempt = 0; ; attempt++) {
     try {
-      outputs =  _model!.runSync([inputTensor]);
+      // If we are retrying after a JSI error, add a small delay to let native side recover
+      if (attempt > 0) {
+        await new Promise((resolve) => setTimeout(resolve, 150));
+      }
+
+      // Ensure we pass exactly what the bridge expects
+      outputs = await _model!.run([inputTensor]);
+
+      if (!outputs || outputs.length === 0) {
+        throw new Error("Model execution returned no outputs");
+      }
       break;
     } catch (runErr) {
-      if (attempt < MAX_RUN_RETRIES && isNativeHandleError(runErr)) {
+      const isStale = isNativeHandleError(runErr);
+      const canRetry = attempt < 2; // Increase retries to 2 for better stability
+
+      if (canRetry && isStale) {
         console.warn(
-          `[Detection] Native handle stale (attempt ${attempt + 1}), reloading model…`,
+          `[Detection] Native handle error (attempt ${attempt + 1}), reloading model and retrying…`,
         );
         await reloadModel();
         continue;
       }
+
+      console.error(
+        `[Detection] Inference failed at attempt ${attempt + 1}:`,
+        runErr,
+      );
       throw runErr;
     }
   }

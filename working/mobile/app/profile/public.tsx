@@ -203,7 +203,7 @@ export default function PublicProfilePreviewScreen() {
         {/* Footer */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            Powered by OceanAI - AI for Bharat Fishermen
+            Powered by Matsya AI - AI for Bharat Fishermen
           </Text>
         </View>
       </ScrollView>

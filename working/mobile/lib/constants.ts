@@ -118,12 +118,12 @@ export const ENDPOINTS = {
 };
 
 // ── App Config ───────────────────────────────────────────────────────────────
-export const APP_NAME = "OceanAI";
+export const APP_NAME = "Matsya AI";
 export const APP_TAGLINE = "AI for Bharat Fishermen";
 
 // Telegram Bot Configuration
 export const TELEGRAM_BOT_USERNAME =
-  process.env.EXPO_PUBLIC_TELEGRAM_BOT_USERNAME || "OceanAICompanionBot";
+  process.env.EXPO_PUBLIC_TELEGRAM_BOT_USERNAME || "Matsya AICompanionBot";
 
 export const FISH_SPECIES = [
   "All Species",

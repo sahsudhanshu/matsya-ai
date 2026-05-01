@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect } from "react";
+
 import {
   View,
   Text,
@@ -13,7 +14,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router, useFocusEffect } from "expo-router";
+import { router } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import {
@@ -65,23 +66,16 @@ import {
 } from "../../lib/offline-inference";
 import { BoundingBoxOverlay } from "../../components/BoundingBoxOverlay";
 import { generateMockSupplement } from "../../lib/species-data";
-import { setAnalysisData, getAnalysisData } from "../../lib/analysis-store";
+import { setAnalysisData } from "../../lib/analysis-store";
 import { toastService } from "../../lib/toast-service";
-import {
-  saveLocalAnalysis,
-  updateLocalDetectionWeight,
-} from "../../lib/local-history";
-import { SyncService } from "../../lib/sync-service";
+import { saveLocalAnalysis } from "../../lib/local-history";
+import { WeightEstimateModal } from "../../components/WeightEstimateModal";
 import { ProfileMenu } from "../../components/ui/ProfileMenu";
 
 const YOLO_CONFIDENCE_THRESHOLD = 0.3;
 const SCREEN_WIDTH = Dimensions.get("window").width;
-const IS_COMPACT_SCREEN = SCREEN_WIDTH < 390;
 
 type Step = "idle" | "uploading" | "processing" | "done" | "error";
-
-const CACHE_HINT_MESSAGE =
-  "If you think this error is incorrect, try clearing your cache and retrying.";
 
 export default function UploadScreen() {
   const { t, locale, isLoaded } = useLanguage();
@@ -109,8 +103,8 @@ export default function UploadScreen() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // ── Detection state ──
-  const [isDetecting, setIsDetecting] = useState(false);
   const [detections, setDetections] = useState<BoundingBox[]>([]);
+  const [isDetecting, setIsDetecting] = useState(false);
   const [detectionTime, setDetectionTime] = useState<number | null>(null);
   const [cropUris, setCropUris] = useState<string[]>([]);
   const [modelError, setModelError] = useState(false);
@@ -142,6 +136,9 @@ export default function UploadScreen() {
   const [tfliteLoading, setTfliteLoading] = useState(false);
   const [tfliteError, setTfliteError] = useState<string | null>(null);
 
+  // ── Weight estimation state ──
+  const [weightModalVisible, setWeightModalVisible] = useState(false);
+  const [weightSpecies, setWeightSpecies] = useState("Tilapia");
   const [uploadGroupId, setUploadGroupId] = useState<string | null>(null);
 
   const refreshModelStatus = () => {
@@ -155,17 +152,6 @@ export default function UploadScreen() {
     setTfliteInfo(getTFLiteModelDebugInfo());
   };
 
-  // Re-sync offlineResults from the store when the tab is focused again.
-  // This ensures weights entered in the detail screen propagate back here.
-  useFocusEffect(
-    useCallback(() => {
-      const stored = getAnalysisData();
-      if (stored?.mode === "offline") {
-        setOfflineResults([...stored.offlineResults]);
-      }
-    }, []),
-  );
-
   // Preload all models on mount
   useEffect(() => {
     // TFLite detection model
@@ -175,7 +161,7 @@ export default function UploadScreen() {
         setModelError(true);
         setModelSource("missing");
         toastService.error(
-          "Detection model unavailable - run: npm run deploy-models",
+          "Detection model failed to load. Please restart the app.",
         );
       });
 
@@ -191,58 +177,27 @@ export default function UploadScreen() {
         const msg = err instanceof Error ? err.message : String(err);
         setTfliteError(msg);
         toastService.error(
-          "Species/disease models unavailable - run: npm run deploy-models",
+          "Species/disease models failed to load. Please restart the app.",
         );
       })
       .finally(() => setTfliteLoading(false));
   }, []);
 
-  // After scan completes → navigate directly to chat with full scan context
+  // Trigger weight modal after species detection
   useEffect(() => {
-    if (step !== "done") return;
+    if (step === "done" && groupAnalysis) {
+      // Check if we have species detected
+      const firstDetection = groupAnalysis.detections?.[0];
 
-    const navigateToChat = () => {
-      if (groupAnalysis) {
-        // Online analysis
-        const speciesList = Object.keys(
-          groupAnalysis.aggregateStats.speciesDistribution,
-        ).join(", ");
-        const detections = groupAnalysis.detections ?? [];
-        const fishSummary = detections
-          .map(
-            (d, i) =>
-              `Fish #${i + 1}: ${d.species} (${(d.confidence * 100).toFixed(0)}% conf, ${d.diseaseStatus})`,
-          )
-          .join("; ");
-
-        const prompt = [
-          `I just scanned ${groupAnalysis.aggregateStats.totalFishCount} fish across ${groupAnalysis.images.length} image(s).`,
-          `Species: ${speciesList}.`,
-          fishSummary ? `Details: ${fishSummary}.` : "",
-          groupAnalysis.aggregateStats.diseaseDetected
-            ? "⚠️ Some fish show signs of disease!"
-            : "All fish appear healthy.",
-          "Please give me a detailed summary with species info, health assessment, and market recommendations.",
-        ]
-          .filter(Boolean)
-          .join(" ");
-
-        router.push({
-          pathname: "/(tabs)/chat",
-          params: {
-            scanComplete: "true",
-            groupId: uploadGroupId || "",
-            scanMode: "online",
-            initialMessage: prompt,
-          },
-        });
+      if (firstDetection?.species) {
+        setWeightSpecies(firstDetection.species);
+        // Small delay to let the UI settle
+        setTimeout(() => {
+          setWeightModalVisible(true);
+        }, 500);
       }
-    };
-
-    // Small delay to let UI settle before navigation
-    const timer = setTimeout(navigateToChat, 800);
-    return () => clearTimeout(timer);
-  }, [step, groupAnalysis, offlineResults, uploadGroupId]);
+    }
+  }, [step, groupAnalysis]);
 
   const handleReloadModel = async () => {
     setIsReloadingModel(true);
@@ -429,18 +384,7 @@ export default function UploadScreen() {
           processingTime,
           imageUri: targetUri,
           location,
-        })
-          .then((record) => {
-            // Patch the local record ID into the store so the detail screen
-            // can update the persisted record when the user enters measurements.
-            const current = getAnalysisData();
-            if (current?.mode === "offline") {
-              current.localRecordId = record.id;
-            }
-            // Push fresh counts to the sync indicator in the header.
-            SyncService.refreshStatus();
-          })
-          .catch((e) => console.warn("[Upload] Local history save failed:", e));
+        }).catch((e) => console.warn("[Upload] Local history save failed:", e));
 
         // Extract detection boxes for the BoundingBoxOverlay
         if (offlineDets.length > 0) {
@@ -471,14 +415,6 @@ export default function UploadScreen() {
             .filter((d) => d.cropUri)
             .map((d) => d.cropUri!);
           setCropUris(crops);
-        } else if (errors && errors.length > 0) {
-          // Inference pipeline hit an error (e.g. TFLite model corruption)
-          // - distinguish from a genuine "no fish" result.
-          console.warn("[Upload] ⚠️ Offline inference errors - not a real detection result");
-          Alert.alert(
-            "Analysis Error",
-            `The on-device model encountered an error.\n\n${CACHE_HINT_MESSAGE}`,
-          );
         } else {
           console.warn("[Upload] ⚠️ No fish detected in image");
           Alert.alert(
@@ -493,11 +429,7 @@ export default function UploadScreen() {
         setIsDetecting(false);
         setStep("error");
         console.error("[Upload] ❌ Offline analysis failed:", e.message);
-        const errorMessage = e.message || t("common.error");
-        Alert.alert(
-          "Offline Analysis Failed",
-          `${errorMessage}\n\n${CACHE_HINT_MESSAGE}`,
-        );
+        Alert.alert("Offline Analysis Failed", e.message || t("common.error"));
       }
     } else if (isMultiImage) {
       // ═══════════════════════════════════════════════════
@@ -550,18 +482,9 @@ export default function UploadScreen() {
         setStep("processing");
         animateProgress(0);
         console.log("[Upload] 🧠 Requesting group analysis…");
-        let isAnalysisComplete = false;
-        const simulateProgress = () => {
-          if (isAnalysisComplete) return;
+        const interval = setInterval(() => {
           setProgress((prev) => {
-            if (prev >= 95) return prev;
-
-            let increment;
-            if (prev < 40) increment = Math.floor(Math.random() * 15) + 5;
-            else if (prev < 75) increment = Math.floor(Math.random() * 8) + 2;
-            else increment = Math.floor(Math.random() * 3) + 1;
-
-            const next = Math.min(prev + increment, 95);
+            const next = Math.min(prev + 8, 85);
             Animated.timing(progressAnim, {
               toValue: next,
               duration: 250,
@@ -569,13 +492,10 @@ export default function UploadScreen() {
             }).start();
             return next;
           });
-          const nextDelay = Math.floor(Math.random() * 400) + 200;
-          setTimeout(simulateProgress, nextDelay);
-        };
-        simulateProgress();
+        }, 400);
 
         const { analysisResult } = await analyzeGroup(groupId);
-        isAnalysisComplete = true;
+        clearInterval(interval);
         animateProgress(100);
 
         // Print raw JSON response
@@ -661,18 +581,9 @@ export default function UploadScreen() {
         setStep("processing");
         animateProgress(0);
         console.log("[Upload] 🧠 Requesting cloud analysis (group API)…");
-        let isAnalysisComplete = false;
-        const simulateProgress = () => {
-          if (isAnalysisComplete) return;
+        const interval = setInterval(() => {
           setProgress((prev) => {
-            if (prev >= 95) return prev;
-
-            let increment;
-            if (prev < 40) increment = Math.floor(Math.random() * 15) + 5;
-            else if (prev < 75) increment = Math.floor(Math.random() * 8) + 2;
-            else increment = Math.floor(Math.random() * 3) + 1;
-
-            const next = Math.min(prev + increment, 95);
+            const next = Math.min(prev + 12, 85);
             Animated.timing(progressAnim, {
               toValue: next,
               duration: 250,
@@ -680,12 +591,9 @@ export default function UploadScreen() {
             }).start();
             return next;
           });
-          const nextDelay = Math.floor(Math.random() * 400) + 200;
-          setTimeout(simulateProgress, nextDelay);
-        };
-        simulateProgress();
+        }, 300);
         const { analysisResult } = await analyzeGroup(groupId);
-        isAnalysisComplete = true;
+        clearInterval(interval);
         animateProgress(100);
 
         // Print raw JSON response
@@ -748,26 +656,6 @@ export default function UploadScreen() {
             location,
           });
 
-          // Persist to local history and attach the record ID to the store
-          saveLocalAnalysis({
-            mode: "offline",
-            offlineResults: offlineDets,
-            processingTime,
-            imageUri: targetUri,
-            location,
-          })
-            .then((record) => {
-              const current = getAnalysisData();
-              if (current?.mode === "offline") {
-                current.localRecordId = record.id;
-              }
-              // Push fresh counts to the sync indicator in the header.
-              SyncService.refreshStatus();
-            })
-            .catch((e) =>
-              console.warn("[Upload] Local history save failed:", e),
-            );
-
           if (offlineDets.length > 0) {
             // Reconstruct boxes for overlay
             const imgDims = await new Promise<{ w: number; h: number }>(
@@ -804,11 +692,9 @@ export default function UploadScreen() {
             fallbackErr.message,
           );
           setStep("error");
-          const cloudErrorMessage = e.message || t("common.error");
-          const offlineErrorMessage = fallbackErr.message || t("common.error");
           Alert.alert(
             "Analysis Failed",
-            `Cloud: ${cloudErrorMessage}\nOffline: ${offlineErrorMessage}\n\n${CACHE_HINT_MESSAGE}`,
+            `Cloud: ${e.message}\nOffline: ${fallbackErr.message}`,
           );
         }
       }
@@ -867,6 +753,46 @@ export default function UploadScreen() {
       : result?.qualityGrade === "Standard"
         ? COLORS.warning
         : COLORS.error;
+
+  // Weight modal handlers
+  const handleWeightComplete = (weightG: number) => {
+    setWeightModalVisible(false);
+
+    // Navigate to chat with analysis context
+    const firstImage = groupAnalysis?.images?.[0];
+    const firstDetection = groupAnalysis?.detections?.[0];
+    const imageUrl =
+      firstImage?.yolo_image_url || imageUris[0] || imageUri || "";
+
+    router.push({
+      pathname: "/(tabs)/chat",
+      params: {
+        analysisId: uploadGroupId || "unknown",
+        species: firstDetection?.species || weightSpecies,
+        imageUrl,
+        weight: weightG.toString(),
+      },
+    });
+  };
+
+  const handleWeightCancel = () => {
+    setWeightModalVisible(false);
+
+    // Navigate to chat without weight
+    const firstImage = groupAnalysis?.images?.[0];
+    const firstDetection = groupAnalysis?.detections?.[0];
+    const imageUrl =
+      firstImage?.yolo_image_url || imageUris[0] || imageUri || "";
+
+    router.push({
+      pathname: "/(tabs)/chat",
+      params: {
+        analysisId: uploadGroupId || "unknown",
+        species: firstDetection?.species || weightSpecies,
+        imageUrl,
+      },
+    });
+  };
 
   if (!isLoaded) return null;
 
@@ -1208,37 +1134,6 @@ export default function UploadScreen() {
         {/* ═══ GROUP ANALYSIS RESULTS ═══ */}
         {groupAnalysis && (
           <View style={styles.groupSection}>
-            {/* Agent Takeover Card */}
-            <TouchableOpacity
-              style={styles.agentTakeoverCard}
-              onPress={() => {
-                const prompt = `I just scanned ${groupAnalysis.aggregateStats.totalFishCount} fish across ${groupAnalysis.images.length} images. Species found: ${Object.keys(groupAnalysis.aggregateStats.speciesDistribution).join(", ")}. Total weight: ${groupAnalysis.aggregateStats.totalEstimatedWeight.toFixed(2)} kg, estimated value: ₹${groupAnalysis.aggregateStats.totalEstimatedValue}. ${groupAnalysis.aggregateStats.diseaseDetected ? "Some fish show signs of disease!" : "Fish appear healthy."} Please give me a detailed analysis with market recommendations.`;
-                router.push({
-                  pathname: "/(tabs)/chat",
-                  params: { initialMessage: prompt },
-                });
-              }}
-              activeOpacity={0.85}
-            >
-              <View style={styles.agentTakeoverIcon}>
-                <Ionicons name="chatbubble" size={20} color="#fff" />
-              </View>
-              <View style={styles.agentTakeoverContent}>
-                <Text style={styles.agentTakeoverTitle}>
-                  SagarMitra has insights for you
-                </Text>
-                <Text style={styles.agentTakeoverSub}>
-                  Get market prices, disease analysis, and selling
-                  recommendations
-                </Text>
-              </View>
-              <Ionicons
-                name="arrow-forward"
-                size={18}
-                color="rgba(255,255,255,0.7)"
-              />
-            </TouchableOpacity>
-
             {/* Aggregate Statistics Card */}
             <View
               style={{
@@ -1671,11 +1566,12 @@ export default function UploadScreen() {
             const avgConf =
               offlineResults.reduce((s, d) => s + d.speciesConfidence, 0) /
               totalFish;
-            // Sum the weight of all detected fish (either bbox-estimated or user-entered)
-            const hasUserWeights = offlineResults.some(d => d.weightG > 0);
             const totalWeightKg =
               offlineResults.reduce((s, d) => s + d.weightG, 0) / 1000;
-            // Prices are unavailable in offline mode - never show estimated value.
+            const totalValue = offlineResults.reduce(
+              (s, d) => s + d.estimatedValue,
+              0,
+            );
             const anyDisease = offlineResults.some(
               (d) => d.disease !== "Healthy Fish",
             );
@@ -1706,21 +1602,14 @@ export default function UploadScreen() {
                   </Text>
                 </View>
                 <Card style={styles.aggregateCard} padding={SPACING.xl}>
-                  <View style={styles.offlineAggregateHeader}>
-                    <View style={styles.offlineAggregateTitleBlock}>
-                      <Text style={styles.offlineAggregateTitle}>
-                        {totalFish} Fish Detected
-                      </Text>
-                      <Text style={styles.offlineAggregateSubtitle}>
-                        On-device inference
-                      </Text>
-                    </View>
+                  <View style={styles.aggregateHeader}>
+                    <Text style={styles.aggregateTitle}>
+                      {totalFish} Fish Detected (On-Device)
+                    </Text>
                     {offlineProcessingTime !== null && (
-                      <View style={styles.offlineAggregateTimeBadge}>
-                        <Text style={styles.offlineAggregateTime}>
-                          {offlineProcessingTime}ms
-                        </Text>
-                      </View>
+                      <Text style={styles.aggregateTime}>
+                        {offlineProcessingTime}ms
+                      </Text>
                     )}
                   </View>
 
@@ -1736,16 +1625,7 @@ export default function UploadScreen() {
                     </Text>
                   </View>
 
-                  {hasUserWeights && (
-                    <View style={styles.aggregateRow}>
-                      <Text style={styles.aggregateLabel}>Total Weight</Text>
-                      <Text style={styles.aggregateValue}>
-                        {totalWeightKg.toFixed(2)} kg
-                      </Text>
-                    </View>
-                  )}
 
-                  {/* Total Value is hidden in offline mode - market prices require connectivity */}
 
                   <View style={styles.aggregateRow}>
                     <Text style={styles.aggregateLabel}>Disease Status</Text>
@@ -1838,10 +1718,35 @@ export default function UploadScreen() {
                     style={styles.actionButton}
                   />
                 </View>
+                <Button
+                  label="Ask AI About This Catch"
+                  onPress={() => {
+                    const speciesList = Object.keys(speciesDist).join(", ");
+                    const prompt = `I just analyzed ${totalFish} fish using offline detection. Species: ${speciesList}. What are the current market prices and any recommendations?`;
+                    router.push({
+                      pathname: "/(tabs)/chat",
+                      params: { initialMessage: prompt },
+                    });
+                  }}
+                  variant="secondary"
+                  icon={<Ionicons name="chatbubbles" size={16} color="#fff" />}
+                  iconPosition="left"
+                  fullWidth
+                  style={{ marginBottom: SPACING.md }}
+                />
               </View>
             );
           })()}
       </ScrollView>
+
+      {/* Weight Estimation Modal */}
+      <WeightEstimateModal
+        visible={weightModalVisible}
+        onClose={handleWeightCancel}
+        onConfirm={handleWeightComplete}
+        species={weightSpecies}
+        fishIndex={0}
+      />
     </SafeAreaView>
   );
 }
@@ -2408,77 +2313,8 @@ const styles = StyleSheet.create({
   groupSection: {
     marginTop: SPACING.xl,
   },
-  agentTakeoverCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: COLORS.primary,
-    borderRadius: RADIUS.xl,
-    padding: SPACING.md,
-    marginBottom: SPACING.lg,
-    gap: 12,
-    overflow: "hidden",
-  },
-  agentTakeoverIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(255,255,255,0.18)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  agentTakeoverContent: {
-    flex: 1,
-  },
-  agentTakeoverTitle: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.bold,
-    color: "#fff",
-    marginBottom: 2,
-  },
-  agentTakeoverSub: {
-    fontSize: FONTS.sizes.xs,
-    color: "rgba(255,255,255,0.7)",
-    lineHeight: 16,
-  },
   aggregateCard: {
     marginBottom: SPACING.md,
-  },
-  offlineAggregateHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: SPACING.md,
-    marginBottom: SPACING.md,
-    paddingBottom: SPACING.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  offlineAggregateTitleBlock: {
-    flex: 1,
-    minWidth: 0,
-  },
-  offlineAggregateTitle: {
-    fontSize: FONTS.sizes["2xl"],
-    lineHeight: 32,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.primaryLight,
-  },
-  offlineAggregateSubtitle: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-    marginTop: SPACING.xs,
-  },
-  offlineAggregateTimeBadge: {
-    borderRadius: RADIUS.full,
-    backgroundColor: COLORS.bgSurface,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: SPACING.xs,
-    alignSelf: "flex-start",
-  },
-  offlineAggregateTime: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-    fontWeight: FONTS.weights.semibold,
   },
   aggregateHeader: {
     flexDirection: "row",
@@ -2490,9 +2326,11 @@ const styles = StyleSheet.create({
     borderBottomColor: COLORS.border,
   },
   aggregateTitle: {
+    flex: 1,
     fontSize: FONTS.sizes.lg,
     fontWeight: FONTS.weights.bold,
     color: COLORS.primaryLight,
+    marginRight: SPACING.sm,
   },
   aggregateTime: {
     fontSize: FONTS.sizes.xs,
@@ -2547,8 +2385,6 @@ const styles = StyleSheet.create({
     fontSize: FONTS.sizes.sm,
     color: COLORS.textSecondary,
     flex: 1,
-    minWidth: 0,
-    paddingRight: SPACING.sm,
   },
   speciesDistRight: {
     flexDirection: "row",
@@ -2726,13 +2562,12 @@ const styles = StyleSheet.create({
 
   // Action buttons
   actionButtonsRow: {
-    flexDirection: IS_COMPACT_SCREEN ? "column" : "row",
-    alignItems: "stretch",
+    flexDirection: "row",
     gap: SPACING.md,
     marginTop: SPACING.md,
     marginBottom: SPACING.md,
   },
   actionButton: {
-    ...(IS_COMPACT_SCREEN ? { width: "100%" } : { flex: 1 }),
+    flex: 1,
   },
 });

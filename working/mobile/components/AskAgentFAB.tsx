@@ -1,5 +1,5 @@
 /**
- * AskAgentFAB - Floating "Ask SagarMitra" button that appears on every screen
+ * AskAgentFAB - Floating "Ask Matsya AI" button that appears on every screen
  * except the chat screen. Collects context from AgentContext and navigates to chat.
  */
 import React, { useRef, useEffect } from "react";
@@ -66,7 +66,7 @@ export function AskAgentFAB({ customPrompt, bottomOffset = 80 }: Props) {
           <View style={styles.iconCircle}>
             <Ionicons name="chatbubble" size={16} color="#fff" />
           </View>
-          <Text style={styles.fabText}>Ask SagarMitra</Text>
+          <Text style={styles.fabText}>Ask Matsya AI</Text>
         </View>
       </TouchableOpacity>
     </Animated.View>

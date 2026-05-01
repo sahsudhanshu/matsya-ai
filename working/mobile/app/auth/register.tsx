@@ -330,7 +330,7 @@ export default function RegisterScreen() {
 
         {/* Benefits */}
         <View style={styles.benefits}>
-          <Text style={styles.benefitsTitle}>Why OceanAI?</Text>
+          <Text style={styles.benefitsTitle}>Why Matsya AI?</Text>
           {[
             "Instant AI fish species identification",
             "Accurate weight & market price estimates",

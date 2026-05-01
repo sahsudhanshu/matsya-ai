@@ -51,7 +51,7 @@ export function TelegramIntegrationModal({
           >
             <Text style={styles.title}>Connect to Telegram</Text>
             <Text style={styles.description}>
-              Get OceanAI assistance directly in Telegram! Chat with our AI
+              Get Matsya AI assistance directly in Telegram! Chat with our AI
               assistant, get fishing advice, and receive notifications about
               ocean conditions.
             </Text>
@@ -151,7 +151,7 @@ export function TelegramIntegrationModal({
                   <Text style={styles.stepNumberText}>3</Text>
                 </View>
                 <Text style={styles.stepText}>
-                  Start chatting with OceanAI Assistant on Telegram!
+                  Start chatting with Matsya AI Assistant on Telegram!
                 </Text>
               </View>
             </View>

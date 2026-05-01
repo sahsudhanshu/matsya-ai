@@ -55,7 +55,7 @@ export default function LoginScreen() {
           <View style={styles.logoContainer}>
             <Ionicons name="fish" size={30} color={COLORS.primaryLight} />
           </View>
-          <Text style={styles.appName}>OceanAI</Text>
+          <Text style={styles.appName}>Matsya AI</Text>
           <Text style={styles.tagline}>AI for Bharat Fishermen</Text>
           <View style={styles.heroBadge}>
             <Text style={styles.heroBadgeText}>

@@ -108,7 +108,7 @@ export class DeepLinkService {
 
     Alert.alert(
       "Telegram Not Installed",
-      "To connect with OceanAI on Telegram, you need to install the Telegram app first.",
+      "To connect with Matsya AI on Telegram, you need to install the Telegram app first.",
       [
         {
           text: "Cancel",

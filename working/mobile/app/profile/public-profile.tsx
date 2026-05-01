@@ -117,9 +117,9 @@ export default function PublicProfileConfigScreen() {
 
     try {
       await Share.share({
-        message: `Check out my fishing profile on OceanAI: ${profileUrl}`,
+        message: `Check out my fishing profile on Matsya AI: ${profileUrl}`,
         url: profileUrl,
-        title: "My OceanAI Profile",
+        title: "My Matsya AI Profile",
       });
     } catch (err) {
       console.error("Error sharing profile:", err);

@@ -1,6 +1,6 @@
 # Empty State Patterns
 
-This document provides comprehensive guidelines and examples for implementing empty states across the OceanAI mobile application.
+This document provides comprehensive guidelines and examples for implementing empty states across the Matsya AI mobile application.
 
 ## Overview
 
@@ -63,7 +63,7 @@ interface EmptyStateProps {
     <Text style={styles.emptyChatTitle}>No Conversations Yet</Text>
     <Text style={styles.emptyChatText}>
       Start a new chat to get fishing advice, market insights, and
-      catch analysis from OceanAI Assistant.
+      catch analysis from Matsya AI Assistant.
     </Text>
   </View>
 ) : (

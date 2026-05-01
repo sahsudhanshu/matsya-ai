@@ -1,11 +1,13 @@
 /**
- * Development-mode startup diagnostics for OceanAI Mobile App.
+ * Development-mode startup diagnostics for Matsya AI Mobile App.
  * Validates required environment variables and checks model availability.
  * Only runs when __DEV__ is true.
  */
 
 import Constants from "expo-constants";
 import { Platform } from "react-native";
+import { Asset } from "expo-asset";
+import * as FileSystem from "expo-file-system";
 
 // ── ANSI color helpers (for console output) ────────────────────────────────
 const c = {
@@ -33,53 +35,23 @@ const ENV_CHECKS = [
   [
     "EXPO_PUBLIC_API_URL",
     "EXPO_PUBLIC_API_URL",
-    "critical",
-    "Backend API URL (required for uploads & analysis)",
+    "warn",
+    "Backend API URL (demo mode if not set)",
   ],
   [
     "EXPO_PUBLIC_AGENT_URL",
     "EXPO_PUBLIC_AGENT_URL",
     "warn",
-    "Agent chat API URL (required for AI assistant)",
-  ],
-  [
-    "EXPO_PUBLIC_COGNITO_USER_POOL_ID",
-    "EXPO_PUBLIC_COGNITO_USER_POOL_ID",
-    "critical",
-    "Cognito User Pool ID for authentication",
-  ],
-  [
-    "EXPO_PUBLIC_COGNITO_CLIENT_ID",
-    "EXPO_PUBLIC_COGNITO_CLIENT_ID",
-    "critical",
-    "Cognito Client ID for authentication",
-  ],
-  [
-    "EXPO_PUBLIC_OWM_API_KEY",
-    "EXPO_PUBLIC_OWM_API_KEY",
-    "warn",
-    "OpenWeatherMap API key for weather & map data",
-  ],
-  [
-    "EXPO_PUBLIC_WEB_URL",
-    "EXPO_PUBLIC_WEB_URL",
-    "warn",
-    "Web app URL for public profile sharing",
-  ],
-  [
-    "EXPO_PUBLIC_TELEGRAM_BOT_USERNAME",
-    "EXPO_PUBLIC_TELEGRAM_BOT_USERNAME",
-    "warn",
-    "Telegram bot username for alerts",
+    "Agent API URL (optional)",
   ],
 ] as const;
 
-
-const MODEL_FILES = [
-  "detection_float32.tflite",
-  "Fish.tflite",
-  "Fish_disease.tflite",
-] as const;
+// Statically require assets to ensure they're bundled by Metro.
+const BUNDLED_MODELS = {
+  "detection_float32.tflite": require("../assets/models/detection_float32.tflite"),
+  "Fish.tflite": require("../assets/models/Fish.tflite"),
+  "Fish_disease.tflite": require("../assets/models/Fish_disease.tflite"),
+};
 
 interface DiagnosticResult {
   ok: boolean;
@@ -125,7 +97,7 @@ export async function runStartupChecks(): Promise<DiagnosticResult> {
     `${c.cyan}${c.bold}╔══════════════════════════════════════════════════════════════════╗${c.reset}`,
   );
   lines.push(
-    `${c.cyan}${c.bold}║  📱 OceanAI Mobile - Development Startup Diagnostics           ║${c.reset}`,
+    `${c.cyan}${c.bold}║  📱 Matsya AI Mobile - Development Startup Diagnostics           ║${c.reset}`,
   );
   lines.push(
     `${c.cyan}${c.bold}╠══════════════════════════════════════════════════════════════════╣${c.reset}`,
@@ -200,7 +172,7 @@ export async function runStartupChecks(): Promise<DiagnosticResult> {
     `${c.cyan}${c.bold}╟──────────────────────────────────────────────────────────────────╢${c.reset}`,
   );
 
-  for (const modelFile of MODEL_FILES) {
+  for (const modelFile of Object.keys(BUNDLED_MODELS)) {
     const exists = await checkModelFile(modelFile);
     const shortName = modelFile.replace(".tflite", "").replace("_", " ");
 

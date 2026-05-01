@@ -1,4 +1,6 @@
 /**
+
+
  * Classification Inference using TFLite
  *
  * Uses react-native-fast-tflite for GPU-accelerated inference.
@@ -13,6 +15,13 @@ import {
 import * as ImageManipulator from "expo-image-manipulator";
 import * as jpeg from "jpeg-js";
 import { getModelDevicePath } from "./detection";
+
+// ── Bundled model assets (resolved by Metro at build time) ────────────────────
+// Must be top-level static requires so Metro bundles the .tflite files.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const _BUNDLED_SPECIES_MODEL = require('../assets/models/Fish.tflite') as number;
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const _BUNDLED_DISEASE_MODEL = require('../assets/models/Fish_disease.tflite') as number;
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -146,14 +155,25 @@ export async function loadSpeciesModel(): Promise<void> {
   if (_speciesLoadingPromise) return _speciesLoadingPromise;
   _speciesLoadingPromise = (async () => {
     try {
-      const modelUri = await getModelDevicePath("Fish.tflite");
-      console.log(`[TFLite] Loading bundled species model from ${modelUri}`);
-      _speciesModel = await loadTensorflowModel({ url: modelUri });
-      _speciesModelUri = modelUri;
-      console.log(`[TFLite] Species model loaded successfully`);
-    } catch (err) {
-      console.error("[TFLite] Failed to load species model:", err);
-      throw err;
+      // Primary: load from Metro-bundled asset
+      console.log('[TFLite] Loading bundled species model...');
+      _speciesModel = await loadTensorflowModel(_BUNDLED_SPECIES_MODEL);
+      _speciesModelUri = 'bundled:Fish.tflite';
+      console.log('[TFLite] Species model loaded from app bundle');
+    } catch (bundleErr) {
+      // Fallback: device storage (dev ADB-deployed)
+      console.warn('[TFLite] Bundle load failed for species model, trying file system...', bundleErr);
+      try {
+        const modelUri = getModelDevicePath('Fish.tflite');
+        const info = await (await import('expo-file-system/legacy')).getInfoAsync(modelUri);
+        if (!info.exists) throw new Error(`Species model not found. Bundle error: ${bundleErr}`);
+        _speciesModel = await loadTensorflowModel({ url: modelUri });
+        _speciesModelUri = modelUri;
+        console.log('[TFLite] Species model loaded from device storage');
+      } catch (fallbackErr) {
+        console.error('[TFLite] Failed to load species model:', fallbackErr);
+        throw fallbackErr;
+      }
     } finally {
       _speciesLoadingPromise = null;
     }
@@ -166,14 +186,25 @@ export async function loadDiseaseModel(): Promise<void> {
   if (_diseaseLoadingPromise) return _diseaseLoadingPromise;
   _diseaseLoadingPromise = (async () => {
     try {
-      const modelUri = await getModelDevicePath("Fish_disease.tflite");
-      console.log(`[TFLite] Loading bundled disease model from ${modelUri}`);
-      _diseaseModel = await loadTensorflowModel({ url: modelUri });
-      _diseaseModelUri = modelUri;
-      console.log(`[TFLite] Disease model loaded successfully`);
-    } catch (err) {
-      console.error("[TFLite] Failed to load disease model:", err);
-      throw err;
+      // Primary: load from Metro-bundled asset
+      console.log('[TFLite] Loading bundled disease model...');
+      _diseaseModel = await loadTensorflowModel(_BUNDLED_DISEASE_MODEL);
+      _diseaseModelUri = 'bundled:Fish_disease.tflite';
+      console.log('[TFLite] Disease model loaded from app bundle');
+    } catch (bundleErr) {
+      // Fallback: device storage (dev ADB-deployed)
+      console.warn('[TFLite] Bundle load failed for disease model, trying file system...', bundleErr);
+      try {
+        const modelUri = getModelDevicePath('Fish_disease.tflite');
+        const info = await (await import('expo-file-system/legacy')).getInfoAsync(modelUri);
+        if (!info.exists) throw new Error(`Disease model not found. Bundle error: ${bundleErr}`);
+        _diseaseModel = await loadTensorflowModel({ url: modelUri });
+        _diseaseModelUri = modelUri;
+        console.log('[TFLite] Disease model loaded from device storage');
+      } catch (fallbackErr) {
+        console.error('[TFLite] Failed to load disease model:', fallbackErr);
+        throw fallbackErr;
+      }
     } finally {
       _diseaseLoadingPromise = null;
     }
@@ -194,12 +225,12 @@ export function getTFLiteModelDebugInfo(): TFLiteModelDebugInfo {
     speciesModel: {
       isLoaded: _speciesModel !== null,
       loadedUri: _speciesModelUri,
-      searchLocations: ["bundled:Fish.tflite"],
+      searchLocations: ['bundled:Fish.tflite', getModelDevicePath('Fish.tflite')],
     },
     diseaseModel: {
       isLoaded: _diseaseModel !== null,
       loadedUri: _diseaseModelUri,
-      searchLocations: ["bundled:Fish_disease.tflite"],
+      searchLocations: ['bundled:Fish_disease.tflite', getModelDevicePath('Fish_disease.tflite')],
     },
   };
 }

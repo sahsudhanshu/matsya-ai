@@ -1,4 +1,4 @@
-# OceanAI – On-Device TFLite Models
+# Matsya AI – On-Device TFLite Models
 
 These are the pre-trained TensorFlow Lite models used for **on-device** fish
 analysis. They are **bundled directly into the app** as assets and loaded at runtime.

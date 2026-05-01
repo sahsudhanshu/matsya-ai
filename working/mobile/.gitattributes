@@ -1,5 +1,5 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# Git Attributes – OceanAI Mobile
+# Git Attributes – Matsya AI Mobile
 #
 # Stores large TFLite binary files in Git LFS so the main repo stays lean.
 # Set up LFS once:
