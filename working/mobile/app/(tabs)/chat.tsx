@@ -553,6 +553,12 @@ export default function ChatScreen() {
             setSound(null);
           }
         });
+      } else if (res.useBrowserTTS) {
+        Speech.speak(text, {
+          language: speechCode || "en-IN",
+          onDone: () => setIsSpeaking(false),
+          onError: () => setIsSpeaking(false),
+        });
       } else {
         setIsSpeaking(false);
       }

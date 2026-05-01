@@ -14,6 +14,7 @@ def _get_field(item: dict, ar: dict, key: str, default=None):
 
 # async def get_catch_details(image_id: str, user_id: str = "") -> str:
 
+@tool
 async def get_catch_details(image_id: str) -> str:
     """
     Get the detailed analysis of a specific catch (fish upload) using its image_id.
@@ -24,7 +25,7 @@ async def get_catch_details(image_id: str) -> str:
         image_id: The unique identifier of the catch/image to look up.
         user_id: Auto-injected by the system. Do not provide.
     """
-    print(f"🔬  [TOOL] get_catch_details called → image_id={image_id!r}, user_id={user_id!r}")
+    print(f"🔬  [TOOL] get_catch_details called → image_id={image_id!r}")
 
     try:
         item = fetchone("SELECT * FROM images WHERE imageId = %s", (image_id,))

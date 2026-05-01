@@ -109,7 +109,7 @@ export const ENDPOINTS = {
   getImages: "/images",
   getMapData: "/map",
   sendChat: "/chat",
-  getChatHistory: "/chat/history",
+  getChatHistory: "/chat",
   getAnalytics: "/analytics",
   saveWeightEstimate: "/weight-estimates",
   saveOfflineAnalysis: "/offline-analyses",  // legacy - kept for reference

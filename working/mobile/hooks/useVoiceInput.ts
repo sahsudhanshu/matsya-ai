@@ -51,9 +51,9 @@ export function useVoiceInput({
 
       // Stop any existing session before starting a new one
       try {
-        ExpoSpeechRecognitionModule.stop();
-      } catch (e) {
-        // ignore
+        await ExpoSpeechRecognitionModule.stop();
+      } catch (e: unknown) {
+        console.warn("Failed to cleanly stop speech recognition module:", e);
       }
 
       ExpoSpeechRecognitionModule.start({
@@ -61,18 +61,19 @@ export function useVoiceInput({
         interimResults: false,
         requiresOnDeviceRecognition: false,
       });
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error("Failed to start speech recognition:", e);
-      Alert.alert("Error", e.message || "Could not start voice recognition.");
+      const errorMessage = e instanceof Error ? e.message : "Could not start voice recognition.";
+      Alert.alert("Error", errorMessage);
       setIsListening(false);
     }
   }, [lang]);
 
-  const stopListening = useCallback(() => {
+  const stopListening = useCallback(async () => {
     try {
-      ExpoSpeechRecognitionModule.stop();
-    } catch (e) {
-      // Ignore
+      await ExpoSpeechRecognitionModule.stop();
+    } catch (e: unknown) {
+      console.warn("Failed to cleanly stop speech recognition module:", e);
     }
     setIsListening(false);
   }, []);

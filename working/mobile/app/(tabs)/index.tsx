@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { router, Href } from "expo-router";
 import { useAuth } from "../../lib/auth-context";
 import { getAnalytics } from "../../lib/api-client";
 import { COLORS, FONTS, SPACING, RADIUS } from "../../lib/constants";
@@ -35,7 +35,9 @@ export default function HomeScreen() {
     agentCtx.updateScreen("home");
     getAnalytics()
       .then(setAnalytics)
-      .catch(() => {});
+      .catch((error) => {
+        console.error("[Analytics] Failed to load analytics:", error);
+      });
     // Entrance animation
     const entranceAnimation = Animated.parallel([
       Animated.timing(fadeAnim, {
@@ -106,7 +108,7 @@ export default function HomeScreen() {
     icon: IoniconName;
     title: string;
     desc: string;
-    route: string;
+    route: Href;
     color: string;
   }[] = [
     {
@@ -319,7 +321,7 @@ export default function HomeScreen() {
               key={tool.title}
               className="w-[47%] flex-grow rounded-[16px] border bg-[#1e293b] p-3 gap-1"
               style={{ borderColor: tool.color + "30" }}
-              onPress={() => router.push(tool.route as any)}
+              onPress={() => router.push(tool.route)}
               activeOpacity={0.8}
             >
               <View

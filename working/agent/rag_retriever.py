@@ -70,6 +70,7 @@ class BedrockRAGRetriever:
 
     def __init__(self, kb_id: Optional[str] = None, region: Optional[str] = None):
         # kb_id / region kept for API compatibility; config comes from env
+        self.kb_id = kb_id
         self._os   = _aoss_client()
         self._index = _AOSS_INDEX
         logger.info(f"BedrockRAGRetriever (Gemini+AOSS) initialised. Index: {self._index}")
