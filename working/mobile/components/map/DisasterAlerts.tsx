@@ -15,7 +15,7 @@ import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
-  StyleSheet,
+  
   TouchableOpacity,
   Modal,
   ScrollView,
@@ -117,10 +117,8 @@ export function DisasterAlerts({
           tracksViewChanges={false}
         >
           <View
-            style={[
-              styles.alertMarker,
-              { backgroundColor: getSeverityColor(alert.severity) },
-            ]}
+            className="h-[34px] w-[34px] items-center justify-center rounded-full border-2 border-white shadow-md shadow-black/30"
+            style={{ backgroundColor: getSeverityColor(alert.severity) }}
           >
             <Ionicons
               name={getAlertIcon(alert.type) as any}
@@ -138,27 +136,25 @@ export function DisasterAlerts({
         animationType="slide"
         onRequestClose={handleCloseModal}
       >
-        <View style={styles.modalOverlay}>
+        <View className="flex-1 justify-end">
           <TouchableOpacity
-            style={styles.modalBackdrop}
+            className="absolute bottom-0 left-0 right-0 top-0 bg-black/50"
             activeOpacity={1}
             onPress={handleCloseModal}
           />
-          <View style={styles.modalContent}>
+          <View className="max-h-[85%] rounded-t-[20px] bg-white shadow-lg shadow-black/10">
             {selectedAlert && (
               <>
                 {/* Modal Header */}
-                <View style={styles.modalHeader}>
-                  <View style={styles.modalHandle} />
-                  <View style={styles.modalTitleRow}>
+                <View className="border-b border-gray-200 px-4 pb-3 pt-1.5">
+                  <View className="mb-3 h-[3px] w-8 self-center rounded-sm bg-gray-300" />
+                  <View className="flex-row items-start gap-3">
                     <View
-                      style={[
-                        styles.severityBadge,
-                        {
-                          backgroundColor:
-                            getSeverityColor(selectedAlert.severity) + "20",
-                        },
-                      ]}
+                      className="h-11 w-11 items-center justify-center rounded-full"
+                      style={{
+                        backgroundColor:
+                          getSeverityColor(selectedAlert.severity) + "20",
+                      }}
                     >
                       <Ionicons
                         name={getAlertIcon(selectedAlert.type) as any}
@@ -166,24 +162,20 @@ export function DisasterAlerts({
                         color={getSeverityColor(selectedAlert.severity)}
                       />
                     </View>
-                    <View style={styles.modalTitleContent}>
-                      <Text style={styles.modalTitle}>
+                    <View className="flex-1 gap-1">
+                      <Text className="text-[15px] font-bold leading-5 text-gray-900">
                         {selectedAlert.title}
                       </Text>
                       <View
-                        style={[
-                          styles.severityLabel,
-                          {
-                            backgroundColor:
-                              getSeverityColor(selectedAlert.severity) + "20",
-                          },
-                        ]}
+                        className="self-start rounded-[10px] px-2 py-[3px]"
+                        style={{
+                          backgroundColor:
+                            getSeverityColor(selectedAlert.severity) + "20",
+                        }}
                       >
                         <Text
-                          style={[
-                            styles.severityLabelText,
-                            { color: getSeverityColor(selectedAlert.severity) },
-                          ]}
+                          className="text-[11px] font-semibold"
+                          style={{ color: getSeverityColor(selectedAlert.severity) }}
                         >
                           {getSeverityInfo(selectedAlert.severity).label}{" "}
                           Severity
@@ -192,7 +184,7 @@ export function DisasterAlerts({
                     </View>
                     <TouchableOpacity
                       onPress={handleCloseModal}
-                      style={styles.closeButton}
+                      className="p-1"
                       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     >
                       <Ionicons
@@ -206,61 +198,61 @@ export function DisasterAlerts({
 
                 {/* Modal Body */}
                 <ScrollView
-                  style={styles.modalBody}
+                  className="px-4 pt-3.5"
                   showsVerticalScrollIndicator={false}
                 >
                   {/* Description */}
-                  <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Description</Text>
-                    <Text style={styles.description}>
+                  <View className="mb-4">
+                    <Text className="mb-2 text-[12px] font-semibold uppercase tracking-[0.5px] text-gray-700">Description</Text>
+                    <Text className="text-[13px] leading-5 text-gray-700">
                       {selectedAlert.description}
                     </Text>
                   </View>
 
                   {/* Alert Details */}
-                  <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Alert Details</Text>
-                    <View style={styles.detailsGrid}>
-                      <View style={styles.detailItem}>
+                  <View className="mb-4">
+                    <Text className="mb-2 text-[12px] font-semibold uppercase tracking-[0.5px] text-gray-700">Alert Details</Text>
+                    <View className="gap-3">
+                      <View className="flex-row items-start gap-2">
                         <Ionicons
                           name="location-outline"
                           size={16}
                           color={Colors.neutral[500]}
                         />
-                        <View style={styles.detailContent}>
-                          <Text style={styles.detailLabel}>Location</Text>
-                          <Text style={styles.detailValue}>
+                        <View className="flex-1 gap-0.5">
+                          <Text className="text-[12px] text-gray-500">Location</Text>
+                          <Text className="text-[13px] font-semibold text-gray-900">
                             {selectedAlert.lat.toFixed(3)}°N,{" "}
                             {selectedAlert.lng.toFixed(3)}°E
                           </Text>
                         </View>
                       </View>
 
-                      <View style={styles.detailItem}>
+                      <View className="flex-row items-start gap-2">
                         <Ionicons
                           name="resize-outline"
                           size={16}
                           color={Colors.neutral[500]}
                         />
-                        <View style={styles.detailContent}>
-                          <Text style={styles.detailLabel}>
+                        <View className="flex-1 gap-0.5">
+                          <Text className="text-[12px] text-gray-500">
                             Affected Radius
                           </Text>
-                          <Text style={styles.detailValue}>
+                          <Text className="text-[13px] font-semibold text-gray-900">
                             {selectedAlert.radiusKm} km
                           </Text>
                         </View>
                       </View>
 
-                      <View style={styles.detailItem}>
+                      <View className="flex-row items-start gap-2">
                         <Ionicons
                           name="time-outline"
                           size={16}
                           color={Colors.neutral[500]}
                         />
-                        <View style={styles.detailContent}>
-                          <Text style={styles.detailLabel}>Expires</Text>
-                          <Text style={styles.detailValue}>
+                        <View className="flex-1 gap-0.5">
+                          <Text className="text-[12px] text-gray-500">Expires</Text>
+                          <Text className="text-[13px] font-semibold text-gray-900">
                             {new Date(selectedAlert.expiresAt).toLocaleString(
                               "en-IN",
                               {
@@ -272,15 +264,15 @@ export function DisasterAlerts({
                         </View>
                       </View>
 
-                      <View style={styles.detailItem}>
+                      <View className="flex-row items-start gap-2">
                         <Ionicons
                           name="information-circle-outline"
                           size={16}
                           color={Colors.neutral[500]}
                         />
-                        <View style={styles.detailContent}>
-                          <Text style={styles.detailLabel}>Source</Text>
-                          <Text style={styles.detailValue}>
+                        <View className="flex-1 gap-0.5">
+                          <Text className="text-[12px] text-gray-500">Source</Text>
+                          <Text className="text-[13px] font-semibold text-gray-900">
                             {selectedAlert.source}
                           </Text>
                         </View>
@@ -290,24 +282,22 @@ export function DisasterAlerts({
 
                   {/* Safety Status */}
                   {userLocation && (
-                    <View style={styles.section}>
-                      <Text style={styles.sectionTitle}>
+                    <View className="mb-4">
+                      <Text className="mb-2 text-[12px] font-semibold uppercase tracking-[0.5px] text-gray-700">
                         Your Safety Status
                       </Text>
                       <View
-                        style={[
-                          styles.safetyCard,
-                          {
-                            backgroundColor:
-                              safetyStatus === "UNSAFE"
-                                ? Colors.alert.critical + "10"
-                                : Colors.semantic.success + "10",
-                            borderColor:
-                              safetyStatus === "UNSAFE"
-                                ? Colors.alert.critical
-                                : Colors.semantic.success,
-                          },
-                        ]}
+                        className="flex-row items-center gap-3 rounded-[10px] border-2 p-3"
+                        style={{
+                          backgroundColor:
+                            safetyStatus === "UNSAFE"
+                              ? Colors.alert.critical + "10"
+                              : Colors.semantic.success + "10",
+                          borderColor:
+                            safetyStatus === "UNSAFE"
+                              ? Colors.alert.critical
+                              : Colors.semantic.success,
+                        }}
                       >
                         <Ionicons
                           name={
@@ -322,21 +312,19 @@ export function DisasterAlerts({
                               : Colors.semantic.success
                           }
                         />
-                        <View style={styles.safetyContent}>
+                        <View className="flex-1 gap-1">
                           <Text
-                            style={[
-                              styles.safetyStatus,
-                              {
-                                color:
-                                  safetyStatus === "UNSAFE"
-                                    ? Colors.alert.critical
-                                    : Colors.semantic.success,
-                              },
-                            ]}
+                            className="text-[15px] font-bold"
+                            style={{
+                              color:
+                                safetyStatus === "UNSAFE"
+                                  ? Colors.alert.critical
+                                  : Colors.semantic.success,
+                            }}
                           >
                             {safetyStatus}
                           </Text>
-                          <Text style={styles.safetyMessage}>
+                          <Text className="text-[13px] leading-[18px] text-gray-700">
                             {safetyStatus === "UNSAFE"
                               ? "You are within the affected area. Please take necessary precautions."
                               : "You are outside the affected area. Stay informed of updates."}
@@ -348,13 +336,13 @@ export function DisasterAlerts({
                 </ScrollView>
 
                 {/* Modal Footer */}
-                <View style={styles.modalFooter}>
+                <View className="border-t border-gray-200 p-3.5">
                   <TouchableOpacity
-                    style={styles.dismissButton}
+                    className="items-center rounded-[10px] bg-blue-500 py-2.5"
                     onPress={handleCloseModal}
                     activeOpacity={0.8}
                   >
-                    <Text style={styles.dismissButtonText}>Dismiss</Text>
+                    <Text className="text-[14px] font-semibold text-white">Dismiss</Text>
                   </TouchableOpacity>
                 </View>
               </>
@@ -365,167 +353,3 @@ export function DisasterAlerts({
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  alertMarker: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: "#fff",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: "flex-end",
-  },
-  modalBackdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  modalContent: {
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: "85%",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 10,
-  },
-  modalHeader: {
-    paddingTop: 6,
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.neutral[200],
-  },
-  modalHandle: {
-    width: 32,
-    height: 3,
-    backgroundColor: Colors.neutral[300],
-    borderRadius: 2,
-    alignSelf: "center",
-    marginBottom: 12,
-  },
-  modalTitleRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 12,
-  },
-  severityBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalTitleContent: {
-    flex: 1,
-    gap: 4,
-  },
-  modalTitle: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: Colors.neutral[900],
-    lineHeight: 20,
-  },
-  severityLabel: {
-    alignSelf: "flex-start",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 10,
-  },
-  severityLabelText: {
-    fontSize: 11,
-    fontWeight: "600",
-  },
-  closeButton: {
-    padding: 4,
-  },
-  modalBody: {
-    paddingHorizontal: 16,
-    paddingTop: 14,
-  },
-  section: {
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: Colors.neutral[700],
-    marginBottom: 8,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  description: {
-    fontSize: 13,
-    lineHeight: 20,
-    color: Colors.neutral[700],
-  },
-  detailsGrid: {
-    gap: 12,
-  },
-  detailItem: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 8,
-  },
-  detailContent: {
-    flex: 1,
-    gap: 2,
-  },
-  detailLabel: {
-    fontSize: 12,
-    color: Colors.neutral[500],
-  },
-  detailValue: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: Colors.neutral[900],
-  },
-  safetyCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    padding: 12,
-    borderRadius: 10,
-    borderWidth: 2,
-  },
-  safetyContent: {
-    flex: 1,
-    gap: 4,
-  },
-  safetyStatus: {
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  safetyMessage: {
-    fontSize: 13,
-    lineHeight: 18,
-    color: Colors.neutral[700],
-  },
-  modalFooter: {
-    padding: 14,
-    borderTopWidth: 1,
-    borderTopColor: Colors.neutral[200],
-  },
-  dismissButton: {
-    backgroundColor: Colors.primary[500],
-    paddingVertical: 10,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  dismissButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#fff",
-  },
-});

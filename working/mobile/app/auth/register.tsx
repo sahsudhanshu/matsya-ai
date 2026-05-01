@@ -2,10 +2,7 @@ import React, { useState } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
   Alert,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
@@ -109,42 +106,59 @@ export default function RegisterScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#0f172a" }}>
       <KeyboardAwareScrollView
-        style={styles.keyboardView}
-        contentContainerStyle={styles.scroll}
+        style={{ flex: 1 }}
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingHorizontal: SPACING.xl,
+          paddingBottom: SPACING["4xl"],
+        }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         enableOnAndroid={true}
       >
         {/* Header */}
-        <View style={styles.header}>
+        <View className="pt-4">
           <TouchableOpacity
             onPress={() => router.back()}
-            style={styles.backBtn}
+            className="self-start py-2"
           >
-            <Text style={styles.backBtnText}>← Back</Text>
+            <Text className="text-[13px] font-semibold text-[#3b82f6]">
+              ← Back
+            </Text>
           </TouchableOpacity>
         </View>
 
         {/* Hero */}
-        <View style={styles.hero}>
-          <View style={styles.logoContainer}>
+        <View className="items-center py-6">
+          <View
+            className="mb-2.5 h-[54px] w-[54px] items-center justify-center rounded-[14px] bg-[#047857]"
+            style={{
+              shadowColor: COLORS.secondary,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.35,
+              shadowRadius: 10,
+              elevation: 5,
+            }}
+          >
             <Ionicons
               name="water-outline"
               size={28}
               color={COLORS.primaryLight}
             />
           </View>
-          <Text style={styles.title}>Create Your Account</Text>
-          <Text style={styles.subtitle}>
+          <Text className="text-center text-[20px] font-bold text-[#f8fafc]">
+            Create Your Account
+          </Text>
+          <Text className="mt-1 px-6 text-center text-[12px] text-[#94a3b8]">
             Join thousands of fishermen modernizing their operations
           </Text>
         </View>
 
         {/* Form Card */}
-        <View style={styles.card}>
-          <View style={styles.formGroup}>
+        <View className="mb-6 rounded-[20px] border border-[#334155] bg-[#1e293b] p-6">
+          <View className="mb-2.5">
             <Input
               label="Full Name *"
               placeholder="Rajan Kumar"
@@ -153,7 +167,7 @@ export default function RegisterScreen() {
               autoCapitalize="words"
             />
           </View>
-          <View style={styles.formGroup}>
+          <View className="mb-2.5">
             <Input
               label="Email Address *"
               placeholder="rajan@example.com"
@@ -164,7 +178,7 @@ export default function RegisterScreen() {
               autoCorrect={false}
             />
           </View>
-          <View style={styles.formGroup}>
+          <View className="mb-2.5">
             <Input
               label="Phone Number (optional)"
               placeholder="+91 9876543210"
@@ -172,11 +186,11 @@ export default function RegisterScreen() {
               onChangeText={setPhone}
               keyboardType="phone-pad"
             />
-            <Text style={styles.helperText}>
+            <Text className="mt-1 ml-1 text-[10px] text-[#94a3b8]">
               Include country code (e.g., +91 for India)
             </Text>
           </View>
-          <View style={styles.formGroup}>
+          <View className="mb-2.5">
             <Input
               label="Password *"
               placeholder="Create a secure password"
@@ -186,11 +200,11 @@ export default function RegisterScreen() {
               showPasswordToggle
             />
             {password.length > 0 && (
-              <View style={styles.passwordRequirements}>
-                <Text style={styles.requirementsTitle}>
+              <View className="mt-2.5 gap-1.5 rounded-xl bg-[#334155] p-4">
+                <Text className="mb-1 text-[10px] font-bold text-[#e2e8f0]">
                   Password Requirements:
                 </Text>
-                <View style={styles.requirementItem}>
+                <View className="flex-row items-center gap-2.5">
                   <Ionicons
                     name={
                       passwordRequirements.minLength
@@ -204,16 +218,11 @@ export default function RegisterScreen() {
                         : COLORS.textMuted
                     }
                   />
-                  <Text
-                    style={[
-                      styles.requirementText,
-                      passwordRequirements.minLength && styles.requirementMet,
-                    ]}
-                  >
+                  <Text className={passwordRequirements.minLength ? "text-[10px] text-[#10b981] font-semibold" : "text-[10px] text-[#94a3b8]"}>
                     At least 8 characters
                   </Text>
                 </View>
-                <View style={styles.requirementItem}>
+                <View className="flex-row items-center gap-2.5">
                   <Ionicons
                     name={
                       passwordRequirements.hasUppercase
@@ -227,17 +236,11 @@ export default function RegisterScreen() {
                         : COLORS.textMuted
                     }
                   />
-                  <Text
-                    style={[
-                      styles.requirementText,
-                      passwordRequirements.hasUppercase &&
-                        styles.requirementMet,
-                    ]}
-                  >
+                  <Text className={passwordRequirements.hasUppercase ? "text-[10px] text-[#10b981] font-semibold" : "text-[10px] text-[#94a3b8]"}>
                     One uppercase letter (A-Z)
                   </Text>
                 </View>
-                <View style={styles.requirementItem}>
+                <View className="flex-row items-center gap-2.5">
                   <Ionicons
                     name={
                       passwordRequirements.hasLowercase
@@ -251,17 +254,11 @@ export default function RegisterScreen() {
                         : COLORS.textMuted
                     }
                   />
-                  <Text
-                    style={[
-                      styles.requirementText,
-                      passwordRequirements.hasLowercase &&
-                        styles.requirementMet,
-                    ]}
-                  >
+                  <Text className={passwordRequirements.hasLowercase ? "text-[10px] text-[#10b981] font-semibold" : "text-[10px] text-[#94a3b8]"}>
                     One lowercase letter (a-z)
                   </Text>
                 </View>
-                <View style={styles.requirementItem}>
+                <View className="flex-row items-center gap-2.5">
                   <Ionicons
                     name={
                       passwordRequirements.hasNumber
@@ -275,16 +272,11 @@ export default function RegisterScreen() {
                         : COLORS.textMuted
                     }
                   />
-                  <Text
-                    style={[
-                      styles.requirementText,
-                      passwordRequirements.hasNumber && styles.requirementMet,
-                    ]}
-                  >
+                  <Text className={passwordRequirements.hasNumber ? "text-[10px] text-[#10b981] font-semibold" : "text-[10px] text-[#94a3b8]"}>
                     One number (0-9)
                   </Text>
                 </View>
-                <View style={styles.requirementItem}>
+                <View className="flex-row items-center gap-2.5">
                   <Ionicons
                     name={
                       passwordRequirements.hasSpecial
@@ -298,12 +290,7 @@ export default function RegisterScreen() {
                         : COLORS.textMuted
                     }
                   />
-                  <Text
-                    style={[
-                      styles.requirementText,
-                      passwordRequirements.hasSpecial && styles.requirementMet,
-                    ]}
-                  >
+                  <Text className={passwordRequirements.hasSpecial ? "text-[10px] text-[#10b981] font-semibold" : "text-[10px] text-[#94a3b8]"}>
                     One special character (!@#$%^&*)
                   </Text>
                 </View>
@@ -317,20 +304,26 @@ export default function RegisterScreen() {
             loading={loading}
             fullWidth
             size="lg"
-            style={styles.registerBtn}
+            className="mt-2"
           />
 
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Already have an account? </Text>
+          <View className="mt-4 flex-row justify-center">
+            <Text className="text-[12px] text-[#94a3b8]">
+              Already have an account? 
+            </Text>
             <TouchableOpacity onPress={() => router.push("/auth/login")}>
-              <Text style={styles.footerLink}>Sign In</Text>
+              <Text className="text-[12px] font-bold text-[#3b82f6]">
+                Sign In
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Benefits */}
-        <View style={styles.benefits}>
-          <Text style={styles.benefitsTitle}>Why Matsya AI?</Text>
+        <View className="gap-1 rounded-[16px] border border-[#334155] bg-[#1e293b] p-4">
+          <Text className="mb-1 text-[13px] font-semibold text-[#f8fafc]">
+            Why Matsya AI?
+          </Text>
           {[
             "Instant AI fish species identification",
             "Accurate weight & market price estimates",
@@ -338,21 +331,15 @@ export default function RegisterScreen() {
             "24/7 AI fisherman assistant",
             "Catch history & earnings analytics",
           ].map((b) => (
-            <View
-              key={b}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 8,
-                marginBottom: 6,
-              }}
-            >
+            <View key={b} className="mb-1.5 flex-row items-center gap-2">
               <Ionicons
                 name="checkmark-circle"
                 size={16}
                 color={COLORS.success}
               />
-              <Text style={styles.benefitItem}>{b}</Text>
+              <Text className="text-[12px] leading-[18px] text-[#e2e8f0]">
+                {b}
+              </Text>
             </View>
           ))}
         </View>
@@ -360,127 +347,3 @@ export default function RegisterScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.bgDark },
-  keyboardView: { flex: 1 },
-  scroll: {
-    flexGrow: 1,
-    paddingHorizontal: SPACING.xl,
-    paddingBottom: SPACING["4xl"],
-  },
-  header: { paddingTop: SPACING.md },
-  backBtn: { alignSelf: "flex-start", paddingVertical: SPACING.sm },
-  backBtnText: {
-    color: COLORS.primaryLight,
-    fontSize: FONTS.sizes.base,
-    fontWeight: FONTS.weights.semibold,
-  },
-
-  hero: {
-    alignItems: "center",
-    paddingVertical: SPACING.lg,
-  },
-  logoContainer: {
-    width: 54,
-    height: 54,
-    borderRadius: 14,
-    backgroundColor: COLORS.secondary,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: SPACING.sm,
-    shadowColor: COLORS.secondary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-
-  title: {
-    fontSize: FONTS.sizes.xl,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-    textAlign: "center",
-    marginTop: SPACING.xs,
-    paddingHorizontal: SPACING.lg,
-  },
-
-  card: {
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.xl,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: SPACING.lg,
-    marginBottom: SPACING.lg,
-  },
-  formGroup: { marginBottom: SPACING.sm },
-  helperText: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    marginTop: SPACING.xs,
-    marginLeft: SPACING.xs,
-  },
-  passwordRequirements: {
-    marginTop: SPACING.sm,
-    padding: SPACING.md,
-    backgroundColor: COLORS.bgSurface,
-    borderRadius: RADIUS.md,
-    gap: SPACING.xs,
-  },
-  requirementsTitle: {
-    fontSize: FONTS.sizes.xs,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textSecondary,
-    marginBottom: SPACING.xs,
-  },
-  requirementItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.sm,
-  },
-  requirementText: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-  },
-  requirementMet: {
-    color: COLORS.success,
-    fontWeight: FONTS.weights.semibold,
-  },
-  registerBtn: { marginTop: SPACING.sm },
-  footer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginTop: SPACING.lg,
-  },
-  footerText: { color: COLORS.textMuted, fontSize: FONTS.sizes.sm },
-  footerLink: {
-    color: COLORS.primaryLight,
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.bold,
-  },
-
-  benefits: {
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.lg,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: SPACING.md,
-    gap: SPACING.xs,
-  },
-  benefitsTitle: {
-    fontSize: FONTS.sizes.base,
-    fontWeight: FONTS.weights.semibold,
-    color: COLORS.textPrimary,
-    marginBottom: SPACING.xs,
-  },
-  benefitItem: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textSecondary,
-    lineHeight: 18,
-  },
-});

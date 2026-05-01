@@ -240,6 +240,9 @@ export async function updateLocalDetectionWeight(
   weightG: number,
 ): Promise<void> {
   const records = await readAll();
+  const record = records.find((r) => r.id === localRecordId);
+  if (!record) return;
+
   const updated = records.map((r) => {
     if (r.id !== localRecordId) return r;
     const dets = r.detections ? [...r.detections] : [];
@@ -250,6 +253,20 @@ export async function updateLocalDetectionWeight(
     return { ...r, detections: dets };
   });
   await writeAll(updated);
+
+  // If the record was already synced to the cloud in the background, 
+  // immediately push this weight update to the cloud.
+  if (record.syncStatus === "synced" && record.remoteId) {
+    const { SyncService } = await import("./sync-service");
+    await SyncService.queueChange("weight_estimate", {
+      groupId: record.remoteId,
+      imageUri: record.imageUri || "",
+      fishIndex,
+      species: record.detections?.[fishIndex]?.species || "Unknown",
+      weightG,
+      timestamp: new Date().toISOString(),
+    });
+  }
 }
 
 /** Mark a record as successfully synced. */
@@ -420,9 +437,18 @@ export async function syncLocalHistory(): Promise<void> {
                 species: det.species,
                 weightG: det.weightG,
                 timestamp: record.createdAt,
-              }).catch((e) => {
-                syncLogger.warn("LocalHistory", `Weight sync failed for fish ${i} of scan ${remoteId}`);
+              }).catch(async (e) => {
+                syncLogger.warn("LocalHistory", `Weight sync failed for fish ${i} of scan ${remoteId} - queueing for retry`);
                 console.warn(`[syncLocalHistory] Weight sync failed fish ${i}:`, e);
+                const { SyncService } = await import("./sync-service");
+                await SyncService.queueChange("weight_estimate", {
+                  groupId: remoteId,
+                  imageUri: record.imageUri || "",
+                  fishIndex: i,
+                  species: det.species,
+                  weightG: det.weightG,
+                  timestamp: record.createdAt,
+                });
               });
             }
           }
@@ -528,6 +554,7 @@ export async function syncLocalHistory(): Promise<void> {
 
         // Push fish weight estimates now that we have a cloud group ID.
         if (remoteGroupId) {
+          let globalFishIndex = 0;
           for (const img of (record.images || [])) {
             for (let i = 0; i < img.detections.length; i++) {
               const det = img.detections[i];
@@ -535,15 +562,25 @@ export async function syncLocalHistory(): Promise<void> {
                 saveWeightEstimate({
                   groupId: remoteGroupId,
                   imageUri: img.imageUri,
-                  fishIndex: i,
+                  fishIndex: globalFishIndex,
                   species: det.species,
                   weightG: det.weightG,
                   timestamp: record.createdAt,
-                }).catch((e) => {
-                  syncLogger.warn("LocalHistory", `Weight sync failed for fish ${i} of group ${remoteGroupId}`);
+                }).catch(async (e) => {
+                  syncLogger.warn("LocalHistory", `Weight sync failed for fish ${globalFishIndex} of group ${remoteGroupId} - queueing for retry`);
                   console.warn(`[syncLocalHistory] Weight sync failed:`, e);
+                  const { SyncService } = await import("./sync-service");
+                  await SyncService.queueChange("weight_estimate", {
+                    groupId: remoteGroupId,
+                    imageUri: img.imageUri,
+                    fishIndex: globalFishIndex,
+                    species: det.species,
+                    weightG: det.weightG,
+                    timestamp: record.createdAt,
+                  });
                 });
               }
+              globalFishIndex++;
             }
           }
         }

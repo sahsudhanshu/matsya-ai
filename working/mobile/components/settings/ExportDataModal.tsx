@@ -2,13 +2,12 @@ import React, { useState } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
   Switch,
 } from "react-native";
-import { COLORS, FONTS, SPACING, RADIUS } from "../../lib/constants";
+import { COLORS } from "../../lib/constants";
 import { Modal } from "../ui/Modal";
 import { ExportService } from "../../lib/export-service";
 import type { DataExportOptions } from "../../lib/types";
@@ -48,18 +47,18 @@ export function ExportDataModal({ visible, onClose }: ExportDataModalProps) {
 
   return (
     <Modal visible={visible} onClose={onClose} title="Export Data">
-      <View style={styles.content}>
-        <Text style={styles.description}>
+      <View className="gap-lg">
+        <Text className="text-sm text-slate-300 leading-5">
           Export your catch history, analysis results, and chat conversations.
         </Text>
 
         {/* Export Options */}
-        <View style={styles.optionsSection}>
-          <Text style={styles.label}>What to Export</Text>
-          <View style={styles.optionRow}>
-            <View style={styles.optionLeft}>
-              <Text style={styles.optionLabel}>Analyses</Text>
-              <Text style={styles.optionDesc}>
+        <View className="gap-sm">
+          <Text className="text-sm text-textSecondary font-medium">What to Export</Text>
+          <View className="flex-row justify-between items-center py-sm border-b border-border">
+            <View className="flex-1 mr-md">
+              <Text className="text-sm text-textSecondary font-medium">Analyses</Text>
+              <Text className="text-xs text-textSubtle mt-[2px]">
                 All catch analysis results and images
               </Text>
             </View>
@@ -70,10 +69,10 @@ export function ExportDataModal({ visible, onClose }: ExportDataModalProps) {
               thumbColor={includeAnalysis ? COLORS.primary : COLORS.textSubtle}
             />
           </View>
-          <View style={styles.optionRow}>
-            <View style={styles.optionLeft}>
-              <Text style={styles.optionLabel}>Chat History</Text>
-              <Text style={styles.optionDesc}>
+          <View className="flex-row justify-between items-center py-sm border-b border-border">
+            <View className="flex-1 mr-md">
+              <Text className="text-sm text-textSecondary font-medium">Chat History</Text>
+              <Text className="text-xs text-textSubtle mt-[2px]">
                 All conversations with AI assistant
               </Text>
             </View>
@@ -86,76 +85,56 @@ export function ExportDataModal({ visible, onClose }: ExportDataModalProps) {
           </View>
         </View>
 
-        <View style={styles.formatSection}>
-          <Text style={styles.label}>Select Format</Text>
-          <View style={styles.formatButtons}>
+        <View className="gap-sm">
+          <Text className="text-sm text-textSecondary font-medium">Select Format</Text>
+          <View className="flex-row gap-md">
             <TouchableOpacity
-              style={[
-                styles.formatButton,
-                format === "csv" && styles.formatButtonActive,
-              ]}
+              className={`flex-1 bg-bgDark border-2 rounded-md p-sm items-center ${format === "csv" ? "border-primary bg-primary/15" : "border-border"}`}
               onPress={() => setFormat("csv")}
             >
-              <Text
-                style={[
-                  styles.formatButtonText,
-                  format === "csv" && styles.formatButtonTextActive,
-                ]}
-              >
+              <Text className={`text-sm font-bold mb-xs ${format === "csv" ? "text-primary" : "text-slate-300"}`}>
                 CSV
               </Text>
-              <Text style={styles.formatButtonDesc}>Spreadsheet format</Text>
+              <Text className="text-xs text-textSubtle">Spreadsheet format</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[
-                styles.formatButton,
-                format === "json" && styles.formatButtonActive,
-              ]}
+              className={`flex-1 bg-bgDark border-2 rounded-md p-sm items-center ${format === "json" ? "border-primary bg-primary/15" : "border-border"}`}
               onPress={() => setFormat("json")}
             >
-              <Text
-                style={[
-                  styles.formatButtonText,
-                  format === "json" && styles.formatButtonTextActive,
-                ]}
-              >
+              <Text className={`text-sm font-bold mb-xs ${format === "json" ? "text-primary" : "text-slate-300"}`}>
                 JSON
               </Text>
-              <Text style={styles.formatButtonDesc}>Raw data format</Text>
+              <Text className="text-xs text-textSubtle">Raw data format</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        <View style={styles.infoBox}>
-          <Text style={styles.infoText}>
+        <View className="bg-primary/10 border-l-[3px] border-primary rounded-md p-md">
+          <Text className="text-xs text-textMuted leading-[18px]">
             📦 Your data will be downloaded and you can share it via email,
             cloud storage, or other apps.
           </Text>
         </View>
 
-        <View style={styles.buttons}>
+        <View className="flex-row gap-md mt-md">
           <TouchableOpacity
-            style={[styles.button, styles.cancelButton]}
+            className="flex-1 py-sm rounded-md items-center justify-center bg-slate-900 border border-slate-600"
             onPress={onClose}
             disabled={loading}
           >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
+            <Text className="text-sm text-slate-300 font-medium">Cancel</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[
-              styles.button,
-              styles.exportButton,
-              loading && styles.buttonDisabled,
-            ]}
+            className={`flex-1 py-sm rounded-md items-center justify-center bg-primary ${loading ? "opacity-50" : ""}`}
             onPress={handleExport}
             disabled={loading}
           >
             {loading ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
-              <Text style={styles.exportButtonText}>Export</Text>
+              <Text className="text-sm text-white font-bold">Export</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -163,122 +142,3 @@ export function ExportDataModal({ visible, onClose }: ExportDataModalProps) {
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  content: {
-    gap: SPACING.lg,
-  },
-  description: {
-    fontSize: FONTS.sizes.sm,
-    color: "#cbd5e1", // Brighter text
-    lineHeight: 20,
-  },
-  optionsSection: {
-    gap: SPACING.sm,
-  },
-  optionRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: SPACING.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  optionLeft: {
-    flex: 1,
-    marginRight: SPACING.md,
-  },
-  optionLabel: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textSecondary,
-    fontWeight: FONTS.weights.medium,
-  },
-  optionDesc: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textSubtle,
-    marginTop: 2,
-  },
-  formatSection: {
-    gap: SPACING.sm,
-  },
-  label: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textSecondary,
-    fontWeight: FONTS.weights.medium,
-  },
-  formatButtons: {
-    flexDirection: "row",
-    gap: SPACING.md,
-  },
-  formatButton: {
-    flex: 1,
-    backgroundColor: COLORS.bgDark,
-    borderWidth: 2,
-    borderColor: COLORS.border,
-    borderRadius: RADIUS.md,
-    padding: SPACING.sm,
-    alignItems: "center",
-  },
-  formatButtonActive: {
-    borderColor: COLORS.primary,
-    backgroundColor: COLORS.primary + "15",
-  },
-  formatButtonText: {
-    fontSize: FONTS.sizes.sm,
-    color: "#cbd5e1", // Brighter text
-    fontWeight: FONTS.weights.bold,
-    marginBottom: SPACING.xs,
-  },
-  formatButtonTextActive: {
-    color: COLORS.primary,
-  },
-  formatButtonDesc: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textSubtle,
-  },
-  infoBox: {
-    backgroundColor: COLORS.primary + "10",
-    borderLeftWidth: 3,
-    borderLeftColor: COLORS.primary,
-    borderRadius: RADIUS.md,
-    padding: SPACING.md,
-  },
-  infoText: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    lineHeight: 18,
-  },
-  buttons: {
-    flexDirection: "row",
-    gap: SPACING.md,
-    marginTop: SPACING.md,
-  },
-  button: {
-    flex: 1,
-    paddingVertical: SPACING.sm,
-    borderRadius: RADIUS.md,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cancelButton: {
-    backgroundColor: "#0f172a", // Darker for contrast
-    borderWidth: 1,
-    borderColor: "#475569", // Lighter border
-  },
-  cancelButtonText: {
-    fontSize: FONTS.sizes.sm,
-    color: "#cbd5e1", // Brighter text
-    fontWeight: FONTS.weights.medium,
-  },
-  exportButton: {
-    backgroundColor: COLORS.primary,
-  },
-  exportButtonText: {
-    fontSize: FONTS.sizes.sm,
-    color: "#fff",
-    fontWeight: FONTS.weights.bold,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-});

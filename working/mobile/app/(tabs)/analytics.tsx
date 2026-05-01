@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
-  StyleSheet,
+  
   ScrollView,
   RefreshControl,
   TouchableOpacity,
@@ -221,38 +221,38 @@ export default function AnalyticsScreen() {
 
   if (loading || !isLoaded) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#0f172a" }}>
         <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.content}
+          className="flex-1"
+          contentContainerStyle={{ padding: 24, paddingBottom: 64 }}
         >
-          <View style={styles.header}>
-            <Text style={styles.title}>{t("nav.analytics")}</Text>
-            <Text style={styles.subtitle}>{t("home.statEarnings")}</Text>
+          <View className="mb-lg flex-row justify-between items-start">
+            <Text className="text-xl text-textPrimary font-bold">{t("nav.analytics")}</Text>
+            <Text className="text-sm text-textMuted mt-xs">{t("home.statEarnings")}</Text>
           </View>
 
           {/* Loading Skeletons */}
-          <View style={styles.statsGrid}>
-            <SkeletonStatCard style={styles.statCard} />
-            <SkeletonStatCard style={styles.statCard} />
-            <SkeletonStatCard style={styles.statCard} />
-            <SkeletonStatCard style={styles.statCard} />
+          <View className="flex-row flex-wrap gap-sm mb-lg">
+            <SkeletonStatCard className="w-[47%]" />
+            <SkeletonStatCard className="w-[47%]" />
+            <SkeletonStatCard className="w-[47%]" />
+            <SkeletonStatCard className="w-[47%]" />
           </View>
 
-          <Text style={styles.sectionTitle}>{t("home.statEarnings")}</Text>
-          <Card padding={SPACING.md} style={styles.chartCard}>
+          <Text className="text-base text-textPrimary font-semibold mb-sm mt-xs">{t("home.statEarnings")}</Text>
+          <Card padding={SPACING.md} className="mb-lg">
             <SkeletonBarChart />
           </Card>
 
-          <Text style={styles.sectionTitle}>{t("home.insightSpecies")}</Text>
-          <Card padding={SPACING.md} style={styles.chartCard}>
+          <Text className="text-base text-textPrimary font-semibold mb-sm mt-xs">{t("home.insightSpecies")}</Text>
+          <Card padding={SPACING.md} className="mb-lg">
             <SkeletonSpeciesBreakdown />
           </Card>
 
-          <Text style={styles.sectionTitle}>{t("upload.species")}</Text>
+          <Text className="text-base text-textPrimary font-semibold mb-sm mt-xs">{t("upload.species")}</Text>
           <SkeletonQualityCards />
 
-          <Text style={styles.sectionTitle}>{t("upload.title")}</Text>
+          <Text className="text-base text-textPrimary font-semibold mb-sm mt-xs">{t("upload.title")}</Text>
           <SkeletonCatchItem />
           <SkeletonCatchItem />
           <SkeletonCatchItem />
@@ -268,10 +268,10 @@ export default function AnalyticsScreen() {
   // Show error state when analytics data is unavailable
   if (error && !analytics) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#0f172a" }}>
         <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.content}
+          className="flex-1"
+          contentContainerStyle={{ padding: 24, paddingBottom: 64 }}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -281,9 +281,9 @@ export default function AnalyticsScreen() {
             />
           }
         >
-          <View style={styles.header}>
-            <Text style={styles.title}>{t("nav.analytics")}</Text>
-            <Text style={styles.subtitle}>{t("home.statEarnings")}</Text>
+          <View className="mb-lg flex-row justify-between items-start">
+            <Text className="text-xl text-textPrimary font-bold">{t("nav.analytics")}</Text>
+            <Text className="text-sm text-textMuted mt-xs">{t("home.statEarnings")}</Text>
           </View>
 
           <EmptyState
@@ -310,57 +310,51 @@ export default function AnalyticsScreen() {
           />
 
           {!isOnline && (
-            <View style={styles.offlineBadge}>
+            <View className="flex-row items-center gap-xs bg-warning/20 px-md py-sm rounded-full mb-lg">
               <Ionicons
                 name="cloud-offline-outline"
                 size={16}
                 color={COLORS.warning}
               />
-              <Text style={styles.offlineText}>Offline Mode</Text>
+              <Text className="text-xs text-warning font-semibold">Offline Mode</Text>
             </View>
           )}
 
           {/* Still show catch history if we have images */}
           {images && images.length > 0 && (
             <>
-              <Text style={styles.sectionTitle}>{t("upload.title")}</Text>
+              <Text className="text-base text-textPrimary font-semibold mb-sm mt-xs">{t("upload.title")}</Text>
               {images.slice(0, 5).map((img) => (
                 <Card
                   key={img.imageId}
                   padding={SPACING.md}
-                  style={styles.catchItem}
+                  className="mb-md"
                 >
-                  <View style={styles.catchRow}>
-                    <View style={styles.catchLeft}>
+                  <View className="flex-row justify-between items-center">
+                    <View className="flex-row items-center gap-md">
                       <Ionicons
                         name="fish-outline"
                         size={22}
                         color={COLORS.primaryLight}
                       />
                       <View>
-                        <Text style={styles.catchSpecies}>
+                        <Text className="text-sm text-textPrimary font-semibold">
                           {img.status === "failed"
                             ? "Analysis Failed"
                             : (img.analysisResult?.species ?? "Pending")}
                         </Text>
-                        <Text style={styles.catchDate}>
+                        <Text className="text-xs text-textMuted mt-[2px]">
                           {new Date(img.createdAt).toLocaleDateString("en-IN")}
                         </Text>
                       </View>
                     </View>
-                    <View style={styles.catchRight}>
+                    <View className="items-end gap-xs">
                       {img.status === "failed" ? (
                         <View
-                          style={[
-                            styles.catchGrade,
-                            { backgroundColor: COLORS.error + "20" },
-                          ]}
+                          className="rounded-full px-sm py-[2px] bg-error/20"
                         >
                           <Text
-                            style={[
-                              styles.catchGradeText,
-                              { color: COLORS.error },
-                            ]}
+                            className="text-xs font-bold text-error"
                           >
                             FAILED
                           </Text>
@@ -368,28 +362,10 @@ export default function AnalyticsScreen() {
                       ) : img.analysisResult ? (
                         <>
                           <View
-                            style={[
-                              styles.catchGrade,
-                              {
-                                backgroundColor:
-                                  GRADE_COLORS[
-                                    img.analysisResult.qualityGrade ??
-                                      "Standard"
-                                  ] + "20",
-                              },
-                            ]}
+                            className="rounded-full px-sm py-[2px]" style={{ backgroundColor: GRADE_COLORS[img.analysisResult.qualityGrade ?? "Standard"] + "20" }}
                           >
                             <Text
-                              style={[
-                                styles.catchGradeText,
-                                {
-                                  color:
-                                    GRADE_COLORS[
-                                      img.analysisResult.qualityGrade ??
-                                        "Standard"
-                                    ],
-                                },
-                              ]}
+                              className="text-xs font-bold" style={{ color: GRADE_COLORS[img.analysisResult.qualityGrade ?? "Standard"] }}
                             >
                               {img.analysisResult.qualityGrade ?? "-"}
                             </Text>
@@ -397,16 +373,10 @@ export default function AnalyticsScreen() {
                         </>
                       ) : (
                         <View
-                          style={[
-                            styles.catchGrade,
-                            { backgroundColor: COLORS.warning + "20" },
-                          ]}
+                          className="rounded-full px-sm py-[2px] bg-warning/20"
                         >
                           <Text
-                            style={[
-                              styles.catchGradeText,
-                              { color: COLORS.warning },
-                            ]}
+                            className="text-xs font-bold text-warning"
                           >
                             PENDING
                           </Text>
@@ -424,10 +394,10 @@ export default function AnalyticsScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#0f172a" }}>
       <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
+        className="flex-1"
+        contentContainerStyle={{ padding: 24, paddingBottom: 64 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -439,16 +409,13 @@ export default function AnalyticsScreen() {
         }
       >
         {/* Header */}
-        <View style={styles.header}>
+        <View className="mb-lg flex-row justify-between items-start">
           <View style={{ flex: 1 }}>
-            <Text style={styles.title}>{t("nav.analytics")}</Text>
-            <Text style={styles.subtitle}>{t("home.statEarnings")}</Text>
+            <Text className="text-xl text-textPrimary font-bold">{t("nav.analytics")}</Text>
+            <Text className="text-sm text-textMuted mt-xs">{t("home.statEarnings")}</Text>
           </View>
           <TouchableOpacity
-            style={[
-              styles.exportButton,
-              (exportingPDF || !analytics) && styles.exportButtonDisabled,
-            ]}
+            className={`flex-row items-center gap-xs bg-primary px-sm py-[6px] rounded-md ${exportingPDF || !analytics ? "bg-textMuted opacity-60" : ""}`}
             onPress={handleExportPDF}
             disabled={exportingPDF || !analytics}
           >
@@ -461,7 +428,7 @@ export default function AnalyticsScreen() {
                 color={COLORS.white}
               />
             )}
-            <Text style={styles.exportButtonText}>
+            <Text className="text-sm text-white font-semibold">
               {exportingPDF ? "Generating..." : "Export PDF"}
             </Text>
           </TouchableOpacity>
@@ -470,13 +437,13 @@ export default function AnalyticsScreen() {
 
         {/* Offline/Cache indicator */}
         {(isFromCache || !isOnline) && (
-          <View style={styles.cacheIndicator}>
+          <View className="flex-row items-center gap-xs bg-bgCard px-md py-sm rounded-full mb-lg self-start">
             <Ionicons
               name={isOnline ? "time-outline" : "cloud-offline-outline"}
               size={14}
               color={COLORS.textMuted}
             />
-            <Text style={styles.cacheText}>
+            <Text className="text-xs text-textMuted">
               {isOnline
                 ? `Cached data${lastUpdated ? ` • Updated ${formatRelativeTime(lastUpdated)}` : ""}`
                 : "Offline Mode • Showing cached data"}
@@ -485,7 +452,7 @@ export default function AnalyticsScreen() {
         )}
 
         {/* Stats Overview */}
-        <View style={styles.statsGrid}>
+        <View className="flex-row flex-wrap gap-sm mb-lg">
           <StatCard
             label={t("home.statEarnings")}
             value={`₹${analytics ? (analytics.totalEarnings / 1000).toFixed(1) + "K" : "-"}`}
@@ -497,7 +464,7 @@ export default function AnalyticsScreen() {
               />
             }
             accentColor={COLORS.secondary}
-            style={styles.statCard}
+            className="w-[47%]"
           />
           <StatCard
             label={t("home.statCatches")}
@@ -506,7 +473,7 @@ export default function AnalyticsScreen() {
               <Ionicons name="fish-outline" size={20} color={COLORS.primary} />
             }
             accentColor={COLORS.primary}
-            style={styles.statCard}
+            className="w-[47%]"
           />
           <StatCard
             label={t("map.weight")}
@@ -515,37 +482,34 @@ export default function AnalyticsScreen() {
               <Ionicons name="scale-outline" size={20} color={COLORS.accent} />
             }
             accentColor={COLORS.accent}
-            style={styles.statCard}
+            className="w-[47%]"
           />
           <StatCard
             label={t("home.insightSpecies")}
             value={analytics?.topSpecies?.split(" ")[0] ?? "-"}
             icon={<Ionicons name="trophy-outline" size={20} color="#7c3aed" />}
             accentColor="#7c3aed"
-            style={styles.statCard}
+            className="w-[47%]"
           />
         </View>
 
         {/* Earnings Chart */}
-        <Text style={styles.sectionTitle}>{t("home.statEarnings")}</Text>
-        <Card padding={SPACING.md} style={styles.chartCard}>
-          <View style={styles.barChart}>
+        <Text className="text-base text-textPrimary font-semibold mb-sm mt-xs">{t("home.statEarnings")}</Text>
+        <Card padding={SPACING.md} className="mb-lg">
+          <View className="flex-row items-end justify-between h-[160px]">
             {analytics?.weeklyTrend.map((day) => {
               const barHeight = Math.max((day.earnings / maxEarnings) * 120, 8);
               return (
-                <View key={day.date} style={styles.barWrapper}>
-                  <Text style={styles.barValue}>
+                <View key={day.date} className="items-center flex-1 gap-xs">
+                  <Text className="text-xs text-textMuted text-center">
                     ₹{(day.earnings / 1000).toFixed(0)}k
                   </Text>
-                  <View style={styles.barTrack}>
+                  <View className="flex-1 justify-end px-xs">
                     <View
-                      style={[
-                        styles.bar,
-                        { height: barHeight, backgroundColor: COLORS.primary },
-                      ]}
+                      className="rounded-sm min-w-[16px] bg-primary" style={{ height: barHeight }}
                     />
                   </View>
-                  <Text style={styles.barLabel}>{day.date}</Text>
+                  <Text className="text-xs text-textSubtle">{day.date}</Text>
                 </View>
               );
             })}
@@ -553,8 +517,8 @@ export default function AnalyticsScreen() {
         </Card>
 
         {/* Species Breakdown */}
-        <Text style={styles.sectionTitle}>{t("home.insightSpecies")}</Text>
-        <Card padding={SPACING.md} style={styles.chartCard}>
+        <Text className="text-base text-textPrimary font-semibold mb-sm mt-xs">{t("home.insightSpecies")}</Text>
+        <Card padding={SPACING.md} className="mb-lg">
           {analytics?.speciesBreakdown.map((s, i) => {
             const colors = [
               COLORS.primary,
@@ -564,90 +528,78 @@ export default function AnalyticsScreen() {
             ];
             const color = colors[i % colors.length];
             return (
-              <View key={s.name} style={styles.speciesRow}>
-                <View style={styles.speciesLeft}>
+              <View key={s.name} className="flex-row items-center py-sm gap-sm">
+                <View className="flex-row items-center gap-sm w-[80px]">
                   <View
-                    style={[styles.speciesDot, { backgroundColor: color }]}
+                    className="w-2 h-2 rounded-full" style={{ backgroundColor: color }}
                   />
-                  <Text style={styles.speciesName}>{s.name}</Text>
+                  <Text className="text-sm text-textSecondary font-medium">{s.name}</Text>
                 </View>
-                <View style={styles.speciesBarContainer}>
+                <View className="flex-1 h-2 bg-borderLight rounded-full overflow-hidden">
                   <View
-                    style={[
-                      styles.speciesBar,
-                      {
-                        width: `${s.percentage}%`,
-                        backgroundColor: color + "80",
-                      },
-                    ]}
+                    className="h-full rounded-full" style={{ width: `${s.percentage}%`, backgroundColor: color + "80" }}
                   />
                 </View>
-                <Text style={styles.speciesPct}>{s.percentage}%</Text>
+                <Text className="text-xs text-textMuted w-[35px] text-right">{s.percentage}%</Text>
               </View>
             );
           })}
         </Card>
 
         {/* Quality Distribution */}
-        <Text style={styles.sectionTitle}>{t("upload.species")}</Text>
-        <View style={styles.qualityRow}>
+        <Text className="text-base text-textPrimary font-semibold mb-sm mt-xs">{t("upload.species")}</Text>
+        <View className="flex-row gap-md mb-xl">
           {analytics?.qualityDistribution.map((q) => (
-            <Card key={q.grade} padding={SPACING.md} style={styles.qualityCard}>
+            <Card key={q.grade} padding={SPACING.md} className="flex-1 items-center">
               <View
-                style={[
-                  styles.qualityDot,
-                  { backgroundColor: GRADE_COLORS[q.grade] },
-                ]}
+                className="w-[10px] h-[10px] rounded-full mb-sm" style={{ backgroundColor: GRADE_COLORS[q.grade] }}
               />
               <Text
-                style={[styles.qualityGrade, { color: GRADE_COLORS[q.grade] }]}
+                className="text-sm font-bold" style={{ color: GRADE_COLORS[q.grade] }}
               >
                 {q.grade}
               </Text>
-              <Text style={styles.qualityCount}>{q.count}</Text>
-              <Text style={styles.qualityLabel}>{t("home.statCatches")}</Text>
+              <Text className="text-xl text-textPrimary font-bold mt-xs">{q.count}</Text>
+              <Text className="text-xs text-textMuted">{t("home.statCatches")}</Text>
             </Card>
           ))}
         </View>
 
         {/* Catch History */}
-        <Text style={styles.sectionTitle}>{t("upload.title")}</Text>
+        <Text className="text-base text-textPrimary font-semibold mb-sm mt-xs">{t("upload.title")}</Text>
         {images &&
           images.length > 0 &&
           images.slice(0, 5).map((img) => (
             <Card
               key={img.imageId}
               padding={SPACING.md}
-              style={styles.catchItem}
+              className="mb-md"
             >
-              <View style={styles.catchRow}>
-                <View style={styles.catchLeft}>
+              <View className="flex-row justify-between items-center">
+                <View className="flex-row items-center gap-md">
                   <Ionicons
                     name="fish-outline"
                     size={22}
                     color={COLORS.primaryLight}
                   />
                   <View>
-                    <Text style={styles.catchSpecies}>
+                    <Text className="text-sm text-textPrimary font-semibold">
                       {img.status === "failed"
                         ? "Analysis Failed"
                         : (img.analysisResult?.species ?? "Pending")}
                     </Text>
-                    <Text style={styles.catchDate}>
+                    <Text className="text-xs text-textMuted mt-[2px]">
                       {new Date(img.createdAt).toLocaleDateString("en-IN")}
                     </Text>
                   </View>
                 </View>
-                <View style={styles.catchRight}>
+                <View className="items-end gap-xs">
                   {img.status === "failed" ? (
                     <View
-                      style={[
-                        styles.catchGrade,
-                        { backgroundColor: COLORS.error + "20" },
-                      ]}
+                      className="rounded-full px-sm py-[2px] bg-error/20"
                     >
                       <Text
-                        style={[styles.catchGradeText, { color: COLORS.error }]}
+                        className="text-xs font-bold text-error"
                       >
                         FAILED
                       </Text>
@@ -655,38 +607,22 @@ export default function AnalyticsScreen() {
                   ) : img.analysisResult ? (
                     <>
                       <View
-                        style={[
-                          styles.catchGrade,
-                          {
-                            backgroundColor:
-                              GRADE_COLORS[
-                                img.analysisResult.qualityGrade ?? "Standard"
-                              ] + "20",
-                          },
-                        ]}
+                        className="rounded-full px-sm py-[2px]" style={{ backgroundColor: GRADE_COLORS[img.analysisResult.qualityGrade ?? "Standard"] + "20" }}
                       >
                         <Text
-                          style={[
-                            styles.catchGradeText,
-                            {
-                              color:
-                                GRADE_COLORS[
-                                  img.analysisResult.qualityGrade ?? "Standard"
-                                ],
-                            },
-                          ]}
+                          className="text-xs font-bold" style={{ color: GRADE_COLORS[img.analysisResult.qualityGrade ?? "Standard"] }}
                         >
                           {img.analysisResult.qualityGrade ?? "-"}
                         </Text>
                       </View>
-                      <Text style={styles.catchWeight}>
+                      <Text className="text-sm text-textSecondary font-semibold">
                         {(img.analysisResult.measurements?.weight_g
                           ? img.analysisResult.measurements.weight_g / 1000
                           : img.analysisResult.weightEstimate
                         ).toFixed(2)}{" "}
                         kg
                       </Text>
-                      <Text style={styles.catchValue}>
+                      <Text className="text-sm text-success font-bold">
                         ₹
                         {img.analysisResult.marketEstimate?.estimated_value ??
                           Math.round(
@@ -697,16 +633,10 @@ export default function AnalyticsScreen() {
                     </>
                   ) : (
                     <View
-                      style={[
-                        styles.catchGrade,
-                        { backgroundColor: COLORS.warning + "20" },
-                      ]}
+                      className="rounded-full px-sm py-[2px] bg-warning/20"
                     >
                       <Text
-                        style={[
-                          styles.catchGradeText,
-                          { color: COLORS.warning },
-                        ]}
+                        className="text-xs font-bold text-warning"
                       >
                         PENDING
                       </Text>
@@ -721,257 +651,4 @@ export default function AnalyticsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.bgDark },
-  scroll: { flex: 1 },
-  content: { padding: SPACING.lg, paddingBottom: SPACING["3xl"] },
 
-  header: {
-    marginBottom: SPACING.lg,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-  },
-  title: {
-    fontSize: FONTS.sizes.xl,
-    color: COLORS.textPrimary,
-    fontWeight: FONTS.weights.bold,
-  },
-  subtitle: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-    marginTop: SPACING.xs,
-  },
-  exportButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.xs,
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 6,
-    borderRadius: RADIUS.md,
-  },
-  exportButtonDisabled: {
-    backgroundColor: COLORS.textMuted,
-    opacity: 0.6,
-  },
-  exportButtonText: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.white,
-    fontWeight: FONTS.weights.semibold,
-  },
-
-  cacheIndicator: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.xs,
-    backgroundColor: COLORS.bgCard,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
-    borderRadius: RADIUS.full,
-    marginBottom: SPACING.lg,
-    alignSelf: "flex-start",
-  },
-  cacheText: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-  },
-
-  errorContainer: {
-    alignItems: "center",
-    paddingVertical: SPACING["3xl"],
-  },
-  errorTitle: {
-    fontSize: FONTS.sizes.lg,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-    marginBottom: SPACING.sm,
-    textAlign: "center",
-  },
-  errorMessage: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-    textAlign: "center",
-    lineHeight: 22,
-    paddingHorizontal: SPACING.xl,
-    marginBottom: SPACING.lg,
-  },
-  offlineBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.xs,
-    backgroundColor: COLORS.warning + "20",
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
-    borderRadius: RADIUS.full,
-    marginBottom: SPACING.lg,
-  },
-  offlineText: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.warning,
-    fontWeight: FONTS.weights.semibold,
-  },
-  retryButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.sm,
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: SPACING.xl,
-    paddingVertical: SPACING.md,
-    borderRadius: RADIUS.md,
-  },
-  retryButtonText: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.white,
-    fontWeight: FONTS.weights.semibold,
-  },
-
-  sectionTitle: {
-    fontSize: FONTS.sizes.base,
-    color: COLORS.textPrimary,
-    fontWeight: FONTS.weights.semibold,
-    marginBottom: SPACING.sm,
-    marginTop: SPACING.xs,
-  },
-
-  statsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: SPACING.sm,
-    marginBottom: SPACING.lg,
-  },
-  statCard: { width: "47%" },
-
-  chartCard: { marginBottom: SPACING.lg },
-
-  // Bar Chart
-  barChart: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-    height: 160,
-  },
-  barWrapper: { alignItems: "center", flex: 1, gap: SPACING.xs },
-  barValue: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    textAlign: "center",
-  },
-  barTrack: {
-    flex: 1,
-    justifyContent: "flex-end",
-    paddingHorizontal: SPACING.xs,
-  },
-  bar: { borderRadius: RADIUS.sm, minWidth: 16 },
-  barLabel: { fontSize: FONTS.sizes.xs, color: COLORS.textSubtle },
-
-  // Species
-  speciesRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: SPACING.sm,
-    gap: SPACING.sm,
-  },
-  speciesLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.sm,
-    width: 80,
-  },
-  speciesDot: { width: 8, height: 8, borderRadius: 4 },
-  speciesName: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textSecondary,
-    fontWeight: FONTS.weights.medium,
-  },
-  speciesBarContainer: {
-    flex: 1,
-    height: 8,
-    backgroundColor: COLORS.border,
-    borderRadius: RADIUS.full,
-    overflow: "hidden",
-  },
-  speciesBar: { height: "100%", borderRadius: RADIUS.full },
-  speciesPct: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    width: 35,
-    textAlign: "right",
-  },
-
-  // Quality
-  qualityRow: {
-    flexDirection: "row",
-    gap: SPACING.md,
-    marginBottom: SPACING.xl,
-  },
-  qualityCard: { flex: 1, alignItems: "center" },
-  qualityDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginBottom: SPACING.sm,
-  },
-  qualityGrade: { fontSize: FONTS.sizes.sm, fontWeight: FONTS.weights.bold },
-  qualityCount: {
-    fontSize: FONTS.sizes.xl,
-    color: COLORS.textPrimary,
-    fontWeight: FONTS.weights.bold,
-    marginTop: SPACING.xs,
-  },
-  qualityLabel: { fontSize: FONTS.sizes.xs, color: COLORS.textMuted },
-
-  // Insights
-  insightsCard: { marginBottom: SPACING.xl },
-  insightRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: SPACING.sm,
-    gap: SPACING.md,
-  },
-  insightBorder: { borderTopWidth: 1, borderTopColor: COLORS.border },
-
-  insightText: {
-    flex: 1,
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textSecondary,
-    lineHeight: 20,
-  },
-
-  // Catch History
-  catchItem: { marginBottom: SPACING.md },
-  catchRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  catchLeft: { flexDirection: "row", alignItems: "center", gap: SPACING.md },
-
-  catchSpecies: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textPrimary,
-    fontWeight: FONTS.weights.semibold,
-  },
-  catchDate: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    marginTop: 2,
-  },
-  catchRight: { alignItems: "flex-end", gap: SPACING.xs },
-  catchGrade: {
-    borderRadius: RADIUS.full,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 2,
-  },
-  catchGradeText: { fontSize: FONTS.sizes.xs, fontWeight: FONTS.weights.bold },
-  catchWeight: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textSecondary,
-    fontWeight: FONTS.weights.semibold,
-  },
-  catchValue: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.success,
-    fontWeight: FONTS.weights.bold,
-  },
-});

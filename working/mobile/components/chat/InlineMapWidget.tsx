@@ -3,14 +3,7 @@
  * Mirrors the maps tab: PROVIDER_DEFAULT + mapType="none" + UrlTile overlay.
  */
 import React, { useMemo, useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Modal,
-  PixelRatio,
-} from "react-native";
+import { View, Text, TouchableOpacity, Modal, PixelRatio } from "react-native";
 import MapView, {
   Marker,
   UrlTile,
@@ -18,7 +11,7 @@ import MapView, {
   Region,
 } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS, FONTS, RADIUS } from "../../lib/constants";
+import { COLORS } from "../../lib/constants";
 
 const TILE_SIZE = 256;
 const USE_RETINA = PixelRatio.get() >= 2;
@@ -64,12 +57,12 @@ export function InlineMapWidget({
 
   return (
     <>
-      <View style={styles.container}>
+      <View className="rounded-md overflow-hidden bg-bgCard border border-borderDark mt-2 mb-1">
         {/* Header */}
-        <View style={styles.mapHeader}>
-          <View style={styles.mapHeaderLeft}>
+        <View className="flex-row items-center justify-between px-[10px] py-[6px] bg-[rgba(15,23,42,0.6)]">
+          <View className="flex-row items-center gap-[6px]">
             <Ionicons name="location" size={14} color={COLORS.primaryLight} />
-            <Text style={styles.mapHeaderText}>
+            <Text className="text-[11px] text-textMuted font-mono">
               {latitude.toFixed(4)}°N, {longitude.toFixed(4)}°E
             </Text>
           </View>
@@ -89,15 +82,15 @@ export function InlineMapWidget({
         <TouchableOpacity
           activeOpacity={0.9}
           onPress={() => setExpanded(true)}
-          style={styles.miniMapTapArea}
+          className="h-[160px]"
         >
           {!expanded ? (
             <MapView
               pointerEvents="none"
-              style={styles.miniMap}
+              style={{ flex: 1, width: "100%", height: "100%" }}
               provider={PROVIDER_DEFAULT}
               initialRegion={miniRegion}
-              mapType="satellite"
+              mapType="hybrid"
               scrollEnabled={false}
               zoomEnabled={false}
               rotateEnabled={false}
@@ -111,21 +104,21 @@ export function InlineMapWidget({
               />
             </MapView>
           ) : (
-            <View
-              style={[styles.miniMap, { backgroundColor: COLORS.bgCard }]}
-            />
+            <View className="h-full w-full bg-bgCard" />
           )}
         </TouchableOpacity>
 
         {/* CTA */}
         {onSendLocation && (
           <TouchableOpacity
-            style={styles.sendLocationBtn}
+            className="flex-row items-center justify-center gap-[6px] py-2 bg-[#1e40af30]"
             onPress={() => onSendLocation(latitude, longitude)}
             activeOpacity={0.8}
           >
             <Ionicons name="navigate" size={13} color="#fff" />
-            <Text style={styles.sendLocationText}>Ask about this location</Text>
+            <Text className="text-[12px] font-semibold text-primaryLight">
+              Ask about this location
+            </Text>
           </TouchableOpacity>
         )}
       </View>
@@ -140,27 +133,29 @@ export function InlineMapWidget({
           setExpanded(false);
         }}
       >
-        <View style={styles.fullMapContainer}>
-          <View style={styles.fullMapHeader}>
+        <View style={{ flex: 1, backgroundColor: "#0f172a" }}>
+          <View className="flex-row items-center justify-between px-4 pt-[50px] pb-3 bg-bgCard border-b border-borderDark">
             <TouchableOpacity
               onPress={() => {
                 setFullMapReady(false);
                 setExpanded(false);
               }}
-              style={styles.fullMapClose}
+              className="w-[40px] h-[40px] items-center justify-center"
             >
               <Ionicons name="close" size={24} color={COLORS.textPrimary} />
             </TouchableOpacity>
-            <Text style={styles.fullMapTitle}>Location</Text>
+            <Text className="text-[15px] font-semibold text-textPrimary">
+              Location
+            </Text>
             <View style={{ width: 40 }} />
           </View>
 
           {fullMapReady && (
             <MapView
-              style={styles.fullMap}
+              style={{ flex: 1 }}
               provider={PROVIDER_DEFAULT}
               initialRegion={fullRegion}
-              mapType="satellite"
+              mapType="hybrid"
               showsUserLocation
               showsCompass
               showsMyLocationButton={false}
@@ -183,9 +178,9 @@ export function InlineMapWidget({
           )}
 
           {onSendLocation && (
-            <View style={styles.fullMapFooter}>
+            <View className="p-4 pb-[34px] bg-bgCard border-t border-borderDark">
               <TouchableOpacity
-                style={styles.fullSendBtn}
+                className="flex-row items-center justify-center gap-2 bg-primary rounded-md py-[14px]"
                 onPress={() => {
                   onSendLocation(latitude, longitude);
                   setFullMapReady(false);
@@ -194,7 +189,7 @@ export function InlineMapWidget({
                 activeOpacity={0.8}
               >
                 <Ionicons name="chatbubble" size={16} color="#fff" />
-                <Text style={styles.fullSendText}>
+                <Text className="text-[15px] font-semibold text-white">
                   Ask Agent About This Spot
                 </Text>
               </TouchableOpacity>
@@ -205,86 +200,3 @@ export function InlineMapWidget({
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    borderRadius: RADIUS.md,
-    overflow: "hidden",
-    backgroundColor: COLORS.bgCard,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    marginTop: 8,
-    marginBottom: 4,
-  },
-  mapHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    backgroundColor: "rgba(15, 23, 42, 0.6)",
-  },
-  mapHeaderLeft: { flexDirection: "row", alignItems: "center", gap: 6 },
-  mapHeaderText: {
-    fontSize: 11,
-    color: COLORS.textMuted,
-    fontFamily: "monospace",
-  },
-  miniMapTapArea: { height: 160 },
-  miniMap: { height: "100%", width: "100%" },
-  sendLocationBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    paddingVertical: 8,
-    backgroundColor: COLORS.primary + "30",
-  },
-  sendLocationText: {
-    fontSize: 12,
-    color: COLORS.primaryLight,
-    fontWeight: "600",
-  },
-  // Full-screen
-  fullMapContainer: { flex: 1, backgroundColor: COLORS.bgDark },
-  fullMap: { flex: 1 },
-  fullMapHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingTop: 50,
-    paddingBottom: 12,
-    backgroundColor: COLORS.bgCard,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  fullMapClose: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  fullMapTitle: {
-    fontSize: FONTS.sizes.md,
-    fontWeight: "600",
-    color: COLORS.textPrimary,
-  },
-  fullMapFooter: {
-    padding: 16,
-    paddingBottom: 34,
-    backgroundColor: COLORS.bgCard,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-  },
-  fullSendBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: COLORS.primary,
-    borderRadius: RADIUS.md,
-    paddingVertical: 14,
-  },
-  fullSendText: { fontSize: 15, fontWeight: "600", color: "#fff" },
-});

@@ -17,18 +17,14 @@ import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   ActivityIndicator,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Ionicons } from "@expo/vector-icons";
 import { Modal } from "./ui/Modal";
 import { Input } from "./ui/Input";
 import { Button } from "./ui/Button";
-import { COLORS, FONTS, SPACING, RADIUS } from "../lib/constants";
+import { COLORS } from "../lib/constants";
 import {
   estimateFishWeightOnline,
   type OnlineWeightResult,
@@ -193,27 +189,35 @@ export function WeightEstimateModal({
       size="lg"
     >
       <KeyboardAwareScrollView
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={{
+          paddingHorizontal: 16,
+          paddingBottom: 24,
+          gap: 16,
+        }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         enableOnAndroid={true}
       >
         {/* ── Species badge ── */}
-        <View style={styles.speciesBadge}>
-          <Text style={styles.speciesBadgeLabel}>Detected Species</Text>
-          <Text style={styles.speciesBadgeValue}>{species}</Text>
+        <View className="mb-1 items-center rounded-xl border border-[#3b82f666] bg-[#1e40af33] p-4">
+          <Text className="text-[10px] font-semibold uppercase tracking-[0.8px] text-[#94a3b8]">
+            Detected Species
+          </Text>
+          <Text className="mt-0.5 text-[15px] font-bold text-[#3b82f6]">
+            {species}
+          </Text>
         </View>
 
         {/* ── Input phase ── */}
         {phase === "input" && (
           <>
-            <Text style={styles.instruction}>
+            <Text className="text-[12px] leading-5 text-[#94a3b8]">
               Enter the fish measurements below. All values should be in
               centimetres (cm).
             </Text>
 
             {FIELDS.map((field) => (
-              <View key={field.key} style={styles.fieldBlock}>
+              <View key={field.key} className="gap-1">
                 <Input
                   label={field.label}
                   placeholder={field.placeholder}
@@ -227,7 +231,9 @@ export function WeightEstimateModal({
                   keyboardType="decimal-pad"
                   error={errors[field.key]}
                 />
-                <Text style={styles.hint}>{field.hint}</Text>
+                <Text className="pl-1 text-[10px] text-[#64748b]">
+                  {field.hint}
+                </Text>
               </View>
             ))}
 
@@ -235,21 +241,22 @@ export function WeightEstimateModal({
               label="Estimate Weight"
               onPress={handleSubmit}
               variant="primary"
-              style={styles.submitBtn}
+              className="mt-2"
             />
           </>
         )}
 
         {/* ── Loading phase ── */}
         {phase === "loading" && (
-          <View style={styles.centeredSection}>
+          <View className="items-center gap-4 py-8">
             <ActivityIndicator
               size="large"
               color={COLORS.primaryLight}
-              style={styles.spinner}
             />
-            <Text style={styles.loadingText}>Estimating weight…</Text>
-            <Text style={styles.loadingSubtext}>
+            <Text className="text-[13px] font-semibold text-[#e2e8f0]">
+              Estimating weight…
+            </Text>
+            <Text className="text-[12px] text-[#94a3b8]">
               ML model · Scientific formula · Gemini analysis
             </Text>
           </View>
@@ -257,13 +264,15 @@ export function WeightEstimateModal({
 
         {/* ── Result phase (online) ── */}
         {phase === "result" && result && (
-          <View style={styles.resultSection}>
-            <View style={styles.resultCard}>
-              <Text style={styles.resultTitle}>Estimated Weight</Text>
-              <Text style={styles.resultWeight}>
+          <View className="gap-4">
+            <View className="items-center rounded-xl border border-[#10b98155] bg-[#04785722] p-6">
+              <Text className="text-[10px] font-semibold uppercase tracking-[0.8px] text-[#94a3b8]">
+                Estimated Weight
+              </Text>
+              <Text className="mt-1 text-[22px] font-extrabold text-[#10b981]">
                 {(result.estimated_weight_grams / 1000).toFixed(2)} kg
               </Text>
-              <Text style={styles.resultWeightKg}>
+              <Text className="mt-0.5 text-[12px] text-[#94a3b8]">
                 {result.estimated_weight_grams.toFixed(0)} g
               </Text>
             </View>
@@ -301,22 +310,26 @@ export function WeightEstimateModal({
               label="Done"
               onPress={handleAcceptResult}
               variant="primary"
-              style={styles.submitBtn}
+              className="mt-2"
             />
           </View>
         )}
 
         {/* ── Error phase ── */}
         {phase === "error" && (
-          <View style={styles.centeredSection}>
+          <View className="items-center gap-4 py-8">
             <Ionicons name="warning-outline" size={40} color={COLORS.warning} />
-            <Text style={styles.errorTitle}>Inference Failed</Text>
-            <Text style={styles.errorMsg}>{errorMsg}</Text>
+            <Text className="text-[13px] font-semibold text-[#f8fafc]">
+              Inference Failed
+            </Text>
+            <Text className="text-center text-[12px] text-[#94a3b8]">
+              {errorMsg}
+            </Text>
             <Button
               label="Try Again"
               onPress={handleTryAgain}
               variant="outline"
-              style={styles.retryBtn}
+              className="mt-2"
             />
           </View>
         )}
@@ -337,215 +350,17 @@ function ResultRow({
   muted?: boolean;
 }) {
   return (
-    <View style={styles.resultRow}>
-      <Text style={styles.resultRowLabel}>{label}</Text>
-      <Text style={[styles.resultRowValue, muted && styles.resultRowMuted]}>
+    <View className="flex-row items-center justify-between rounded-xl bg-[#334155] px-4 py-3">
+      <Text className="text-[12px] text-[#94a3b8]">{label}</Text>
+      <Text
+        className={
+          muted
+            ? "max-w-[65%] text-right text-[12px] italic text-[#64748b]"
+            : "max-w-[65%] text-right text-[12px] font-medium text-[#e2e8f0]"
+        }
+      >
         {value}
       </Text>
     </View>
   );
 }
-
-// ── Styles ─────────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  scroll: {
-    paddingHorizontal: SPACING.md,
-    paddingBottom: SPACING.xl,
-    gap: SPACING.md,
-  },
-
-  speciesBadge: {
-    backgroundColor: COLORS.primary + "33",
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: COLORS.primaryLight + "66",
-    padding: SPACING.md,
-    alignItems: "center",
-    marginBottom: SPACING.xs,
-  },
-  speciesBadgeLabel: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    fontWeight: FONTS.weights.semibold,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  speciesBadgeValue: {
-    fontSize: FONTS.sizes.md,
-    color: COLORS.primaryLight,
-    fontWeight: FONTS.weights.bold,
-    marginTop: 2,
-  },
-
-  instruction: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-    lineHeight: 20,
-  },
-
-  fieldBlock: {
-    gap: 4,
-  },
-  hint: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textSubtle,
-    paddingLeft: SPACING.xs,
-  },
-
-  submitBtn: {
-    marginTop: SPACING.sm,
-  },
-
-  // Loading
-  centeredSection: {
-    alignItems: "center",
-    paddingVertical: SPACING.xl,
-    gap: SPACING.md,
-  },
-  spinner: {
-    marginBottom: SPACING.sm,
-  },
-  loadingText: {
-    fontSize: FONTS.sizes.base,
-    color: COLORS.textSecondary,
-    fontWeight: FONTS.weights.semibold,
-  },
-  loadingSubtext: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-  },
-
-  // Result
-  resultSection: {
-    gap: SPACING.md,
-  },
-  resultCard: {
-    backgroundColor: COLORS.secondary + "22",
-    borderRadius: RADIUS.lg,
-    borderWidth: 1.5,
-    borderColor: COLORS.secondaryLight + "55",
-    padding: SPACING.lg,
-    alignItems: "center",
-  },
-  resultTitle: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-    fontWeight: FONTS.weights.semibold,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  resultWeight: {
-    fontSize: FONTS.sizes["2xl"],
-    color: COLORS.secondaryLight,
-    fontWeight: FONTS.weights.extrabold,
-    marginTop: SPACING.xs,
-  },
-  resultWeightKg: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-    marginTop: 2,
-  },
-
-  // Method breakdown
-  methodBreakdown: {
-    backgroundColor: COLORS.bgSurface,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: COLORS.primaryLight + "33",
-    padding: SPACING.md,
-    gap: SPACING.sm,
-  },
-  methodBreakdownTitle: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    fontWeight: FONTS.weights.semibold,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-    marginBottom: SPACING.xs,
-  },
-  methodRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  methodRowAvg: {
-    marginTop: SPACING.xs,
-    paddingTop: SPACING.xs,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.primaryLight + "33",
-  },
-  methodLabel: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-  },
-  methodValue: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textSecondary,
-    fontWeight: FONTS.weights.medium,
-  },
-  methodLabelAvg: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.primaryLight,
-    fontWeight: FONTS.weights.semibold,
-  },
-  methodValueAvg: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.primaryLight,
-    fontWeight: FONTS.weights.bold,
-  },
-
-  resultMeta: {
-    backgroundColor: COLORS.bgSurface,
-    borderRadius: RADIUS.md,
-    padding: SPACING.md,
-    gap: SPACING.sm,
-  },
-  resultRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  resultRowLabel: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-  },
-  resultRowValue: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textSecondary,
-    fontWeight: FONTS.weights.medium,
-  },
-  resultRowMuted: {
-    color: COLORS.textSubtle,
-    fontStyle: "italic",
-  },
-
-  buttonRow: {
-    flexDirection: "row",
-    gap: SPACING.sm,
-  },
-  halfBtn: {
-    flex: 1,
-  },
-  retryBtn: {
-    alignSelf: "center",
-    minWidth: 140,
-  },
-
-  // Error
-  errorIcon: {
-    fontSize: 40,
-  },
-  errorTitle: {
-    fontSize: FONTS.sizes.md,
-    color: COLORS.error,
-    fontWeight: FONTS.weights.bold,
-  },
-  errorMsg: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-    textAlign: "center",
-    lineHeight: 20,
-    paddingHorizontal: SPACING.md,
-  },
-});

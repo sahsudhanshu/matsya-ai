@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   Switch,
   Alert,
@@ -262,29 +261,29 @@ export default function SettingsScreen() {
   if (!isLoaded) return null;
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#0f172a" }}>
       <KeyboardAwareScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
+        className="flex-1"
+        contentContainerClassName="p-6 pb-16"
         showsVerticalScrollIndicator={false}
         enableOnAndroid={true}
       >
         {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>{t("nav.settings")}</Text>
+        <View className="mb-6 flex-row justify-between items-center">
+          <Text className="text-xl text-slate-50 font-bold">{t("nav.settings")}</Text>
           <ProfileMenu size={36} />
         </View>
 
         {/* Profile Card */}
-        <View style={styles.profileCard}>
-          <View style={styles.profileAvatar}>
-            <Text style={styles.profileAvatarText}>
+        <View className="flex-row items-center bg-slate-800 rounded-[20px] border border-slate-700 p-4 mb-6 gap-2">
+          <View className="w-12 h-12 rounded-full bg-blue-800 items-center justify-center">
+            <Text className="text-[17px] text-white font-bold">
               {(user?.name ?? "F")[0].toUpperCase()}
             </Text>
           </View>
-          <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>{user?.name ?? "Fisherman"}</Text>
-            <Text style={styles.profileEmail}>{user?.email ?? ""}</Text>
+          <View className="flex-1">
+            <Text className="text-[13px] font-semibold text-slate-50">{user?.name ?? "Fisherman"}</Text>
+            <Text className="text-xs text-slate-400 mt-0.5">{user?.email ?? ""}</Text>
             {user?.location && (
               <View
                 style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
@@ -294,15 +293,15 @@ export default function SettingsScreen() {
                   size={12}
                   color={COLORS.textMuted}
                 />
-                <Text style={styles.profileLocation}>{user.location}</Text>
+                <Text className="text-[10px] text-slate-500 mt-0.5">{user.location}</Text>
               </View>
             )}
           </View>
         </View>
 
         {/* Account Info */}
-        <Text style={styles.sectionLabel}>{t("settings.account")}</Text>
-        <Card padding={0} style={styles.menuCard}>
+        <Text className="text-[10px] text-slate-500 font-semibold tracking-wide uppercase mb-1 mt-2 px-1">{t("settings.account")}</Text>
+        <Card padding={0} className="mb-1 overflow-hidden">
           {user?.phone && (
             <PreferenceRow
               label={t("settings.phone")}
@@ -331,11 +330,11 @@ export default function SettingsScreen() {
         </Card>
 
         {/* Public Profile Section */}
-        <Text style={styles.sectionLabel}>Public Profile</Text>
+        <Text className="text-xs font-bold color-[#94a3b8] uppercase tracking-[0.8px] mb-2 ml-1 mt-4">Public Profile</Text>
         {loadingProfile ? (
-          <Card style={styles.loadingCard}>
+          <Card className="flex-row items-center justify-center p-6 gap-4">
             <ActivityIndicator size="small" color={COLORS.primary} />
-            <Text style={styles.loadingText}>Loading profile settings...</Text>
+            <Text className="text-xs text-slate-400">Loading profile settings...</Text>
           </Card>
         ) : publicProfile ? (
           <>
@@ -347,7 +346,7 @@ export default function SettingsScreen() {
               onPreview={handlePreviewProfile}
               loading={updatingProfile}
             />
-            <Card padding={0} style={styles.menuCard}>
+            <Card padding={0} className="mb-4">
               <PreferenceRow
                 label="Configure Public Profile"
                 type="action"
@@ -358,8 +357,8 @@ export default function SettingsScreen() {
         ) : null}
 
         {/* Preferences */}
-        <Text style={styles.sectionLabel}>{t("settings.preferences")}</Text>
-        <Card padding={0} style={styles.menuCard}>
+        <Text className="text-xs font-bold color-[#94a3b8] uppercase tracking-[0.8px] mb-2 ml-1 mt-4">{t("settings.preferences")}</Text>
+        <Card padding={0} className="mb-4">
           <PreferenceRow
             label={t("settings.notifications")}
             type="toggle"
@@ -377,8 +376,8 @@ export default function SettingsScreen() {
         </Card>
 
         {/* Fishing Preferences */}
-        <Text style={styles.sectionLabel}>Fishing Preferences</Text>
-        <Card padding={0} style={styles.menuCard}>
+        <Text className="text-xs font-bold color-[#94a3b8] uppercase tracking-[0.8px] mb-2 ml-1 mt-4">Fishing Preferences</Text>
+        <Card padding={0} className="mb-4">
           <PreferenceRow
             label="Boat Type"
             type="select"
@@ -412,8 +411,8 @@ export default function SettingsScreen() {
         </Card>
 
         {/* Language */}
-        <Text style={styles.sectionLabel}>{t("settings.language")}</Text>
-        <Card padding={0} style={styles.menuCard}>
+        <Text className="text-xs font-bold color-[#94a3b8] uppercase tracking-[0.8px] mb-2 ml-1 mt-4">{t("settings.language")}</Text>
+        <Card padding={0} className="mb-4">
           <PreferenceRow
             label={t("settings.appLanguage")}
             type="select"
@@ -423,8 +422,8 @@ export default function SettingsScreen() {
         </Card>
 
         {/* Privacy & Security */}
-        <Text style={styles.sectionLabel}>{t("settings.privacy")}</Text>
-        <Card padding={0} style={styles.menuCard}>
+        <Text className="text-xs font-bold color-[#94a3b8] uppercase tracking-[0.8px] mb-2 ml-1 mt-4">{t("settings.privacy")}</Text>
+        <Card padding={0} className="mb-4">
           <PreferenceRow
             label={t("settings.changePassword")}
             type="action"
@@ -444,8 +443,8 @@ export default function SettingsScreen() {
         </Card>
 
         {/* AI Agent */}
-        <Text style={styles.sectionLabel}>AI Agent</Text>
-        <Card padding={0} style={styles.menuCard}>
+        <Text className="text-xs font-bold color-[#94a3b8] uppercase tracking-[0.8px] mb-2 ml-1 mt-4">AI Agent</Text>
+        <Card padding={0} className="mb-4">
           <PreferenceRow
             label="Agent Memory"
             type="action"
@@ -516,10 +515,10 @@ export default function SettingsScreen() {
         </Card>
 
         {/* Data Sync */}
-        <Text style={styles.sectionLabel}>Data Sync</Text>
+        <Text className="text-xs font-bold color-[#94a3b8] uppercase tracking-[0.8px] mb-2 ml-1 mt-4">Data Sync</Text>
         <Card
           padding={SPACING.md}
-          style={[styles.menuCard, { padding: SPACING.md }]}
+          className="mb-1 overflow-hidden p-4"
         >
           {/* Status row */}
           <View
@@ -660,7 +659,7 @@ export default function SettingsScreen() {
         {showSyncLogs && (
           <Card
             padding={SPACING.sm}
-            style={[styles.menuCard, { maxHeight: 300 }]}
+            className="mb-1 overflow-hidden max-h-[300px]"
           >
             {syncLogs.length === 0 ? (
               <Text
@@ -750,8 +749,8 @@ export default function SettingsScreen() {
         )}
 
         {/* Help */}
-        <Text style={styles.sectionLabel}>{t("settings.help")}</Text>
-        <Card padding={0} style={styles.menuCard}>
+        <Text className="text-xs font-bold color-[#94a3b8] uppercase tracking-[0.8px] mb-2 ml-1 mt-4">{t("settings.help")}</Text>
+        <Card padding={0} className="mb-4">
           <PreferenceRow
             label="Documentation"
             type="action"
@@ -772,15 +771,15 @@ export default function SettingsScreen() {
 
         {/* Logout */}
         <TouchableOpacity
-          style={styles.logoutBtn}
+          className="bg-red-500/15 border border-red-500/40 rounded-2xl p-2 items-center mt-6 mb-2"
           onPress={handleLogout}
           activeOpacity={0.8}
         >
-          <Text style={styles.logoutText}>🚪 {t("settings.logout")}</Text>
+          <Text className="text-red-500 text-xs font-semibold">🚪 {t("settings.logout")}</Text>
         </TouchableOpacity>
 
         {/* App Info */}
-        <Text style={styles.appInfo}>
+        <Text className="text-center text-slate-500 text-[10px] mb-2">
           Matsya AI v1.0.0 · AWS AI for Bharat Challenge
         </Text>
       </KeyboardAwareScrollView>
@@ -792,9 +791,9 @@ export default function SettingsScreen() {
         animationType="slide"
         onRequestClose={() => setLangModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalSheet}>
-            <Text style={styles.modalTitle}>
+        <View className="flex-1 bg-black/70 justify-center items-center p-8">
+          <View className="bg-slate-800 rounded-[20px] p-6 pb-12 max-h-[80%] w-full">
+            <Text className="text-[13px] font-semibold text-slate-50 mb-2">
               {t("settings.selectLanguage")}
             </Text>
             <ScrollView showsVerticalScrollIndicator={false}>
@@ -802,10 +801,7 @@ export default function SettingsScreen() {
                 ([code, displayName]) => (
                   <TouchableOpacity
                     key={code}
-                    style={[
-                      styles.langOption,
-                      code === locale && styles.langOptionActive,
-                    ]}
+                    className={`flex-row justify-between items-center py-2 border-b border-slate-700 ${code === locale ? "bg-blue-800/15 rounded-xl px-2" : ""}`}
                     onPress={() => {
                       setLocale(code as any);
                       setLangModalVisible(false);
@@ -813,10 +809,7 @@ export default function SettingsScreen() {
                     activeOpacity={0.8}
                   >
                     <Text
-                      style={[
-                        styles.langOptionText,
-                        code === locale && styles.langOptionTextActive,
-                      ]}
+                      className={`text-[13px] text-slate-200 ${code === locale ? "text-blue-500 font-bold" : ""}`}
                     >
                       {displayName}
                     </Text>
@@ -866,9 +859,9 @@ export default function SettingsScreen() {
         animationType="slide"
         onRequestClose={() => setBoatTypeModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalSheet}>
-            <Text style={styles.modalTitle}>Select Boat Type</Text>
+        <View className="flex-1 justify-end bg-black/60">
+          <View className="bg-[#1e293b] rounded-t-3xl p-6 pb-8">
+            <Text className="text-xl font-bold color-[#f8fafc] mb-6 text-center">Select Boat Type</Text>
             <ScrollView showsVerticalScrollIndicator={false}>
               {[
                 "Trawler",
@@ -881,10 +874,7 @@ export default function SettingsScreen() {
               ].map((type) => (
                 <TouchableOpacity
                   key={type}
-                  style={[
-                    styles.langOption,
-                    preferences?.boatType === type && styles.langOptionActive,
-                  ]}
+                  className={`flex-row justify-between items-center py-2 border-b border-slate-700 ${preferences?.boatType === type ? "bg-blue-800/15 rounded-xl px-2" : ""}`}
                   onPress={() => {
                     updatePreference({ boatType: type });
                     setBoatTypeModalVisible(false);
@@ -892,11 +882,7 @@ export default function SettingsScreen() {
                   activeOpacity={0.8}
                 >
                   <Text
-                    style={[
-                      styles.langOptionText,
-                      preferences?.boatType === type &&
-                        styles.langOptionTextActive,
-                    ]}
+                    className={`text-[13px] text-slate-200 ${preferences?.boatType === type ? "text-blue-500 font-bold" : ""}`}
                   >
                     {type}
                   </Text>
@@ -921,9 +907,9 @@ export default function SettingsScreen() {
         animationType="slide"
         onRequestClose={() => setWeightUnitModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalSheet}>
-            <Text style={styles.modalTitle}>Select Weight Unit</Text>
+        <View className="flex-1 justify-end bg-black/60">
+          <View className="bg-[#1e293b] rounded-t-3xl p-6 pb-8">
+            <Text className="text-xl font-bold color-[#f8fafc] mb-6 text-center">Select Weight Unit</Text>
             <ScrollView showsVerticalScrollIndicator={false}>
               {[
                 { label: "Kilograms (kg)", value: "kg" },
@@ -932,11 +918,7 @@ export default function SettingsScreen() {
               ].map((unit) => (
                 <TouchableOpacity
                   key={unit.value}
-                  style={[
-                    styles.langOption,
-                    preferences?.units === unit.value &&
-                      styles.langOptionActive,
-                  ]}
+                  className={`flex-row justify-between items-center py-2 border-b border-slate-700 ${preferences?.units === unit.value ? "bg-blue-800/15 rounded-xl px-2" : ""}`}
                   onPress={() => {
                     updatePreference({ units: unit.value });
                     setWeightUnitModalVisible(false);
@@ -944,11 +926,7 @@ export default function SettingsScreen() {
                   activeOpacity={0.8}
                 >
                   <Text
-                    style={[
-                      styles.langOptionText,
-                      preferences?.units === unit.value &&
-                        styles.langOptionTextActive,
-                    ]}
+                    className={`text-[13px] text-slate-200 ${preferences?.units === unit.value ? "text-blue-500 font-bold" : ""}`}
                   >
                     {unit.label}
                   </Text>
@@ -969,152 +947,3 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.bgDark },
-  scroll: { flex: 1 },
-  content: { padding: SPACING.lg, paddingBottom: SPACING["3xl"] },
-
-  header: {
-    marginBottom: SPACING.lg,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  title: {
-    fontSize: FONTS.sizes.xl,
-    color: COLORS.textPrimary,
-    fontWeight: FONTS.weights.bold,
-  },
-
-  profileCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.xl,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: SPACING.md,
-    marginBottom: SPACING.lg,
-    gap: SPACING.sm,
-  },
-  profileAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: COLORS.primary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  profileAvatarText: {
-    fontSize: FONTS.sizes.lg,
-    color: "#fff",
-    fontWeight: FONTS.weights.bold,
-  },
-  profileInfo: { flex: 1 },
-  profileName: {
-    fontSize: FONTS.sizes.base,
-    fontWeight: FONTS.weights.semibold,
-    color: COLORS.textPrimary,
-  },
-  profileEmail: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-    marginTop: 2,
-  },
-  profileLocation: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textSubtle,
-    marginTop: 2,
-  },
-
-  sectionLabel: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textSubtle,
-    fontWeight: FONTS.weights.semibold,
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-    marginBottom: SPACING.xs,
-    marginTop: SPACING.sm,
-    paddingHorizontal: SPACING.xs,
-  },
-
-  menuCard: {
-    marginBottom: SPACING.xs,
-    overflow: "hidden",
-  },
-
-  logoutBtn: {
-    backgroundColor: COLORS.error + "15",
-    borderWidth: 1,
-    borderColor: COLORS.error + "40",
-    borderRadius: RADIUS.lg,
-    padding: SPACING.sm,
-    alignItems: "center",
-    marginTop: SPACING.lg,
-    marginBottom: SPACING.sm,
-  },
-  logoutText: {
-    color: COLORS.error,
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.semibold,
-  },
-
-  appInfo: {
-    textAlign: "center",
-    color: COLORS.textSubtle,
-    fontSize: FONTS.sizes.xs,
-    marginBottom: SPACING.sm,
-  },
-
-  loadingCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: SPACING.lg,
-    gap: SPACING.md,
-  },
-  loadingText: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-  },
-
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.7)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: SPACING.xl,
-  },
-  modalSheet: {
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.xl,
-    padding: SPACING.lg,
-    paddingBottom: SPACING["2xl"],
-    maxHeight: "80%",
-    width: "100%",
-  },
-  modalTitle: {
-    fontSize: FONTS.sizes.base,
-    fontWeight: FONTS.weights.semibold,
-    color: COLORS.textPrimary,
-    marginBottom: SPACING.sm,
-  },
-  langOption: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: SPACING.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  langOptionActive: {
-    backgroundColor: COLORS.primary + "15",
-    borderRadius: RADIUS.md,
-    paddingHorizontal: SPACING.sm,
-  },
-  langOptionText: { fontSize: FONTS.sizes.base, color: COLORS.textSecondary },
-  langOptionTextActive: {
-    color: COLORS.primaryLight,
-    fontWeight: FONTS.weights.bold,
-  },
-});

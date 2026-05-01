@@ -6,7 +6,6 @@ import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
@@ -125,11 +124,11 @@ export function SyncStatusIndicator({
 
   return (
     <TouchableOpacity
-      style={styles.container}
+      className="px-2 py-1"
       onPress={showSyncButton ? handleManualSync : undefined}
       disabled={!showSyncButton}
     >
-      <View style={styles.content}>
+      <View className="flex-row items-center gap-1.5">
         {config.showSpinner ? (
           <ActivityIndicator size="small" color={config.color} />
         ) : (
@@ -138,7 +137,7 @@ export function SyncStatusIndicator({
           )
         )}
         {showLabel && (
-          <Text style={[styles.text, { color: config.color, fontSize }]}>
+          <Text style={{ color: config.color, fontWeight: "500", fontSize }}>
             {config.text}
           </Text>
         )}
@@ -146,18 +145,3 @@ export function SyncStatusIndicator({
     </TouchableOpacity>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  content: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  text: {
-    fontWeight: "500",
-  },
-});

@@ -670,7 +670,12 @@ export async function streamChat(
         }
       }
       return { chatId: overrideChatId, messageId: finalMessageId, ui: finalUi };
-    } catch {
+    } catch (err: any) {
+      if (signal?.aborted || err?.name === 'AbortError') {
+        const abortErr = new Error('AbortError');
+        abortErr.name = 'AbortError';
+        throw abortErr;
+      }
       // If stream was already established, avoid issuing a second duplicate sync request.
       if (streamEstablished || streamedAnyChunk) {
         return { chatId: overrideChatId };
@@ -789,6 +794,18 @@ export async function getConversationsList(): Promise<Conversation[]> {
     return res.conversations;
   }
   return [];
+}
+
+export async function deleteConversation(conversationId: string): Promise<void> {
+  if (!IS_AGENT_CONFIGURED) {
+    throw new ApiError(0, "Chat is not available. Configure EXPO_PUBLIC_AGENT_URL.");
+  }
+  if (!conversationId || !conversationId.trim()) {
+    throw new ApiError(400, "Conversation ID is required");
+  }
+  await agentFetch(`/conversations/${conversationId}`, {
+    method: "DELETE",
+  });
 }
 
 /**

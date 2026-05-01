@@ -16,7 +16,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
-  StyleSheet,
+  
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
@@ -219,11 +219,14 @@ export function ZoneInsights({
           onPress={() => handleZonePress(zone.zoneId)}
         >
           <View
-            style={[
-              styles.zoneMarker,
-              { backgroundColor: conditionColor },
-              isSelected && styles.zoneMarkerSelected,
-            ]}
+            className="items-center justify-center rounded-full border-white shadow-md shadow-black/25"
+            style={{
+              backgroundColor: conditionColor,
+              width: isSelected ? 44 : 36,
+              height: isSelected ? 44 : 36,
+              borderRadius: isSelected ? 22 : 18,
+              borderWidth: isSelected ? 3 : 2,
+            }}
           >
             <Ionicons
               name="location"
@@ -243,26 +246,26 @@ export function ZoneInsights({
 
       {/* Zone Detail Card (shown when a zone is selected) */}
       {selectedZoneId && (
-        <View style={styles.detailCard}>
-          <View style={styles.detailCardHandle} />
+        <View className="absolute bottom-0 left-0 right-0 max-h-[60%] rounded-t-[20px] bg-white shadow-lg shadow-black/10">
+          <View className="mt-2 mb-4 h-1 w-10 self-center rounded-sm bg-gray-300" />
 
           {insightLoading ? (
-            <View style={styles.loadingContainer}>
+            <View className="items-center gap-2 p-8">
               <ActivityIndicator size="small" color={Colors.primary[500]} />
-              <Text style={styles.loadingText}>Loading zone insights...</Text>
+              <Text className="text-[12px] text-gray-500">Loading zone insights...</Text>
             </View>
           ) : selectedZoneInsight ? (
             <ScrollView
-              style={styles.detailContent}
+              className="px-4 pb-6"
               showsVerticalScrollIndicator={false}
             >
               {/* Header */}
-              <View style={styles.detailHeader}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.zoneName}>
+              <View className="mb-6 flex-row items-start">
+                <View className="flex-1">
+                  <Text className="mb-1 text-[13px] font-bold text-gray-900">
                     {selectedZoneInsight.zoneName}
                   </Text>
-                  <Text style={styles.zoneCoords}>
+                  <Text className="text-[12px] text-gray-500">
                     {selectedZoneInsight.location.latitude.toFixed(4)}°N,{" "}
                     {selectedZoneInsight.location.longitude.toFixed(4)}°E
                   </Text>
@@ -272,7 +275,7 @@ export function ZoneInsights({
                     setSelectedZoneId(null);
                     setSelectedZoneInsight(null);
                   }}
-                  style={styles.closeButton}
+                  className="p-1"
                 >
                   <Ionicons
                     name="close"
@@ -283,18 +286,16 @@ export function ZoneInsights({
               </View>
 
               {/* Fishing Conditions */}
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Fishing Conditions</Text>
+              <View className="mb-6">
+                <Text className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-gray-700">Fishing Conditions</Text>
                 <View
-                  style={[
-                    styles.conditionBadge,
-                    {
-                      backgroundColor:
-                        getConditionColor(
-                          selectedZoneInsight.recommendations.fishingConditions,
-                        ) + "20",
-                    },
-                  ]}
+                  className="flex-row items-center gap-2 self-start rounded-lg px-4 py-2"
+                  style={{
+                    backgroundColor:
+                      getConditionColor(
+                        selectedZoneInsight.recommendations.fishingConditions,
+                      ) + "20",
+                  }}
                 >
                   <Ionicons
                     name={getConditionIcon(
@@ -306,14 +307,12 @@ export function ZoneInsights({
                     )}
                   />
                   <Text
-                    style={[
-                      styles.conditionText,
-                      {
-                        color: getConditionColor(
-                          selectedZoneInsight.recommendations.fishingConditions,
-                        ),
-                      },
-                    ]}
+                    className="text-[12px] font-bold tracking-wide"
+                    style={{
+                      color: getConditionColor(
+                        selectedZoneInsight.recommendations.fishingConditions,
+                      ),
+                    }}
                   >
                     {selectedZoneInsight.recommendations.fishingConditions.toUpperCase()}
                   </Text>
@@ -321,18 +320,18 @@ export function ZoneInsights({
               </View>
 
               {/* Target Species */}
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Target Species</Text>
-                <View style={styles.speciesList}>
+              <View className="mb-6">
+                <Text className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-gray-700">Target Species</Text>
+                <View className="flex-row flex-wrap gap-2">
                   {selectedZoneInsight.recommendations.targetSpecies.map(
                     (species, index) => (
-                      <View key={index} style={styles.speciesChip}>
+                      <View key={index} className="flex-row items-center gap-1 rounded-2xl border border-blue-500/30 bg-blue-50 px-2 py-1">
                         <Ionicons
                           name="fish"
                           size={14}
                           color={Colors.primary[500]}
                         />
-                        <Text style={styles.speciesText}>{species}</Text>
+                        <Text className="text-[12px] font-medium text-blue-700">{species}</Text>
                       </View>
                     ),
                   )}
@@ -340,48 +339,44 @@ export function ZoneInsights({
               </View>
 
               {/* Expected Catch Size & Safety */}
-              <View style={styles.statsRow}>
-                <View style={styles.statCard}>
-                  <View style={styles.statHeader}>
+              <View className="mb-6 flex-row gap-4">
+                <View className="flex-1 rounded-xl border border-gray-200 bg-gray-50 p-4">
+                  <View className="mb-1 flex-row items-center gap-1">
                     <Ionicons
                       name="resize-outline"
                       size={16}
                       color={Colors.neutral[500]}
                     />
-                    <Text style={styles.statLabel}>Catch Size</Text>
+                    <Text className="text-[10px] uppercase tracking-wide text-gray-500">Catch Size</Text>
                   </View>
                   <Text
-                    style={[
-                      styles.statValue,
-                      {
-                        color: getCatchSizeColor(
-                          selectedZoneInsight.recommendations.expectedCatchSize,
-                        ),
-                      },
-                    ]}
+                    className="text-[12px] font-bold"
+                    style={{
+                      color: getCatchSizeColor(
+                        selectedZoneInsight.recommendations.expectedCatchSize,
+                      ),
+                    }}
                   >
                     {selectedZoneInsight.recommendations.expectedCatchSize.toUpperCase()}
                   </Text>
                 </View>
 
-                <View style={styles.statCard}>
-                  <View style={styles.statHeader}>
+                <View className="flex-1 rounded-xl border border-gray-200 bg-gray-50 p-4">
+                  <View className="mb-1 flex-row items-center gap-1">
                     <Ionicons
                       name="shield-checkmark-outline"
                       size={16}
                       color={Colors.neutral[500]}
                     />
-                    <Text style={styles.statLabel}>Safety</Text>
+                    <Text className="text-[10px] uppercase tracking-wide text-gray-500">Safety</Text>
                   </View>
                   <Text
-                    style={[
-                      styles.statValue,
-                      {
-                        color: getSafetyColor(
-                          selectedZoneInsight.recommendations.safetyRating,
-                        ),
-                      },
-                    ]}
+                    className="text-[12px] font-bold"
+                    style={{
+                      color: getSafetyColor(
+                        selectedZoneInsight.recommendations.safetyRating,
+                      ),
+                    }}
                   >
                     {selectedZoneInsight.recommendations.safetyRating}/10
                   </Text>
@@ -389,39 +384,39 @@ export function ZoneInsights({
               </View>
 
               {/* Recent Activity */}
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Recent Activity</Text>
-                <View style={styles.activityGrid}>
-                  <View style={styles.activityItem}>
+              <View className="mb-6">
+                <Text className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-gray-700">Recent Activity</Text>
+                <View className="flex-row gap-2">
+                  <View className="flex-1 items-center gap-1 rounded-lg bg-gray-50 p-2">
                     <Ionicons
                       name="fish-outline"
                       size={18}
                       color={Colors.primary[500]}
                     />
-                    <Text style={styles.activityLabel}>Catches</Text>
-                    <Text style={styles.activityValue}>
+                    <Text className="text-center text-[10px] text-gray-500">Catches</Text>
+                    <Text className="text-center text-[12px] font-bold text-gray-900">
                       {selectedZoneInsight.recentActivity.catchCount}
                     </Text>
                   </View>
-                  <View style={styles.activityItem}>
+                  <View className="flex-1 items-center gap-1 rounded-lg bg-gray-50 p-2">
                     <Ionicons
                       name="star-outline"
                       size={18}
                       color={Colors.primary[500]}
                     />
-                    <Text style={styles.activityLabel}>Top Species</Text>
-                    <Text style={styles.activityValue}>
+                    <Text className="text-center text-[10px] text-gray-500">Top Species</Text>
+                    <Text className="text-center text-[12px] font-bold text-gray-900">
                       {selectedZoneInsight.recentActivity.topSpecies}
                     </Text>
                   </View>
-                  <View style={styles.activityItem}>
+                  <View className="flex-1 items-center gap-1 rounded-lg bg-gray-50 p-2">
                     <Ionicons
                       name="ribbon-outline"
                       size={18}
                       color={Colors.primary[500]}
                     />
-                    <Text style={styles.activityLabel}>Avg Quality</Text>
-                    <Text style={styles.activityValue}>
+                    <Text className="text-center text-[10px] text-gray-500">Avg Quality</Text>
+                    <Text className="text-center text-[12px] font-bold text-gray-900">
                       {selectedZoneInsight.recentActivity.avgQuality}
                     </Text>
                   </View>
@@ -429,14 +424,14 @@ export function ZoneInsights({
               </View>
 
               {/* Last Updated */}
-              <Text style={styles.lastUpdated}>
+              <Text className="mb-2 mt-4 text-center text-[10px] text-gray-500">
                 Updated{" "}
                 {new Date(selectedZoneInsight.updatedAt).toLocaleString()}
               </Text>
 
               {/* Refresh Button */}
               <TouchableOpacity
-                style={styles.refreshButton}
+                className="mt-2 flex-row items-center justify-center gap-1 rounded-lg border border-blue-500 py-2"
                 onPress={handleRefresh}
               >
                 <Ionicons
@@ -444,24 +439,24 @@ export function ZoneInsights({
                   size={16}
                   color={Colors.primary[500]}
                 />
-                <Text style={styles.refreshButtonText}>Refresh Data</Text>
+                <Text className="text-[12px] font-semibold text-blue-500">Refresh Data</Text>
               </TouchableOpacity>
             </ScrollView>
           ) : (
-            <View style={styles.errorContainer}>
+            <View className="items-center gap-4 p-8">
               <Ionicons
                 name="alert-circle-outline"
                 size={48}
                 color={Colors.semantic.error}
               />
-              <Text style={styles.errorText}>Failed to load zone insights</Text>
+              <Text className="text-center text-[13px] text-gray-700">Failed to load zone insights</Text>
               <TouchableOpacity
-                style={styles.retryButton}
+                className="mt-2 rounded-lg bg-blue-500 px-6 py-2"
                 onPress={() =>
                   selectedZoneId && fetchZoneInsights(selectedZoneId)
                 }
               >
-                <Text style={styles.retryButtonText}>Retry</Text>
+                <Text className="text-[12px] font-semibold text-white">Retry</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -470,247 +465,3 @@ export function ZoneInsights({
     </>
   );
 }
-
-// ── Styles ────────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  // Zone Marker
-  zoneMarker: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: "#fff",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  zoneMarkerSelected: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 3,
-  },
-
-  // Detail Card
-  detailCard: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: Colors.background.light,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: "60%",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 10,
-  },
-  detailCardHandle: {
-    width: 40,
-    height: 4,
-    backgroundColor: Colors.neutral[300],
-    borderRadius: 2,
-    alignSelf: "center",
-    marginTop: SPACING.sm,
-    marginBottom: SPACING.md,
-  },
-  detailContent: {
-    paddingHorizontal: SPACING.md,
-    paddingBottom: SPACING.lg,
-  },
-
-  // Loading State
-  loadingContainer: {
-    padding: SPACING.xl,
-    alignItems: "center",
-    gap: SPACING.sm,
-  },
-  loadingText: {
-    fontSize: FONTS.sizes.sm,
-    color: Colors.neutral[500],
-  },
-
-  // Error State
-  errorContainer: {
-    padding: SPACING.xl,
-    alignItems: "center",
-    gap: SPACING.md,
-  },
-  errorText: {
-    fontSize: FONTS.sizes.base,
-    color: Colors.neutral[700],
-    textAlign: "center",
-  },
-  retryButton: {
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.sm,
-    backgroundColor: Colors.primary[500],
-    borderRadius: 8,
-    marginTop: SPACING.sm,
-  },
-  retryButtonText: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: "600",
-    color: "#fff",
-  },
-
-  // Header
-  detailHeader: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    marginBottom: SPACING.lg,
-  },
-  zoneName: {
-    fontSize: FONTS.sizes.base,
-    fontWeight: "700",
-    color: Colors.neutral[900],
-    marginBottom: SPACING.xs,
-  },
-  zoneCoords: {
-    fontSize: FONTS.sizes.sm,
-    color: Colors.neutral[500],
-  },
-  closeButton: {
-    padding: SPACING.xs,
-  },
-
-  // Section
-  section: {
-    marginBottom: SPACING.lg,
-  },
-  sectionTitle: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: "600",
-    color: Colors.neutral[700],
-    marginBottom: SPACING.sm,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-
-  // Fishing Conditions
-  conditionBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.sm,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
-    borderRadius: 8,
-    alignSelf: "flex-start",
-  },
-  conditionText: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: "700",
-    letterSpacing: 0.5,
-  },
-
-  // Target Species
-  speciesList: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: SPACING.sm,
-  },
-  speciesChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.xs,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: SPACING.xs,
-    backgroundColor: Colors.primary[50],
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Colors.primary[500] + "30",
-  },
-  speciesText: {
-    fontSize: FONTS.sizes.sm,
-    color: Colors.primary[700],
-    fontWeight: "500",
-  },
-
-  // Stats Row
-  statsRow: {
-    flexDirection: "row",
-    gap: SPACING.md,
-    marginBottom: SPACING.lg,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: Colors.neutral[50],
-    padding: SPACING.md,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.neutral[200],
-  },
-  statHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.xs,
-    marginBottom: SPACING.xs,
-  },
-  statLabel: {
-    fontSize: FONTS.sizes.xs,
-    color: Colors.neutral[500],
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  statValue: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: "700",
-  },
-
-  // Recent Activity
-  activityGrid: {
-    flexDirection: "row",
-    gap: SPACING.sm,
-  },
-  activityItem: {
-    flex: 1,
-    backgroundColor: Colors.neutral[50],
-    padding: SPACING.sm,
-    borderRadius: 8,
-    alignItems: "center",
-    gap: SPACING.xs,
-  },
-  activityLabel: {
-    fontSize: FONTS.sizes.xs,
-    color: Colors.neutral[500],
-    textAlign: "center",
-  },
-  activityValue: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: "700",
-    color: Colors.neutral[900],
-    textAlign: "center",
-  },
-
-  // Footer
-  lastUpdated: {
-    fontSize: FONTS.sizes.xs,
-    color: Colors.neutral[500],
-    textAlign: "center",
-    marginTop: SPACING.md,
-    marginBottom: SPACING.sm,
-  },
-  refreshButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: SPACING.xs,
-    paddingVertical: SPACING.sm,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.primary[500],
-    marginTop: SPACING.sm,
-  },
-  refreshButtonText: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: "600",
-    color: Colors.primary[500],
-  },
-});

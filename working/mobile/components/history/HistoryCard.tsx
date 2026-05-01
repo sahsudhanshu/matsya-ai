@@ -2,14 +2,13 @@ import React from "react";
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   Image,
   Alert,
   Dimensions,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { COLORS, FONTS, SPACING, RADIUS } from "../../lib/constants";
+import { COLORS } from "../../lib/constants";
 import { Card } from "../ui/Card";
 import type { GroupRecord } from "../../lib/types";
 
@@ -74,46 +73,47 @@ export function HistoryCard({
   const previewUrls = group.presignedViewUrls?.slice(0, 3) || [];
 
   return (
-    <Card variant="default" padding={0} style={styles.cardContainer}>
+    <Card variant="default" padding={0} className="mb-md overflow-hidden">
       {/* Thumbnail Row or Placeholder */}
       {hasImages ? (
-        <View style={styles.thumbnailRow}>
+        <View className="flex-row h-[140px] overflow-hidden">
           {previewUrls.map((url, index) => (
             <Image
               key={index}
               source={{ uri: url }}
-              style={[
-                styles.thumbnail,
-                previewUrls.length === 1 && styles.thumbnailFull,
-                previewUrls.length === 2 && styles.thumbnailHalf,
-                previewUrls.length >= 3 && styles.thumbnailThird,
-              ]}
+              className={`h-full border-[0.5px] border-borderDark ${
+                previewUrls.length === 1
+                  ? "w-full"
+                  : previewUrls.length === 2
+                  ? "w-1/2"
+                  : "w-1/3"
+              }`}
               resizeMode="cover"
             />
           ))}
           {imageCount > 3 && (
-            <View style={styles.moreOverlay}>
-              <Text style={styles.moreText}>+{imageCount - 3}</Text>
+            <View className="absolute right-0 top-0 w-1/3 h-full bg-black/55 justify-center items-center">
+              <Text className="text-textPrimary text-md font-bold">+{imageCount - 3}</Text>
             </View>
           )}
         </View>
       ) : (
         <TouchableOpacity
-          style={styles.placeholderRow}
+          className="h-[60px] bg-bgSurface flex-row items-center justify-between px-md border-b border-borderDark"
           onPress={onViewDetails}
           activeOpacity={0.8}
         >
-          <View style={styles.placeholderLeft}>
+          <View className="flex-row items-center gap-sm">
             <Ionicons
               name="images-outline"
               size={28}
               color={COLORS.textMuted}
             />
             <View>
-              <Text style={styles.placeholderCount}>
+              <Text className="text-sm font-semibold text-textSecondary">
                 {imageCount} {imageCount === 1 ? "image" : "images"}
               </Text>
-              <Text style={styles.placeholderSub}>Tap to view analysis</Text>
+              <Text className="text-xs text-textMuted mt-[1px]">Tap to view analysis</Text>
             </View>
           </View>
           <Ionicons name="chevron-forward" size={18} color={COLORS.textMuted} />
@@ -121,10 +121,10 @@ export function HistoryCard({
       )}
 
       {/* Info Section */}
-      <View style={styles.infoSection}>
+      <View className="p-sm gap-sm">
         {/* Header row: date + status badge */}
-        <View style={styles.headerRow}>
-          <Text style={styles.date}>
+        <View className="flex-row justify-between items-center">
+          <Text className="text-xs text-textMuted flex-1">
             {new Date(group.createdAt).toLocaleDateString("en-IN", {
               day: "numeric",
               month: "short",
@@ -134,15 +134,14 @@ export function HistoryCard({
             })}
           </Text>
           <View
-            style={[
-              styles.statusBadge,
-              { backgroundColor: statusColor + "22" },
-            ]}
+            className="flex-row items-center gap-1 rounded-full px-sm py-[3px]"
+            style={{ backgroundColor: statusColor + "22" }}
           >
             <View
-              style={[styles.statusDot, { backgroundColor: statusColor }]}
+              className="w-[6px] h-[6px] rounded-full"
+              style={{ backgroundColor: statusColor }}
             />
-            <Text style={[styles.statusText, { color: statusColor }]}>
+            <Text className="text-xs font-semibold" style={{ color: statusColor }}>
               {group.status.charAt(0).toUpperCase() + group.status.slice(1)}
             </Text>
           </View>
@@ -151,15 +150,13 @@ export function HistoryCard({
         {/* Offline sync badge */}
         {offlineSyncStatus && (
           <View
-            style={[
-              styles.syncBadge,
-              {
-                backgroundColor:
-                  offlineSyncStatus === "pending"
-                    ? COLORS.warning + "22"
-                    : COLORS.error + "22",
-              },
-            ]}
+            className="flex-row items-center gap-1 rounded-sm px-sm py-[3px] self-start"
+            style={{
+              backgroundColor:
+                offlineSyncStatus === "pending"
+                  ? COLORS.warning + "22"
+                  : COLORS.error + "22",
+            }}
           >
             <Ionicons
               name={
@@ -173,15 +170,13 @@ export function HistoryCard({
               }
             />
             <Text
-              style={[
-                styles.syncBadgeText,
-                {
-                  color:
-                    offlineSyncStatus === "pending"
-                      ? COLORS.warning
-                      : COLORS.error,
-                },
-              ]}
+              className="text-xs font-semibold"
+              style={{
+                color:
+                  offlineSyncStatus === "pending"
+                    ? COLORS.warning
+                    : COLORS.error,
+              }}
             >
               {offlineSyncStatus === "pending"
                 ? "Saved Offline · Pending Sync"
@@ -192,36 +187,34 @@ export function HistoryCard({
 
         {/* Stats row */}
         {group.status === "completed" && (
-          <View style={styles.statsRow}>
-            <View style={styles.statChip}>
+          <View className="flex-row flex-wrap gap-xs">
+            <View className="flex-row items-center gap-1 bg-bgSurface rounded-full px-sm py-1 border border-borderDark">
               <Ionicons name="fish" size={13} color={COLORS.primary} />
-              <Text style={styles.statChipText}>{fishCount} fish</Text>
+              <Text className="text-xs text-textSecondary font-medium">{fishCount} fish</Text>
             </View>
-            <View style={styles.statChip}>
+            <View className="flex-row items-center gap-1 bg-bgSurface rounded-full px-sm py-1 border border-borderDark">
               <Ionicons name="list" size={13} color={COLORS.secondary} />
-              <Text style={styles.statChipText}>{speciesCount} species</Text>
+              <Text className="text-xs text-textSecondary font-medium">{speciesCount} species</Text>
             </View>
             {totalWeight != null && totalWeight > 0 && (
-              <View style={styles.statChip}>
+              <View className="flex-row items-center gap-1 bg-bgSurface rounded-full px-sm py-1 border border-borderDark">
                 <Ionicons
                   name="scale-outline"
                   size={13}
                   color={COLORS.textSecondary}
                 />
-                <Text style={styles.statChipText}>
+                <Text className="text-xs text-textSecondary font-medium">
                   {totalWeight.toFixed(1)} kg
                 </Text>
               </View>
             )}
             {hasDiseases && (
               <View
-                style={[
-                  styles.statChip,
-                  { backgroundColor: COLORS.error + "18" },
-                ]}
+                className="flex-row items-center gap-1 rounded-full px-sm py-1 border border-borderDark"
+                style={{ backgroundColor: COLORS.error + "18" }}
               >
                 <Ionicons name="warning" size={13} color={COLORS.error} />
-                <Text style={[styles.statChipText, { color: COLORS.error }]}>
+                <Text className="text-xs font-medium" style={{ color: COLORS.error }}>
                   Disease
                 </Text>
               </View>
@@ -230,17 +223,17 @@ export function HistoryCard({
         )}
 
         {/* Action buttons */}
-        <View style={styles.actions}>
+        <View className="flex-row gap-xs items-center">
           <TouchableOpacity
-            style={styles.primaryAction}
+            className="flex-1 flex-row items-center justify-center gap-1 bg-primary rounded-md py-sm"
             onPress={onViewDetails}
           >
             <Ionicons name="eye-outline" size={15} color={COLORS.bgDark} />
-            <Text style={styles.primaryActionText}>View Details</Text>
+            <Text className="text-xs font-bold text-bgDark">View Details</Text>
           </TouchableOpacity>
 
           {group.status === "completed" && !offlineSyncStatus && (
-            <TouchableOpacity style={styles.iconAction} onPress={onAskAI}>
+            <TouchableOpacity className="w-9 h-9 items-center justify-center bg-bgSurface rounded-md border border-borderDark" onPress={onAskAI}>
               <Ionicons
                 name="chatbubble-outline"
                 size={15}
@@ -250,7 +243,7 @@ export function HistoryCard({
           )}
 
           {group.status === "completed" && !offlineSyncStatus && (
-            <TouchableOpacity style={styles.iconAction} onPress={onExportPDF}>
+            <TouchableOpacity className="w-9 h-9 items-center justify-center bg-bgSurface rounded-md border border-borderDark" onPress={onExportPDF}>
               <Ionicons
                 name="document-outline"
                 size={15}
@@ -259,7 +252,7 @@ export function HistoryCard({
             </TouchableOpacity>
           )}
 
-          <TouchableOpacity style={styles.iconAction} onPress={handleDelete}>
+          <TouchableOpacity className="w-9 h-9 items-center justify-center bg-bgSurface rounded-md border border-borderDark" onPress={handleDelete}>
             <Ionicons name="trash-outline" size={15} color={COLORS.error} />
           </TouchableOpacity>
         </View>
@@ -267,164 +260,3 @@ export function HistoryCard({
     </Card>
   );
 }
-
-const styles = StyleSheet.create({
-  cardContainer: {
-    marginBottom: SPACING.md,
-    overflow: "hidden",
-  },
-  thumbnailRow: {
-    flexDirection: "row",
-    height: 140,
-    overflow: "hidden",
-  },
-  thumbnail: {
-    height: "100%",
-    borderWidth: 0.5,
-    borderColor: COLORS.border,
-  },
-  thumbnailFull: {
-    width: "100%",
-  },
-  thumbnailHalf: {
-    width: "50%",
-  },
-  thumbnailThird: {
-    width: "33.33%",
-  },
-  moreOverlay: {
-    position: "absolute",
-    right: 0,
-    top: 0,
-    width: "33.33%",
-    height: "100%",
-    backgroundColor: "rgba(0,0,0,0.55)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  moreText: {
-    color: COLORS.textPrimary,
-    fontSize: FONTS.sizes.md,
-    fontWeight: FONTS.weights.bold,
-  },
-  placeholderRow: {
-    height: 60,
-    backgroundColor: COLORS.bgSurface,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: SPACING.md,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  placeholderLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.sm,
-  },
-  placeholderCount: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.semibold,
-    color: COLORS.textSecondary,
-  },
-  placeholderSub: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    marginTop: 1,
-  },
-  infoSection: {
-    padding: SPACING.sm,
-    gap: SPACING.sm,
-  },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  date: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    flex: 1,
-  },
-  statusBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    borderRadius: RADIUS.full,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 3,
-  },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  statusText: {
-    fontSize: FONTS.sizes.xs,
-    fontWeight: FONTS.weights.semibold,
-  },
-  syncBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    borderRadius: RADIUS.sm,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 3,
-    alignSelf: "flex-start",
-  },
-  syncBadgeText: {
-    fontSize: FONTS.sizes.xs,
-    fontWeight: FONTS.weights.semibold,
-  },
-  statsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: SPACING.xs,
-  },
-  statChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: COLORS.bgSurface,
-    borderRadius: RADIUS.full,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 4,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  statChipText: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textSecondary,
-    fontWeight: FONTS.weights.medium,
-  },
-  actions: {
-    flexDirection: "row",
-    gap: SPACING.xs,
-    alignItems: "center",
-  },
-  primaryAction: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 5,
-    backgroundColor: COLORS.primary,
-    borderRadius: RADIUS.md,
-    paddingVertical: SPACING.sm,
-  },
-  primaryActionText: {
-    fontSize: FONTS.sizes.xs,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.bgDark,
-  },
-  iconAction: {
-    width: 36,
-    height: 36,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: COLORS.bgSurface,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-});

@@ -3,15 +3,9 @@
  * response based on the tools that were called.
  */
 import React from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-} from "react-native";
+import { ScrollView, TouchableOpacity, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS, RADIUS } from "../../lib/constants";
+import { COLORS } from "../../lib/constants";
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
 
@@ -199,45 +193,21 @@ export function SuggestionChips({ suggestions, onSelect, disabled }: Props) {
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.container}
+      contentContainerClassName="px-4 py-[6px] gap-2"
       keyboardShouldPersistTaps="always"
     >
       {suggestions.map((s) => (
         <TouchableOpacity
           key={s.label}
-          style={styles.chip}
+          className="flex-row items-center gap-[6px] bg-bgCard rounded-full border border-[#1e40af40] px-[14px] py-2"
           onPress={() => onSelect(s.prompt)}
           disabled={disabled}
           activeOpacity={0.7}
         >
           <Ionicons name={s.icon} size={13} color={COLORS.primaryLight} />
-          <Text style={styles.chipText}>{s.label}</Text>
+          <Text className="text-[12px] text-textSecondary font-medium">{s.label}</Text>
         </TouchableOpacity>
       ))}
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    gap: 8,
-  },
-  chip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.full,
-    borderWidth: 1,
-    borderColor: COLORS.primary + "40",
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
-  chipText: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    fontWeight: "500",
-  },
-});

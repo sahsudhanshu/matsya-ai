@@ -2,7 +2,6 @@ import React from "react";
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   Switch,
   Alert,
@@ -12,7 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Avatar } from "../ui/Avatar";
 import { Card } from "../ui/Card";
 import { Button } from "../ui/Button";
-import { COLORS, FONTS, SPACING, RADIUS } from "../../lib/constants";
+import { COLORS } from "../../lib/constants";
 import type { PublicProfile } from "../../lib/types";
 
 interface PublicProfileCardProps {
@@ -40,31 +39,41 @@ export function PublicProfileCard({
   };
 
   return (
-    <Card style={styles.container}>
+    <Card className="p-6">
       {/* Profile Preview */}
-      <View style={styles.profileSection}>
+      <View className="mb-6 flex-row items-center border-b border-[#334155] pb-6">
         <Avatar uri={profile.avatarUrl} name={profile.name} size="lg" />
-        <View style={styles.profileInfo}>
-          <Text style={styles.name}>{profile.name}</Text>
-          {profile.role && <Text style={styles.role}>{profile.role}</Text>}
+        <View className="ml-4 flex-1">
+          <Text className="text-[13px] font-bold text-[#f8fafc]">
+            {profile.name}
+          </Text>
+          {profile.role && (
+            <Text className="mt-1 text-[12px] text-[#e2e8f0]">
+              {profile.role}
+            </Text>
+          )}
           {profile.port && (
-            <View style={styles.locationContainer}>
+            <View className="mt-1 flex-row items-center gap-1">
               <Ionicons
                 name="location"
                 size={14}
                 color={COLORS.textSecondary}
               />
-              <Text style={styles.location}>{profile.port}</Text>
+              <Text className="text-[10px] text-[#94a3b8]">
+                {profile.port}
+              </Text>
             </View>
           )}
         </View>
       </View>
 
       {/* Public Profile Toggle */}
-      <View style={styles.settingRow}>
-        <View style={styles.settingLeft}>
-          <Text style={styles.settingLabel}>Public Profile</Text>
-          <Text style={styles.settingDesc}>
+      <View className="flex-row items-center justify-between py-2">
+        <View className="mr-4 flex-1">
+          <Text className="text-[12px] font-semibold text-[#f8fafc]">
+            Public Profile
+          </Text>
+          <Text className="mt-1 text-[10px] text-[#94a3b8]">
             Allow others to view your profile
           </Text>
         </View>
@@ -78,13 +87,13 @@ export function PublicProfileCard({
       </View>
 
       {!profile.isPublic && (
-        <View style={styles.disabledMessage}>
+        <View className="mt-4 flex-row items-start gap-2 rounded-xl bg-[#334155] p-4">
           <Ionicons
             name="information-circle-outline"
             size={20}
             color={COLORS.primary}
           />
-          <Text style={styles.disabledMessageText}>
+          <Text className="flex-1 text-[12px] leading-5 text-[#e2e8f0]">
             Public profile is off. Turn it on to share your fishing profile with
             others.
           </Text>
@@ -94,10 +103,12 @@ export function PublicProfileCard({
       {profile.isPublic && (
         <>
           {/* Show Statistics Toggle */}
-          <View style={[styles.settingRow, styles.settingRowBorder]}>
-            <View style={styles.settingLeft}>
-              <Text style={styles.settingLabel}>Show Fishing Statistics</Text>
-              <Text style={styles.settingDesc}>
+          <View className="flex-row items-center justify-between border-t border-[#334155] py-2">
+            <View className="mr-4 flex-1">
+              <Text className="text-[12px] font-semibold text-[#f8fafc]">
+                Show Fishing Statistics
+              </Text>
+              <Text className="mt-1 text-[10px] text-[#94a3b8]">
                 Display catch stats on public profile
               </Text>
             </View>
@@ -114,55 +125,65 @@ export function PublicProfileCard({
 
           {/* Statistics Display */}
           {profile.showStats && profile.stats && (
-            <View style={styles.statsSection}>
-              <Text style={styles.statsTitle}>Public Statistics</Text>
-              <View style={styles.statsGrid}>
-                <View style={styles.statItem}>
-                  <Text style={styles.statValue}>
+            <View className="mt-4 rounded-xl bg-[#0f172a] p-4">
+              <Text className="mb-3 text-[12px] font-semibold text-[#e2e8f0]">
+                Public Statistics
+              </Text>
+              <View className="flex-row justify-around">
+                <View className="items-center">
+                  <Text className="text-[20px] font-bold text-[#1e40af]">
                     {profile.stats.totalCatches}
                   </Text>
-                  <Text style={styles.statLabel}>Total Catches</Text>
+                  <Text className="mt-1 text-[10px] text-[#94a3b8]">
+                    Total Catches
+                  </Text>
                 </View>
-                <View style={styles.statItem}>
-                  <Text style={styles.statValue}>
+                <View className="items-center">
+                  <Text className="text-[20px] font-bold text-[#1e40af]">
                     {profile.stats.speciesCount}
                   </Text>
-                  <Text style={styles.statLabel}>Species</Text>
+                  <Text className="mt-1 text-[10px] text-[#94a3b8]">
+                    Species
+                  </Text>
                 </View>
-                <View style={styles.statItem}>
-                  <Text style={styles.statValue}>
+                <View className="items-center">
+                  <Text className="text-[20px] font-bold text-[#1e40af]">
                     ₹{profile.stats.totalEarnings.toLocaleString()}
                   </Text>
-                  <Text style={styles.statLabel}>Earnings</Text>
+                  <Text className="mt-1 text-[10px] text-[#94a3b8]">
+                    Earnings
+                  </Text>
                 </View>
               </View>
             </View>
           )}
 
           {/* Public URL */}
-          <View style={styles.urlSection}>
-            <Text style={styles.urlLabel}>Your Public Profile URL</Text>
-            <View style={styles.urlBox}>
-              <Text style={styles.urlText} numberOfLines={1}>
+          <View className="mt-4">
+            <Text className="mb-2 text-[12px] font-semibold text-[#e2e8f0]">
+              Your Public Profile URL
+            </Text>
+            <View className="rounded-xl border border-[#334155] bg-[#334155] p-3">
+              <Text className="text-[12px] text-[#3b82f6]" numberOfLines={1}>
                 {publicUrl}
               </Text>
             </View>
           </View>
 
           {/* Action Buttons */}
-          <View style={styles.actions}>
+          <View className="mt-4 gap-3">
             <Button
               label="Copy URL"
               onPress={handleCopyUrl}
               variant="outline"
-              style={styles.actionButton}
+              className="w-full"
               disabled={loading}
             />
             <Button
               label="Share Profile"
               onPress={onShare}
               variant="outline"
-              style={styles.actionButton}
+              className="w-full"
               disabled={loading}
             />
           </View>
@@ -178,139 +199,3 @@ export function PublicProfileCard({
     </Card>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    padding: SPACING.lg,
-  },
-  profileSection: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: SPACING.lg,
-    paddingBottom: SPACING.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  profileInfo: {
-    marginLeft: SPACING.md,
-    flex: 1,
-  },
-  name: {
-    fontSize: FONTS.sizes.base,
-    fontWeight: FONTS.weights.bold as any,
-    color: COLORS.textPrimary,
-  },
-  role: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textSecondary,
-    marginTop: SPACING.xs,
-  },
-  locationContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    marginTop: SPACING.xs,
-  },
-  location: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-  },
-  settingRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: SPACING.sm,
-  },
-  settingRowBorder: {
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-  },
-  settingLeft: {
-    flex: 1,
-    marginRight: SPACING.md,
-  },
-  settingLabel: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.semibold as any,
-    color: COLORS.textPrimary,
-  },
-  settingDesc: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    marginTop: SPACING.xs,
-  },
-  statsSection: {
-    marginTop: SPACING.md,
-    padding: SPACING.md,
-    backgroundColor: COLORS.bgDark,
-    borderRadius: RADIUS.lg,
-  },
-  statsTitle: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.semibold as any,
-    color: COLORS.textSecondary,
-    marginBottom: SPACING.sm,
-  },
-  statsGrid: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-  },
-  statItem: {
-    alignItems: "center",
-  },
-  statValue: {
-    fontSize: FONTS.sizes.lg,
-    fontWeight: FONTS.weights.bold as any,
-    color: COLORS.primary,
-  },
-  statLabel: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    marginTop: SPACING.xs,
-  },
-  urlSection: {
-    marginTop: SPACING.lg,
-  },
-  urlLabel: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.semibold as any,
-    color: COLORS.textSecondary,
-    marginBottom: SPACING.sm,
-  },
-  urlBox: {
-    backgroundColor: COLORS.bgDark,
-    borderRadius: RADIUS.md,
-    padding: SPACING.md,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  urlText: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.primary,
-    fontFamily: "monospace",
-  },
-  actions: {
-    flexDirection: "row",
-    gap: SPACING.sm,
-    marginTop: SPACING.md,
-    marginBottom: SPACING.md,
-  },
-  actionButton: {
-    flex: 1,
-  },
-  disabledMessage: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.sm,
-    padding: SPACING.md,
-    backgroundColor: COLORS.primary + "10",
-    borderRadius: RADIUS.md,
-    marginTop: SPACING.md,
-  },
-  disabledMessageText: {
-    flex: 1,
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textSecondary,
-    lineHeight: 20,
-  },
-});

@@ -6,7 +6,6 @@ import React, { useRef, useEffect } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   Animated,
   Platform,
@@ -53,68 +52,40 @@ export function AskAgentFAB({ customPrompt, bottomOffset = 80 }: Props) {
   return (
     <Animated.View
       style={[
-        styles.container,
-        { bottom: bottomOffset, transform: [{ scale: scaleAnim }] },
+        {
+          position: "absolute",
+          right: 16,
+          zIndex: 999,
+          bottom: bottomOffset,
+          transform: [{ scale: scaleAnim }],
+        },
+        Platform.select({
+          ios: {
+            shadowColor: COLORS.primary,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.35,
+            shadowRadius: 10,
+          },
+          android: {
+            elevation: 8,
+          },
+        }),
       ]}
     >
       <TouchableOpacity
-        style={styles.fab}
+        className="rounded-[24px] border border-[#3b82f640] bg-[#1e40af]"
         onPress={handlePress}
         activeOpacity={0.85}
       >
-        <View style={styles.fabContent}>
-          <View style={styles.iconCircle}>
+        <View className="flex-row items-center gap-2 px-4 py-3">
+          <View className="h-7 w-7 items-center justify-center rounded-full bg-[rgba(255,255,255,0.15)]">
             <Ionicons name="chatbubble" size={16} color="#fff" />
           </View>
-          <Text style={styles.fabText}>Ask Matsya AI</Text>
+          <Text className="text-[13px] font-bold tracking-[0.3px] text-white">
+            Ask Matsya AI
+          </Text>
         </View>
       </TouchableOpacity>
     </Animated.View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    position: "absolute",
-    right: 16,
-    zIndex: 999,
-    ...Platform.select({
-      ios: {
-        shadowColor: COLORS.primary,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.35,
-        shadowRadius: 10,
-      },
-      android: {
-        elevation: 8,
-      },
-    }),
-  },
-  fab: {
-    backgroundColor: COLORS.primary,
-    borderRadius: RADIUS["2xl"],
-    borderWidth: 1,
-    borderColor: COLORS.primaryLight + "40",
-  },
-  fabContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  iconCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "rgba(255,255,255,0.15)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  fabText: {
-    color: "#fff",
-    fontSize: 13,
-    fontWeight: "700",
-    letterSpacing: 0.3,
-  },
-});

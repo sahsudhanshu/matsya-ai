@@ -3,9 +3,9 @@
  * agent takeover. Displays species, weight, value, and quick action buttons.
  */
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS, RADIUS, FONTS } from "../../lib/constants";
+import { COLORS } from "../../lib/constants";
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
 
@@ -47,21 +47,20 @@ export function ScanResultCard({
   const hasDisease = detections.some((d) => !d.healthy);
 
   return (
-    <View style={styles.container}>
+    <View className="rounded-lg bg-bgCard border border-[#1e40af30] overflow-hidden mt-2 mb-1">
       {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerIcon}>
+      <View className="flex-row items-center gap-[10px] p-[14px] border-b border-borderDark">
+        <View className="w-[36px] h-[36px] rounded-[10px] bg-primary items-center justify-center">
           <Ionicons name="fish" size={18} color="#fff" />
         </View>
-        <View style={styles.headerText}>
-          <Text style={styles.title}>Scan Complete</Text>
-          <Text style={styles.subtitle}>{fishCount} fish detected</Text>
+        <View className="flex-1">
+          <Text className="text-[15px] font-bold text-textPrimary">Scan Complete</Text>
+          <Text className="text-[12px] text-textMuted">{fishCount} fish detected</Text>
         </View>
         <View
-          style={[
-            styles.healthBadge,
-            hasDisease ? styles.healthBadgeDanger : styles.healthBadgeOk,
-          ]}
+          className={`flex-row items-center gap-1 rounded-full px-[10px] py-1 ${
+            hasDisease ? "bg-[#ef444418]" : "bg-[#10b98118]"
+          }`}
         >
           <Ionicons
             name={hasDisease ? "alert-circle" : "checkmark-circle"}
@@ -69,10 +68,9 @@ export function ScanResultCard({
             color={hasDisease ? COLORS.error : COLORS.success}
           />
           <Text
-            style={[
-              styles.healthText,
-              hasDisease ? styles.healthTextDanger : styles.healthTextOk,
-            ]}
+            className={`text-[10px] font-semibold ${
+              hasDisease ? "text-error" : "text-success"
+            }`}
           >
             {allHealthy ? "All Healthy" : "Disease Found"}
           </Text>
@@ -80,13 +78,13 @@ export function ScanResultCard({
       </View>
 
       {/* Species breakdown */}
-      <View style={styles.speciesList}>
+      <View className="p-[14px] gap-1">
         {Array.from(speciesMap.entries()).map(([species, data]) => (
-          <View key={species} style={styles.speciesRow}>
-            <View style={styles.speciesDot} />
-            <Text style={styles.speciesName}>{species}</Text>
-            <Text style={styles.speciesCount}>× {data.count}</Text>
-            <Text style={styles.speciesWeight}>
+          <View key={species} className="flex-row items-center gap-[6px]">
+            <View className="w-[6px] h-[6px] rounded-full bg-primaryLight" />
+            <Text className="flex-1 text-[13px] font-semibold text-textPrimary">{species}</Text>
+            <Text className="text-[12px] text-textMuted">× {data.count}</Text>
+            <Text className="text-[12px] text-textSubtle">
               ({data.totalWeight.toFixed(1)}kg)
             </Text>
           </View>
@@ -94,19 +92,19 @@ export function ScanResultCard({
       </View>
 
       {/* Value + port */}
-      <View style={styles.valueLine}>
-        <View style={styles.valueItem}>
+      <View className="px-[14px] pb-3 gap-[6px]">
+        <View className="flex-row items-center gap-[6px]">
           <Ionicons name="cash" size={14} color={COLORS.secondaryLight} />
-          <Text style={styles.valueLabel}>Est. Value:</Text>
-          <Text style={styles.valueAmount}>₹{Math.round(totalValue)}</Text>
+          <Text className="text-[12px] text-textMuted">Est. Value:</Text>
+          <Text className="text-[14px] font-bold text-secondaryLight">₹{Math.round(totalValue)}</Text>
         </View>
         {bestPort && (
-          <View style={styles.valueItem}>
+          <View className="flex-row items-center gap-[6px]">
             <Ionicons name="boat" size={14} color={COLORS.accent} />
-            <Text style={styles.valueLabel}>Best port:</Text>
-            <Text style={styles.portName}>{bestPort}</Text>
+            <Text className="text-[12px] text-textMuted">Best port:</Text>
+            <Text className="text-[12px] font-semibold text-textPrimary">{bestPort}</Text>
             {bestPortGain !== undefined && bestPortGain > 0 && (
-              <Text style={styles.portGain}>
+              <Text className="text-[12px] font-semibold text-success">
                 (+₹{Math.round(bestPortGain)})
               </Text>
             )}
@@ -115,7 +113,7 @@ export function ScanResultCard({
       </View>
 
       {/* Quick actions */}
-      <View style={styles.actions}>
+      <View className="flex-row border-t border-borderDark">
         {[
           {
             key: "ask",
@@ -135,112 +133,15 @@ export function ScanResultCard({
         ].map((a) => (
           <TouchableOpacity
             key={a.key}
-            style={styles.actionBtn}
+            className="flex-1 flex-row items-center justify-center gap-[5px] py-[10px] border-r border-borderDark"
             onPress={() => onAction?.(a.key)}
             activeOpacity={0.75}
           >
             <Ionicons name={a.icon} size={13} color={COLORS.primaryLight} />
-            <Text style={styles.actionText}>{a.label}</Text>
+            <Text className="text-[11px] text-primaryLight font-semibold">{a.label}</Text>
           </TouchableOpacity>
         ))}
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    borderRadius: RADIUS.lg,
-    backgroundColor: COLORS.bgCard,
-    borderWidth: 1,
-    borderColor: COLORS.primary + "30",
-    overflow: "hidden",
-    marginTop: 8,
-    marginBottom: 4,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    padding: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.border,
-  },
-  headerIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: COLORS.primary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  headerText: { flex: 1 },
-  title: { fontSize: 15, fontWeight: "700", color: COLORS.textPrimary },
-  subtitle: { fontSize: 12, color: COLORS.textMuted },
-  healthBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    borderRadius: RADIUS.full,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  healthBadgeOk: { backgroundColor: COLORS.success + "18" },
-  healthBadgeDanger: { backgroundColor: COLORS.error + "18" },
-  healthText: { fontSize: 10, fontWeight: "600" },
-  healthTextOk: { color: COLORS.success },
-  healthTextDanger: { color: COLORS.error },
-
-  speciesList: { padding: 14, gap: 4 },
-  speciesRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  speciesDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: COLORS.primaryLight,
-  },
-  speciesName: {
-    flex: 1,
-    fontSize: 13,
-    fontWeight: "600",
-    color: COLORS.textPrimary,
-  },
-  speciesCount: { fontSize: 12, color: COLORS.textMuted },
-  speciesWeight: { fontSize: 12, color: COLORS.textSubtle },
-
-  valueLine: {
-    paddingHorizontal: 14,
-    paddingBottom: 12,
-    gap: 6,
-  },
-  valueItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  valueLabel: { fontSize: 12, color: COLORS.textMuted },
-  valueAmount: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: COLORS.secondaryLight,
-  },
-  portName: { fontSize: 12, fontWeight: "600", color: COLORS.textPrimary },
-  portGain: { fontSize: 12, fontWeight: "600", color: COLORS.success },
-
-  actions: {
-    flexDirection: "row",
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: COLORS.border,
-  },
-  actionBtn: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 5,
-    paddingVertical: 10,
-    borderRightWidth: StyleSheet.hairlineWidth,
-    borderRightColor: COLORS.border,
-  },
-  actionText: { fontSize: 11, color: COLORS.primaryLight, fontWeight: "600" },
-});

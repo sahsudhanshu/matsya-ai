@@ -2,10 +2,7 @@ import React, { useState } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
   Alert,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
@@ -42,36 +39,55 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#0f172a" }}>
       <KeyboardAwareScrollView
-        style={styles.keyboardView}
-        contentContainerStyle={styles.scroll}
+        style={{ flex: 1 }}
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingHorizontal: SPACING.xl,
+          paddingBottom: SPACING["4xl"],
+        }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         enableOnAndroid={true}
       >
         {/* Header */}
-        <View style={styles.hero}>
-          <View style={styles.logoContainer}>
+        <View className="items-center pt-8 pb-6">
+          <View
+            className="mb-2.5 h-16 w-16 items-center justify-center rounded-2xl bg-[#1e40af]"
+            style={{
+              shadowColor: COLORS.primary,
+              shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: 0.35,
+              shadowRadius: 12,
+              elevation: 6,
+            }}
+          >
             <Ionicons name="fish" size={30} color={COLORS.primaryLight} />
           </View>
-          <Text style={styles.appName}>Matsya AI</Text>
-          <Text style={styles.tagline}>AI for Bharat Fishermen</Text>
-          <View style={styles.heroBadge}>
-            <Text style={styles.heroBadgeText}>
+          <Text className="text-[26px] font-extrabold tracking-[-0.5px] text-[#f8fafc]">
+            Matsya AI
+          </Text>
+          <Text className="mt-1 text-[12px] font-medium text-[#94a3b8]">
+            AI for Bharat Fishermen
+          </Text>
+          <View className="mt-2 rounded-full bg-[#d9770620] px-2.5 py-[3px]">
+            <Text className="text-[10px] font-semibold text-[#f59e0b]">
               AWS AI for Bharat Challenge
             </Text>
           </View>
         </View>
 
         {/* Card */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Welcome Back</Text>
-          <Text style={styles.cardSubtitle}>
+        <View className="mb-6 rounded-[20px] border border-[#334155] bg-[#1e293b] p-6">
+          <Text className="mb-1 text-[20px] font-bold text-[#f8fafc]">
+            Welcome Back
+          </Text>
+          <Text className="mb-6 text-[12px] text-[#94a3b8]">
             Sign in to continue to your dashboard
           </Text>
 
-          <View style={styles.formGroup}>
+          <View className="mb-2.5">
             <Input
               label="Email Address"
               placeholder="rajan@example.com"
@@ -83,7 +99,7 @@ export default function LoginScreen() {
             />
           </View>
 
-          <View style={styles.formGroup}>
+          <View className="mb-2.5">
             <Input
               label="Password"
               placeholder="Enter your password"
@@ -100,28 +116,34 @@ export default function LoginScreen() {
             loading={loading}
             fullWidth
             size="lg"
-            style={styles.loginBtn}
+            className="mt-2"
           />
 
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Don't have an account? </Text>
+          <View className="mt-4 flex-row justify-center">
+            <Text className="text-[12px] text-[#94a3b8]">
+              Don't have an account? 
+            </Text>
             <TouchableOpacity onPress={() => router.push("/auth/register")}>
-              <Text style={styles.footerLink}>Register</Text>
+              <Text className="text-[12px] font-semibold text-[#3b82f6]">
+                Register
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Feature highlights */}
-        <View style={styles.features}>
+        <View className="flex-row justify-around">
           {[
             { icon: "fish-outline" as const, label: "AI Fish ID" },
             { icon: "map-outline" as const, label: "Ocean Map" },
             { icon: "chatbubbles-outline" as const, label: "AI Assistant" },
             { icon: "bar-chart-outline" as const, label: "Analytics" },
           ].map((f) => (
-            <View key={f.label} style={styles.featureItem}>
+            <View key={f.label} className="items-center gap-1">
               <Ionicons name={f.icon} size={18} color={COLORS.primaryLight} />
-              <Text style={styles.featureLabel}>{f.label}</Text>
+              <Text className="text-[10px] font-medium text-[#64748b]">
+                {f.label}
+              </Text>
             </View>
           ))}
         </View>
@@ -129,105 +151,3 @@ export default function LoginScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.bgDark },
-  keyboardView: { flex: 1 },
-  scroll: {
-    flexGrow: 1,
-    paddingHorizontal: SPACING.xl,
-    paddingBottom: SPACING["4xl"],
-  },
-
-  hero: {
-    alignItems: "center",
-    paddingTop: SPACING["2xl"],
-    paddingBottom: SPACING.xl,
-  },
-  logoContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 16,
-    backgroundColor: COLORS.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: SPACING.sm,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-
-  appName: {
-    fontSize: FONTS.sizes["3xl"],
-    fontWeight: FONTS.weights.extrabold,
-    color: COLORS.textPrimary,
-    letterSpacing: -0.5,
-  },
-  tagline: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-    marginTop: SPACING.xs,
-    fontWeight: FONTS.weights.medium,
-  },
-  heroBadge: {
-    marginTop: SPACING.sm,
-    backgroundColor: COLORS.accent + "20",
-    borderRadius: RADIUS.full,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 3,
-  },
-  heroBadgeText: {
-    color: COLORS.accentLight,
-    fontSize: FONTS.sizes.xs,
-    fontWeight: FONTS.weights.semibold,
-  },
-
-  card: {
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.xl,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: SPACING.lg,
-    marginBottom: SPACING.lg,
-  },
-  cardTitle: {
-    fontSize: FONTS.sizes.xl,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-    marginBottom: SPACING.xs,
-  },
-  cardSubtitle: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-    marginBottom: SPACING.lg,
-  },
-  formGroup: { marginBottom: SPACING.sm },
-
-  loginBtn: { marginTop: SPACING.sm },
-
-  footer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginTop: SPACING.md,
-  },
-  footerText: { color: COLORS.textMuted, fontSize: FONTS.sizes.sm },
-  footerLink: {
-    color: COLORS.primaryLight,
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.semibold,
-  },
-
-  features: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-  },
-  featureItem: { alignItems: "center", gap: SPACING.xs },
-
-  featureLabel: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textSubtle,
-    fontWeight: FONTS.weights.medium,
-  },
-});

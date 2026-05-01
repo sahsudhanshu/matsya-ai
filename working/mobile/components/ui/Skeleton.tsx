@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { View, StyleSheet, Animated } from "react-native";
+import { View,  Animated } from "react-native";
 import { COLORS, RADIUS, SPACING } from "../../lib/constants";
 
 interface SkeletonProps {
@@ -46,8 +46,8 @@ export function Skeleton({
 
   return (
     <Animated.View
+      className="bg-[#334155]"
       style={[
-        styles.skeleton,
         {
           width,
           height,
@@ -63,9 +63,9 @@ export function Skeleton({
 /**
  * Skeleton for stat cards
  */
-export function SkeletonStatCard({ style }: { style?: any }) {
+export function SkeletonStatCard({ style, className }: { style?: any, className?: string }) {
   return (
-    <View style={[styles.statCard, style]}>
+    <View style={style} className={`w-[47%] rounded-[12px] bg-[#1e293b] p-4 ${className || ""}`}>
       <Skeleton width={24} height={24} borderRadius={12} />
       <Skeleton width="60%" height={14} style={{ marginTop: 8 }} />
       <Skeleton width="80%" height={24} style={{ marginTop: 4 }} />
@@ -78,9 +78,9 @@ export function SkeletonStatCard({ style }: { style?: any }) {
  */
 export function SkeletonBarChart() {
   return (
-    <View style={styles.barChart}>
+    <View className="h-[160px] flex-row items-end justify-between px-2">
       {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-        <View key={i} style={styles.barWrapper}>
+        <View key={i} className="flex-1 items-center">
           <Skeleton width={40} height={12} style={{ marginBottom: 4 }} />
           <Skeleton width={16} height={Math.random() * 80 + 40} />
           <Skeleton width={30} height={10} style={{ marginTop: 4 }} />
@@ -97,7 +97,7 @@ export function SkeletonSpeciesBreakdown() {
   return (
     <View>
       {[1, 2, 3, 4].map((i) => (
-        <View key={i} style={styles.speciesRow}>
+        <View key={i} className="flex-row items-center py-4">
           <Skeleton width={8} height={8} borderRadius={4} />
           <Skeleton width={80} height={14} style={{ marginLeft: 8 }} />
           <Skeleton width="40%" height={8} style={{ marginLeft: 8, flex: 1 }} />
@@ -113,9 +113,9 @@ export function SkeletonSpeciesBreakdown() {
  */
 export function SkeletonQualityCards() {
   return (
-    <View style={styles.qualityRow}>
+    <View className="flex-row gap-4">
       {[1, 2, 3].map((i) => (
-        <View key={i} style={styles.qualityCard}>
+        <View key={i} className="flex-1 items-center rounded-[12px] bg-[#1e293b] p-4">
           <Skeleton width={10} height={10} borderRadius={5} />
           <Skeleton width={60} height={14} style={{ marginTop: 8 }} />
           <Skeleton width={40} height={28} style={{ marginTop: 4 }} />
@@ -131,16 +131,16 @@ export function SkeletonQualityCards() {
  */
 export function SkeletonCatchItem() {
   return (
-    <View style={styles.catchItem}>
-      <View style={styles.catchRow}>
-        <View style={styles.catchLeft}>
+    <View className="mb-4 rounded-[12px] bg-[#1e293b] p-4">
+      <View className="flex-row items-center justify-between">
+        <View className="flex-row items-center">
           <Skeleton width={22} height={22} borderRadius={11} />
           <View style={{ marginLeft: 12 }}>
             <Skeleton width={120} height={14} />
             <Skeleton width={80} height={10} style={{ marginTop: 4 }} />
           </View>
         </View>
-        <View style={styles.catchRight}>
+        <View className="items-end">
           <Skeleton width={60} height={20} borderRadius={10} />
           <Skeleton width={50} height={14} style={{ marginTop: 4 }} />
           <Skeleton width={40} height={14} style={{ marginTop: 2 }} />
@@ -155,7 +155,7 @@ export function SkeletonCatchItem() {
  */
 export function SkeletonCard({ style }: { style?: any }) {
   return (
-    <View style={[styles.card, style]}>
+    <View className="mb-4 overflow-hidden rounded-[12px] bg-[#1e293b]" style={style}>
       <Skeleton width="100%" height={200} borderRadius={RADIUS.md} />
       <View style={{ padding: SPACING.md }}>
         <Skeleton width="80%" height={20} />
@@ -183,7 +183,7 @@ export function SkeletonList({ itemCount = 5 }: { itemCount?: number }) {
   return (
     <View>
       {Array.from({ length: itemCount }).map((_, i) => (
-        <View key={i} style={styles.listItem}>
+        <View key={i} className="mb-4 flex-row items-center rounded-[12px] bg-[#1e293b] p-4">
           <Skeleton width={48} height={48} borderRadius={RADIUS.sm} />
           <View style={{ flex: 1, marginLeft: SPACING.md }}>
             <Skeleton width="70%" height={16} />
@@ -210,14 +210,14 @@ export function SkeletonList({ itemCount = 5 }: { itemCount?: number }) {
  */
 export function SkeletonChart({ style }: { style?: any }) {
   return (
-    <View style={[styles.chartContainer, style]}>
-      <View style={styles.chartHeader}>
+    <View className="rounded-[12px] bg-[#1e293b] p-4" style={style}>
+      <View className="mb-4 flex-row items-center justify-between">
         <Skeleton width={120} height={20} />
         <Skeleton width={60} height={14} />
       </View>
-      <View style={styles.chartBody}>
+      <View className="mb-4 h-[180px] flex-row items-end justify-between">
         {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-          <View key={i} style={styles.chartBar}>
+          <View key={i} className="flex-1 items-center">
             <Skeleton
               width={32}
               height={Math.random() * 100 + 50}
@@ -231,7 +231,7 @@ export function SkeletonChart({ style }: { style?: any }) {
           </View>
         ))}
       </View>
-      <View style={styles.chartLegend}>
+      <View className="mt-2 flex-row justify-around">
         <Skeleton width={80} height={12} />
         <Skeleton width={100} height={12} />
       </View>
@@ -244,9 +244,9 @@ export function SkeletonChart({ style }: { style?: any }) {
  */
 export function SkeletonMap({ style }: { style?: any }) {
   return (
-    <View style={[styles.mapContainer, style]}>
+    <View className="relative flex-1" style={style}>
       <Skeleton width="100%" height="100%" borderRadius={0} />
-      <View style={styles.mapControls}>
+      <View className="absolute right-4 top-8">
         <Skeleton width={48} height={48} borderRadius={RADIUS.md} />
         <Skeleton
           width={48}
@@ -261,7 +261,7 @@ export function SkeletonMap({ style }: { style?: any }) {
           style={{ marginTop: SPACING.sm }}
         />
       </View>
-      <View style={styles.mapSearch}>
+      <View className="absolute left-4 right-20 top-4">
         <Skeleton width="100%" height={48} borderRadius={RADIUS.md} />
       </View>
     </View>
@@ -273,18 +273,18 @@ export function SkeletonMap({ style }: { style?: any }) {
  */
 export function SkeletonProfile({ style }: { style?: any }) {
   return (
-    <View style={[styles.profileContainer, style]}>
+    <View className="flex-1" style={style}>
       {/* Avatar and header */}
-      <View style={styles.profileHeader}>
+      <View className="items-center py-8">
         <Skeleton width={100} height={100} borderRadius={50} />
         <Skeleton width={150} height={24} style={{ marginTop: SPACING.md }} />
         <Skeleton width={200} height={14} style={{ marginTop: SPACING.xs }} />
       </View>
 
       {/* Stats row */}
-      <View style={styles.profileStats}>
+      <View className="flex-row justify-around border-y border-[#334155] py-6">
         {[1, 2, 3].map((i) => (
-          <View key={i} style={styles.profileStat}>
+          <View key={i} className="items-center">
             <Skeleton width={60} height={28} />
             <Skeleton
               width={80}
@@ -296,9 +296,9 @@ export function SkeletonProfile({ style }: { style?: any }) {
       </View>
 
       {/* Info sections */}
-      <View style={styles.profileSections}>
+      <View className="p-4">
         {[1, 2, 3, 4].map((i) => (
-          <View key={i} style={styles.profileSection}>
+          <View key={i} className="border-b border-[#334155] py-4">
             <Skeleton width={100} height={16} />
             <Skeleton
               width="100%"
@@ -311,143 +311,3 @@ export function SkeletonProfile({ style }: { style?: any }) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  skeleton: {
-    backgroundColor: COLORS.border,
-  },
-  statCard: {
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.md,
-    padding: SPACING.md,
-    width: "47%",
-  },
-  barChart: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-    height: 160,
-    paddingHorizontal: 8,
-  },
-  barWrapper: {
-    alignItems: "center",
-    flex: 1,
-  },
-  speciesRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: SPACING.md,
-  },
-  qualityRow: {
-    flexDirection: "row",
-    gap: SPACING.md,
-  },
-  qualityCard: {
-    flex: 1,
-    alignItems: "center",
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.md,
-    padding: SPACING.md,
-  },
-  catchItem: {
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.md,
-    padding: SPACING.md,
-    marginBottom: SPACING.md,
-  },
-  catchRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  catchLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  catchRight: {
-    alignItems: "flex-end",
-  },
-  // New skeleton styles
-  card: {
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.md,
-    overflow: "hidden",
-    marginBottom: SPACING.md,
-  },
-  listItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.md,
-    padding: SPACING.md,
-    marginBottom: SPACING.md,
-  },
-  chartContainer: {
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.md,
-    padding: SPACING.md,
-  },
-  chartHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: SPACING.md,
-  },
-  chartBody: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-    height: 180,
-    marginBottom: SPACING.md,
-  },
-  chartBar: {
-    alignItems: "center",
-    flex: 1,
-  },
-  chartLegend: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginTop: SPACING.sm,
-  },
-  mapContainer: {
-    flex: 1,
-    position: "relative",
-  },
-  mapControls: {
-    position: "absolute",
-    right: SPACING.md,
-    top: SPACING.xl,
-  },
-  mapSearch: {
-    position: "absolute",
-    top: SPACING.md,
-    left: SPACING.md,
-    right: 80,
-  },
-  profileContainer: {
-    flex: 1,
-  },
-  profileHeader: {
-    alignItems: "center",
-    paddingVertical: SPACING.xl,
-  },
-  profileStats: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: SPACING.lg,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: COLORS.border,
-  },
-  profileStat: {
-    alignItems: "center",
-  },
-  profileSections: {
-    padding: SPACING.md,
-  },
-  profileSection: {
-    paddingVertical: SPACING.md,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-});

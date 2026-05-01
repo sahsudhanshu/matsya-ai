@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text } from "react-native";
 import { Button } from "./Button";
 import { COLORS, FONTS, SPACING } from "../../lib/constants";
 
@@ -55,6 +55,7 @@ interface EmptyStateProps {
   icon: React.ReactNode;
   title: string;
   description: string;
+  className?: string;
   action?: {
     label: string;
     onPress: () => void;
@@ -66,51 +67,22 @@ export function EmptyState({
   title,
   description,
   action,
+  className,
 }: EmptyStateProps) {
   return (
-    <View style={styles.container}>
-      <View style={styles.iconContainer}>{icon}</View>
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.description}>{description}</Text>
+    <View className={`flex-1 justify-center items-center p-8 ${className || ""}`}>
+      <View className="mb-6 opacity-60">{icon}</View>
+      <Text className="text-xl font-bold text-center text-textPrimary mb-2">{title}</Text>
+      <Text className="text-base text-center text-textSecondary mb-6 leading-6">{description}</Text>
       {action && (
         <Button
           label={action.label}
           onPress={action.onPress}
           variant="primary"
           size="md"
-          style={styles.button}
+          className="min-w-[200px]"
         />
       )}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: SPACING["2xl"],
-  },
-  iconContainer: {
-    marginBottom: SPACING.lg,
-    opacity: 0.6,
-  },
-  title: {
-    fontSize: FONTS.sizes.lg,
-    fontWeight: FONTS.weights.semibold,
-    color: COLORS.textPrimary,
-    textAlign: "center",
-    marginBottom: SPACING.xs,
-  },
-  description: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-    textAlign: "center",
-    lineHeight: 20,
-    marginBottom: SPACING.lg,
-  },
-  button: {
-    marginTop: SPACING.sm,
-  },
-});

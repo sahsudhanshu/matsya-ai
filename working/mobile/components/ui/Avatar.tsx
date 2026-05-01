@@ -3,12 +3,11 @@ import {
   View,
   Text,
   Image,
-  StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS, FONTS, SPACING, RADIUS } from "../../lib/constants";
+import { COLORS, FONTS } from "../../lib/constants";
 
 interface AvatarProps {
   uri?: string;
@@ -19,6 +18,7 @@ interface AvatarProps {
   showBadge?: boolean;
   badgeType?: "verified" | "premium";
   loading?: boolean;
+  className?: string;
 }
 
 const SIZES = {
@@ -44,6 +44,7 @@ export function Avatar({
   showBadge,
   badgeType,
   loading = false,
+  className = "",
 }: AvatarProps) {
   const avatarSize = SIZES[size];
   const fontSize = FONT_SIZES[size];
@@ -64,33 +65,32 @@ export function Avatar({
   const initials = getInitials(name);
 
   const content = (
-    <View style={[styles.container, { width: avatarSize, height: avatarSize }]}>
+    <View className={`relative ${className}`} style={[{ width: avatarSize, height: avatarSize }]}>
       {loading ? (
         <View
-          style={[styles.avatar, { width: avatarSize, height: avatarSize }]}
+          className="rounded-full bg-slate-700 border-2 border-slate-700 overflow-hidden justify-center items-center"
+          style={[{ width: avatarSize, height: avatarSize }]}
         >
           <ActivityIndicator size="small" color={COLORS.primary} />
         </View>
       ) : uri ? (
         <Image
           source={{ uri }}
-          style={[styles.avatar, { width: avatarSize, height: avatarSize }]}
+          className="rounded-full bg-slate-700 border-2 border-slate-700 overflow-hidden justify-center items-center"
+          style={[{ width: avatarSize, height: avatarSize }]}
           resizeMode="cover"
         />
       ) : (
         <View
-          style={[
-            styles.avatar,
-            styles.initialsContainer,
-            { width: avatarSize, height: avatarSize },
-          ]}
+          className="rounded-full bg-blue-800 border-2 border-slate-700 overflow-hidden justify-center items-center"
+          style={[{ width: avatarSize, height: avatarSize }]}
         >
-          <Text style={[styles.initials, { fontSize }]}>{initials}</Text>
+          <Text className="text-white font-bold" style={[{ fontSize }]}>{initials}</Text>
         </View>
       )}
 
       {editable && (
-        <View style={[styles.editIcon, size === "sm" && styles.editIconSm]}>
+        <View className={`absolute bottom-0 right-0 rounded-full bg-blue-800 justify-center items-center border-2 border-slate-900 ${size === "sm" ? 'w-4 h-4' : 'w-[22px] h-[22px]'}`}>
           <Ionicons
             name="camera"
             size={size === "sm" ? 12 : 16}
@@ -100,7 +100,7 @@ export function Avatar({
       )}
 
       {showBadge && badgeType && (
-        <View style={[styles.badge, size === "sm" && styles.badgeSm]}>
+        <View className={`absolute -top-0.5 -right-0.5 rounded-full bg-emerald-500 justify-center items-center border-2 border-slate-900 ${size === "sm" ? 'w-3.5 h-3.5' : 'w-[18px] h-[18px]'}`}>
           <Ionicons
             name={badgeType === "verified" ? "checkmark-circle" : "star"}
             size={size === "sm" ? 12 : 16}
@@ -125,59 +125,3 @@ export function Avatar({
 
   return content;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    position: "relative",
-  },
-  avatar: {
-    borderRadius: RADIUS.full,
-    backgroundColor: COLORS.bgSurface,
-    borderWidth: 2,
-    borderColor: COLORS.border,
-    overflow: "hidden",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  initialsContainer: {
-    backgroundColor: COLORS.primary,
-  },
-  initials: {
-    color: "#fff",
-    fontWeight: FONTS.weights.bold,
-  },
-  editIcon: {
-    position: "absolute",
-    bottom: 0,
-    right: 0,
-    width: 22,
-    height: 22,
-    borderRadius: RADIUS.full,
-    backgroundColor: COLORS.primary,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: COLORS.bgDark,
-  },
-  editIconSm: {
-    width: 16,
-    height: 16,
-  },
-  badge: {
-    position: "absolute",
-    top: -2,
-    right: -2,
-    width: 18,
-    height: 18,
-    borderRadius: RADIUS.full,
-    backgroundColor: COLORS.success,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: COLORS.bgDark,
-  },
-  badgeSm: {
-    width: 14,
-    height: 14,
-  },
-});

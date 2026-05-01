@@ -3,7 +3,7 @@
  * Displays offline mode banner and connection quality indicator
  */
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNetwork } from "../../lib/network-context";
@@ -44,42 +44,22 @@ export function NetworkStatusBanner() {
   if (!config) return null;
 
   return (
-    <View style={[styles.banner, { backgroundColor: `${config.color}15`, paddingTop: insets.top + SPACING.sm }]}>
-      <View style={styles.content}>
+    <View
+      className="border-b border-[#E5E7EB] px-4 py-2"
+      style={{
+        backgroundColor: `${config.color}15`,
+        paddingTop: insets.top + SPACING.sm,
+      }}
+    >
+      <View className="flex-row items-center gap-4">
         <Ionicons name={config.icon} size={20} color={config.color} />
-        <View style={styles.textContainer}>
-          <Text style={[styles.text, { color: config.color }]}>
+        <View className="flex-1">
+          <Text className="mb-0.5 text-xs font-semibold" style={{ color: config.color }}>
             {config.text}
           </Text>
-          <Text style={styles.subtext}>{config.subtext}</Text>
+          <Text className="text-[11px] text-[#6B7280]">{config.subtext}</Text>
         </View>
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  banner: {
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-  },
-  content: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.md,
-  },
-  textContainer: {
-    flex: 1,
-  },
-  text: {
-    fontSize: 12,
-    fontWeight: "600",
-    marginBottom: 2,
-  },
-  subtext: {
-    fontSize: 11,
-    color: "#6B7280",
-  },
-});

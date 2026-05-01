@@ -2,13 +2,12 @@ import React, { useState } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { COLORS, FONTS, SPACING, RADIUS } from "../../lib/constants";
+import { COLORS } from "../../lib/constants";
 import { Modal } from "../ui/Modal";
 import { changePassword } from "../../lib/api-client";
 import { toastService } from "../../lib/toast-service";
@@ -77,11 +76,11 @@ export function ChangePasswordModal({
 
   return (
     <Modal visible={visible} onClose={handleClose} title="Change Password">
-      <View style={styles.content}>
-        <View style={styles.field}>
-          <Text style={styles.label}>Current Password</Text>
+      <View className="gap-lg">
+        <View className="gap-xs">
+          <Text className="text-sm text-slate-300 font-medium">Current Password</Text>
           <TextInput
-            style={[styles.input, errors.oldPassword && styles.inputError]}
+            className={`bg-slate-900 border border-slate-600 rounded-md px-md py-sm text-sm text-slate-100 ${errors.oldPassword ? "border-error" : ""}`}
             value={oldPassword}
             onChangeText={setOldPassword}
             placeholder="Enter current password"
@@ -90,14 +89,14 @@ export function ChangePasswordModal({
             autoCapitalize="none"
           />
           {errors.oldPassword && (
-            <Text style={styles.errorText}>{errors.oldPassword}</Text>
+            <Text className="text-xs text-error mt-xs">{errors.oldPassword}</Text>
           )}
         </View>
 
-        <View style={styles.field}>
-          <Text style={styles.label}>New Password</Text>
+        <View className="gap-xs">
+          <Text className="text-sm text-slate-300 font-medium">New Password</Text>
           <TextInput
-            style={[styles.input, errors.newPassword && styles.inputError]}
+            className={`bg-slate-900 border border-slate-600 rounded-md px-md py-sm text-sm text-slate-100 ${errors.newPassword ? "border-error" : ""}`}
             value={newPassword}
             onChangeText={setNewPassword}
             placeholder="Enter new password"
@@ -106,14 +105,14 @@ export function ChangePasswordModal({
             autoCapitalize="none"
           />
           {errors.newPassword && (
-            <Text style={styles.errorText}>{errors.newPassword}</Text>
+            <Text className="text-xs text-error mt-xs">{errors.newPassword}</Text>
           )}
         </View>
 
-        <View style={styles.field}>
-          <Text style={styles.label}>Confirm New Password</Text>
+        <View className="gap-xs">
+          <Text className="text-sm text-slate-300 font-medium">Confirm New Password</Text>
           <TextInput
-            style={[styles.input, errors.confirmPassword && styles.inputError]}
+            className={`bg-slate-900 border border-slate-600 rounded-md px-md py-sm text-sm text-slate-100 ${errors.confirmPassword ? "border-error" : ""}`}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             placeholder="Re-enter new password"
@@ -122,32 +121,28 @@ export function ChangePasswordModal({
             autoCapitalize="none"
           />
           {errors.confirmPassword && (
-            <Text style={styles.errorText}>{errors.confirmPassword}</Text>
+            <Text className="text-xs text-error mt-xs">{errors.confirmPassword}</Text>
           )}
         </View>
 
-        <View style={styles.buttons}>
+        <View className="flex-row gap-md mt-md">
           <TouchableOpacity
-            style={[styles.button, styles.cancelButton]}
+            className="flex-1 py-sm rounded-md items-center justify-center bg-slate-900 border border-slate-600"
             onPress={handleClose}
             disabled={loading}
           >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
+            <Text className="text-sm text-slate-300 font-medium">Cancel</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[
-              styles.button,
-              styles.submitButton,
-              loading && styles.buttonDisabled,
-            ]}
+            className={`flex-1 py-sm rounded-md items-center justify-center bg-primary ${loading ? "opacity-50" : ""}`}
             onPress={handleSubmit}
             disabled={loading}
           >
             {loading ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
-              <Text style={styles.submitButtonText}>Change Password</Text>
+              <Text className="text-sm text-white font-bold">Change Password</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -155,68 +150,3 @@ export function ChangePasswordModal({
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  content: {
-    gap: SPACING.lg,
-  },
-  field: {
-    gap: SPACING.xs,
-  },
-  label: {
-    fontSize: FONTS.sizes.sm,
-    color: "#cbd5e1", // Brighter label text
-    fontWeight: FONTS.weights.medium,
-  },
-  input: {
-    backgroundColor: "#0f172a", // Darker input for contrast
-    borderWidth: 1,
-    borderColor: "#475569", // Lighter border
-    borderRadius: RADIUS.md,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
-    fontSize: FONTS.sizes.sm,
-    color: "#f1f5f9", // Brighter text
-  },
-  inputError: {
-    borderColor: COLORS.error,
-  },
-  errorText: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.error,
-    marginTop: SPACING.xs,
-  },
-  buttons: {
-    flexDirection: "row",
-    gap: SPACING.md,
-    marginTop: SPACING.md,
-  },
-  button: {
-    flex: 1,
-    paddingVertical: SPACING.sm,
-    borderRadius: RADIUS.md,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cancelButton: {
-    backgroundColor: "#0f172a", // Darker for contrast
-    borderWidth: 1,
-    borderColor: "#475569", // Lighter border
-  },
-  cancelButtonText: {
-    fontSize: FONTS.sizes.sm,
-    color: "#cbd5e1", // Brighter text
-    fontWeight: FONTS.weights.medium,
-  },
-  submitButton: {
-    backgroundColor: COLORS.primary,
-  },
-  submitButtonText: {
-    fontSize: FONTS.sizes.sm,
-    color: "#fff",
-    fontWeight: FONTS.weights.bold,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-});

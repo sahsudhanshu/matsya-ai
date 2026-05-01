@@ -2,12 +2,11 @@ import React from "react";
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   Switch,
   TextInput,
 } from "react-native";
-import { COLORS, FONTS, SPACING, RADIUS } from "../../lib/constants";
+import { COLORS } from "../../lib/constants";
 
 interface PreferenceRowProps {
   label: string;
@@ -43,16 +42,16 @@ export function PreferenceRow({
 
       case "select":
         return (
-          <View style={styles.selectControl}>
-            <Text style={styles.selectValue}>{value || "Select"}</Text>
-            <Text style={styles.arrow}>›</Text>
+          <View className="flex-row items-center gap-sm">
+            <Text className="text-sm text-textMuted">{value || "Select"}</Text>
+            <Text className="text-lg text-textSubtle">›</Text>
           </View>
         );
 
       case "text":
         return (
           <TextInput
-            style={styles.textInput}
+            className="text-sm text-textPrimary bg-bgDark rounded-md px-sm py-xs min-w-[120px] text-right"
             value={value}
             onChangeText={onValueChange}
             placeholder="Enter value"
@@ -62,9 +61,9 @@ export function PreferenceRow({
 
       case "action":
         return (
-          <View style={styles.actionControl}>
-            {value && <Text style={styles.actionValue}>{value}</Text>}
-            <Text style={[styles.arrow, danger && styles.arrowDanger]}>
+          <View className="flex-row items-center gap-sm">
+            {value && <Text className="text-sm text-textMuted">{value}</Text>}
+            <Text className={`text-lg ${danger ? "text-error" : "text-textSubtle"}`}>
               {danger ? "→" : "›"}
             </Text>
           </View>
@@ -76,14 +75,14 @@ export function PreferenceRow({
   };
 
   const content = (
-    <View style={styles.container}>
-      <View style={styles.left}>
-        <Text style={[styles.label, danger && styles.labelDanger]}>
+    <View className="flex-row justify-between items-center px-md py-sm border-b border-border">
+      <View className="flex-1 mr-sm">
+        <Text className={`text-sm font-medium ${danger ? "text-error" : "text-textSecondary"}`}>
           {label}
         </Text>
-        {description && <Text style={styles.description}>{description}</Text>}
+        {description && <Text className="text-xs text-textSubtle mt-[2px]">{description}</Text>}
       </View>
-      <View style={styles.right}>{renderControl()}</View>
+      <View className="flex-row items-center">{renderControl()}</View>
     </View>
   );
 
@@ -97,71 +96,3 @@ export function PreferenceRow({
 
   return content;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  left: {
-    flex: 1,
-    marginRight: SPACING.sm,
-  },
-  right: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  label: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textSecondary,
-    fontWeight: FONTS.weights.medium,
-  },
-  labelDanger: {
-    color: COLORS.error,
-  },
-  description: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textSubtle,
-    marginTop: 2,
-  },
-  selectControl: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.sm,
-  },
-  selectValue: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-  },
-  arrow: {
-    fontSize: FONTS.sizes.lg,
-    color: COLORS.textSubtle,
-  },
-  arrowDanger: {
-    color: COLORS.error,
-  },
-  textInput: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textPrimary,
-    backgroundColor: COLORS.bgDark,
-    borderRadius: RADIUS.md,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: SPACING.xs,
-    minWidth: 120,
-    textAlign: "right",
-  },
-  actionControl: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.sm,
-  },
-  actionValue: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-  },
-});

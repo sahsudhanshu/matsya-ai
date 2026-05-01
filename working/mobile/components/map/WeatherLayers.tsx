@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  StyleSheet,
+  
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
@@ -162,12 +162,12 @@ export function WeatherLayerControls({
   ];
 
   return (
-    <View style={styles.container}>
+    <View className="rounded-[16px] border border-[#334155] bg-[#1e293b] p-4">
       {/* Layer Selection */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.layerScroll}
+        contentContainerStyle={{ gap: 8 }}
       >
         {layers.map((layer) => {
           const isActive =
@@ -184,7 +184,11 @@ export function WeatherLayerControls({
           return (
             <TouchableOpacity
               key={layer}
-              style={[styles.layerButton, isActive && styles.layerButtonActive]}
+              className={`flex-row items-center gap-1 rounded-[12px] border px-4 py-2 ${
+                isActive
+                  ? "border-[#3b82f6] bg-[#0f3460]"
+                  : "border-[#334155] bg-[#334155]"
+              }`}
               onPress={() => onLayerChange(layer === "none" ? null : layer)}
               activeOpacity={0.7}
             >
@@ -194,10 +198,9 @@ export function WeatherLayerControls({
                 color={isActive ? COLORS.primaryLight : COLORS.textMuted}
               />
               <Text
-                style={[
-                  styles.layerButtonText,
-                  isActive && styles.layerButtonTextActive,
-                ]}
+                className={`text-[12px] font-semibold ${
+                  isActive ? "text-[#3b82f6]" : "text-[#94a3b8]"
+                }`}
               >
                 {config.label}
               </Text>
@@ -208,47 +211,47 @@ export function WeatherLayerControls({
 
       {/* Active Layer Info & Controls */}
       {activeLayer && (
-        <View style={styles.activeLayerInfo}>
+        <View className="mt-4 border-t border-[#334155] pt-4">
           {loading ? (
-            <View style={styles.loadingContainer}>
+            <View className="flex-row items-center gap-2 p-4">
               <ActivityIndicator size="small" color={COLORS.primaryLight} />
-              <Text style={styles.loadingText}>Loading layer...</Text>
+              <Text className="text-[12px] text-[#94a3b8]">Loading layer...</Text>
             </View>
           ) : layerData ? (
             <>
               {/* Layer Description */}
-              <View style={styles.layerHeader}>
+              <View className="mb-1 flex-row items-center gap-2">
                 <Ionicons
                   name={LAYER_CONFIG[activeLayer].icon}
                   size={18}
                   color={COLORS.primaryLight}
                 />
-                <Text style={styles.layerTitle}>
+                <Text className="text-[13px] font-bold text-[#f8fafc]">
                   {LAYER_CONFIG[activeLayer].label}
                 </Text>
               </View>
-              <Text style={styles.layerDescription}>
+              <Text className="mb-4 text-[12px] text-[#94a3b8]">
                 {LAYER_CONFIG[activeLayer].description}
               </Text>
 
               {/* Opacity Control */}
-              <View style={styles.opacityControl}>
-                <Text style={styles.opacityLabel}>Opacity</Text>
-                <View style={styles.opacityButtons}>
+              <View className="mb-4">
+                <Text className="mb-2 text-[12px] font-semibold text-[#e2e8f0]">Opacity</Text>
+                <View className="flex-row gap-2">
                   {[0.3, 0.5, 0.7, 1.0].map((value) => (
                     <TouchableOpacity
                       key={value}
-                      style={[
-                        styles.opacityButton,
-                        opacity === value && styles.opacityButtonActive,
-                      ]}
+                      className={`flex-1 items-center rounded-[12px] border py-2 ${
+                        opacity === value
+                          ? "border-[#3b82f6] bg-[#0f3460]"
+                          : "border-[#334155] bg-[#334155]"
+                      }`}
                       onPress={() => onOpacityChange(value)}
                     >
                       <Text
-                        style={[
-                          styles.opacityButtonText,
-                          opacity === value && styles.opacityButtonTextActive,
-                        ]}
+                        className={`text-[12px] font-semibold ${
+                          opacity === value ? "text-[#3b82f6]" : "text-[#94a3b8]"
+                        }`}
                       >
                         {Math.round(value * 100)}%
                       </Text>
@@ -259,18 +262,16 @@ export function WeatherLayerControls({
 
               {/* Legend */}
               {layerData.legend && layerData.legend.length > 0 && (
-                <View style={styles.legend}>
-                  <Text style={styles.legendTitle}>Legend</Text>
-                  <View style={styles.legendItems}>
+                <View className="mb-4">
+                  <Text className="mb-2 text-[12px] font-semibold text-[#e2e8f0]">Legend</Text>
+                  <View className="flex-row flex-wrap gap-2">
                     {layerData.legend.map((item, index) => (
-                      <View key={index} style={styles.legendItem}>
+                      <View key={index} className="flex-row items-center gap-1 rounded-[12px] bg-[#334155] px-2 py-1">
                         <View
-                          style={[
-                            styles.legendColor,
-                            { backgroundColor: item.color },
-                          ]}
+                          className="h-4 w-4 rounded-[8px] border border-[#334155]"
+                          style={{ backgroundColor: item.color }}
                         />
-                        <Text style={styles.legendLabel}>{item.label}</Text>
+                        <Text className="text-[10px] text-[#e2e8f0]">{item.label}</Text>
                       </View>
                     ))}
                   </View>
@@ -278,18 +279,18 @@ export function WeatherLayerControls({
               )}
 
               {/* Timestamp */}
-              <Text style={styles.timestamp}>
+              <Text className="text-center text-[10px] text-[#94a3b8]">
                 Updated: {new Date(layerData.timestamp).toLocaleTimeString()}
               </Text>
             </>
           ) : (
-            <View style={styles.errorContainer}>
+            <View className="flex-row items-center gap-2 rounded-[12px] bg-[#ef444415] p-4">
               <Ionicons
                 name="alert-circle-outline"
                 size={24}
                 color={COLORS.error}
               />
-              <Text style={styles.errorText}>Failed to load layer data</Text>
+              <Text className="text-[12px] text-[#ef4444]">Failed to load layer data</Text>
             </View>
           )}
         </View>
@@ -297,156 +298,3 @@ export function WeatherLayerControls({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.lg,
-    padding: SPACING.md,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  layerScroll: {
-    gap: SPACING.sm,
-  },
-  layerButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.xs,
-    backgroundColor: COLORS.bgSurface,
-    borderRadius: RADIUS.md,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  layerButtonActive: {
-    backgroundColor: COLORS.primaryDark,
-    borderColor: COLORS.primaryLight,
-  },
-  layerButtonText: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.semibold,
-    color: COLORS.textMuted,
-  },
-  layerButtonTextActive: {
-    color: COLORS.primaryLight,
-  },
-  activeLayerInfo: {
-    marginTop: SPACING.md,
-    paddingTop: SPACING.md,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-  },
-  loadingContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.sm,
-    padding: SPACING.md,
-  },
-  loadingText: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-  },
-  layerHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.sm,
-    marginBottom: SPACING.xs,
-  },
-  layerTitle: {
-    fontSize: FONTS.sizes.base,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-  },
-  layerDescription: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-    marginBottom: SPACING.md,
-  },
-  opacityControl: {
-    marginBottom: SPACING.md,
-  },
-  opacityLabel: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.semibold,
-    color: COLORS.textSecondary,
-    marginBottom: SPACING.sm,
-  },
-  opacityButtons: {
-    flexDirection: "row",
-    gap: SPACING.sm,
-  },
-  opacityButton: {
-    flex: 1,
-    backgroundColor: COLORS.bgSurface,
-    borderRadius: RADIUS.md,
-    paddingVertical: SPACING.sm,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  opacityButtonActive: {
-    backgroundColor: COLORS.primaryDark,
-    borderColor: COLORS.primaryLight,
-  },
-  opacityButtonText: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.semibold,
-    color: COLORS.textMuted,
-  },
-  opacityButtonTextActive: {
-    color: COLORS.primaryLight,
-  },
-  legend: {
-    marginBottom: SPACING.md,
-  },
-  legendTitle: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.semibold,
-    color: COLORS.textSecondary,
-    marginBottom: SPACING.sm,
-  },
-  legendItems: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: SPACING.sm,
-  },
-  legendItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.xs,
-    backgroundColor: COLORS.bgSurface,
-    borderRadius: RADIUS.md,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: SPACING.xs,
-  },
-  legendColor: {
-    width: 16,
-    height: 16,
-    borderRadius: RADIUS.sm,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  legendLabel: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textSecondary,
-  },
-  timestamp: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    textAlign: "center",
-  },
-  errorContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.sm,
-    padding: SPACING.md,
-    backgroundColor: COLORS.error + "15",
-    borderRadius: RADIUS.md,
-  },
-  errorText: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.error,
-  },
-});

@@ -36,7 +36,7 @@ exports.handler = async (event) => {
     }
 
     if (!groupId) {
-        return ok({ stored: false, reason: "no_group_id" });
+        return badRequest("Missing required field: groupId");
     }
 
     const userId = decoded.sub;

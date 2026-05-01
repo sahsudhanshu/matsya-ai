@@ -19,40 +19,6 @@ import { generateGradCAM } from "./gradcam";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as FileSystem from "expo-file-system/legacy";
 
-/**
- * Estimate weight from bounding box dimensions (rough approximation)
- */
-function estimateWeight(box: BoundingBox): number {
-  // Assume average fish density and image scale
-  const area = (box.x2 - box.x1) * (box.y2 - box.y1);
-  const baseWeight = area * 50000; // Rough scaling factor
-  const variance = 0.8 + Math.random() * 0.4; // ±20% variance
-  return Math.round(baseWeight * variance);
-}
-
-/**
- * Estimate length from bounding box height
- */
-function estimateLength(box: BoundingBox): number {
-  const height = box.y2 - box.y1;
-  const baseLength = height * 800; // Rough scaling factor
-  const variance = 0.9 + Math.random() * 0.2;
-  return Math.round(baseLength * variance);
-}
-
-/**
- * Determine quality grade based on disease and size
- */
-function determineQuality(
-  disease: string,
-  lengthMm: number,
-  minSize: number,
-): string {
-  if (disease !== "Healthy Fish") return "Low";
-  if (lengthMm >= minSize * 1.3) return "Premium";
-  if (lengthMm >= minSize) return "Standard";
-  return "Low";
-}
 
 export interface OfflineDetectionResult {
   bbox: number[];
@@ -281,16 +247,10 @@ export async function runOfflineInference(
         const speciesInfo = getSpeciesInfo(speciesResult.label);
 
         // Calculate measurements
-        const weightG = estimateWeight(box);
-        const lengthMm = estimateLength(box);
-        const qualityGrade = determineQuality(
-          diseaseResult.label,
-          lengthMm,
-          speciesInfo.minSize,
-        );
-        const estimatedValue = Math.round(
-          (weightG / 1000) * speciesInfo.avgPrice,
-        );
+        const weightG = 0;
+        const lengthMm = 0;
+        const qualityGrade = diseaseResult.label === "Healthy Fish" ? "Standard" : "Low";
+        const estimatedValue = 0;
 
         detection = {
           bbox: [

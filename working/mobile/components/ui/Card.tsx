@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, ViewStyle, TextStyle, StyleProp } from "react-native";
+import { View, Text, ViewStyle, TextStyle, StyleProp } from "react-native";
 import { COLORS, FONTS, SPACING, RADIUS } from "../../lib/constants";
 import { Colors } from "../../lib/colors";
 
@@ -18,6 +18,7 @@ import { Colors } from "../../lib/colors";
 interface CardProps {
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
+  className?: string;
   variant?: "default" | "outlined" | "elevated";
   size?: "small" | "default" | "large";
   shadow?: "none" | "sm" | "md" | "lg";
@@ -27,6 +28,7 @@ interface CardProps {
 export function Card({
   children,
   style,
+  className,
   variant = "default",
   size = "default",
   shadow = "md",
@@ -46,18 +48,18 @@ export function Card({
   const borderRadius = size === "small" ? 4 : size === "large" ? 12 : 8;
 
   // Determine shadow style based on variant and shadow prop
-  const shadowStyle =
+  const shadowClass =
     variant === "outlined"
-      ? {}
+      ? ""
       : variant === "elevated"
-        ? styles.shadowLg
+        ? "shadow-lg"
         : shadow === "none"
-          ? {}
+          ? ""
           : shadow === "sm"
-            ? styles.shadowSm
+            ? "shadow-sm"
             : shadow === "lg"
-              ? styles.shadowLg
-              : styles.shadowMd;
+              ? "shadow-lg"
+              : "shadow-md";
 
   // Determine border style for outlined variant
   const borderStyle =
@@ -67,10 +69,9 @@ export function Card({
 
   return (
     <View
+      className={`bg-[#1e293b] rounded-[24px] border border-[#334155] ${shadowClass} ${className || ''}`}
       style={[
-        styles.card,
         { padding: paddingValue, borderRadius },
-        shadowStyle,
         borderStyle,
         style,
       ]}
@@ -101,18 +102,16 @@ export function Badge({
 }: BadgeProps) {
   return (
     <View
+      className={`rounded-full self-start ${size === "sm" ? "px-[6px] py-[2px]" : "px-2 py-[3px]"}`}
       style={[
-        styles.badge,
         { backgroundColor: color + "22" },
-        size === "sm" && styles.badgeSm,
         style,
       ]}
     >
       <Text
+        className={`font-semibold tracking-[0.2px] ${size === "sm" ? "text-[10px]" : "text-[10px]"}`}
         style={[
-          styles.badgeText,
           { color },
-          size === "sm" && styles.badgeTextSm,
           textStyle,
         ]}
       >
@@ -125,7 +124,7 @@ export function Badge({
 // ── Divider ───────────────────────────────────────────────────────────────────
 
 export function Divider({ style }: { style?: ViewStyle }) {
-  return <View style={[styles.divider, style]} />;
+  return <View className="h-[1px] bg-[#334155] my-4" style={style} />;
 }
 
 // ── StatCard ──────────────────────────────────────────────────────────────────
@@ -136,6 +135,7 @@ interface StatCardProps {
   icon: React.ReactNode;
   accentColor: string;
   style?: ViewStyle;
+  className?: string;
 }
 
 export function StatCard({
@@ -144,14 +144,15 @@ export function StatCard({
   icon,
   accentColor,
   style,
+  className,
 }: StatCardProps) {
   return (
-    <View style={[styles.statCard, style]}>
-      <View style={[styles.statIcon, { backgroundColor: accentColor + "20" }]}>
+    <View className={`bg-[#1e293b] rounded-2xl border border-[#334155] p-2 items-start ${className || ''}`} style={style}>
+      <View className="w-9 h-9 rounded-lg items-center justify-center mb-1" style={{ backgroundColor: accentColor + "20" }}>
         {icon}
       </View>
-      <Text style={styles.statLabel}>{label}</Text>
-      <Text style={styles.statValue}>{value}</Text>
+      <Text className="text-[10px] color-[#94a3b8] font-medium mb-[2px] tracking-[0.3px] uppercase">{label}</Text>
+      <Text className="text-[20px] color-[#f8fafc] font-bold">{value}</Text>
     </View>
   );
 }
@@ -166,115 +167,9 @@ interface SectionHeaderProps {
 
 export function SectionHeader({ title, subtitle, style }: SectionHeaderProps) {
   return (
-    <View style={[styles.sectionHeader, style]}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      {subtitle && <Text style={styles.sectionSubtitle}>{subtitle}</Text>}
+    <View className="mb-2" style={style}>
+      <Text className="text-[20px] color-[#f8fafc] font-bold">{title}</Text>
+      {subtitle && <Text className="text-[12px] color-[#94a3b8] mt-1">{subtitle}</Text>}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  // Card
-  card: {
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS["2xl"],
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-
-  // Shadow variants matching web design system
-  shadowSm: {
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  shadowMd: {
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  shadowLg: {
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-
-  // Badge
-  badge: {
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 3,
-    borderRadius: RADIUS.full,
-    alignSelf: "flex-start",
-  },
-  badgeSm: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  badgeText: {
-    fontSize: FONTS.sizes.xs,
-    fontWeight: FONTS.weights.semibold,
-    letterSpacing: 0.2,
-  },
-  badgeTextSm: {
-    fontSize: 10,
-  },
-
-  // Divider
-  divider: {
-    height: 1,
-    backgroundColor: COLORS.border,
-    marginVertical: SPACING.md,
-  },
-
-  // StatCard
-  statCard: {
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.lg,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: SPACING.sm,
-    alignItems: "flex-start",
-  },
-  statIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: RADIUS.sm,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: SPACING.xs,
-  },
-  statLabel: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    fontWeight: FONTS.weights.medium,
-    marginBottom: 2,
-    letterSpacing: 0.3,
-    textTransform: "uppercase",
-  },
-  statValue: {
-    fontSize: FONTS.sizes.lg,
-    color: COLORS.textPrimary,
-    fontWeight: FONTS.weights.bold,
-  },
-
-  // Section Header
-  sectionHeader: {
-    marginBottom: SPACING.sm,
-  },
-  sectionTitle: {
-    fontSize: FONTS.sizes.xl,
-    color: COLORS.textPrimary,
-    fontWeight: FONTS.weights.bold,
-  },
-  sectionSubtitle: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-    marginTop: SPACING.xs,
-  },
-});

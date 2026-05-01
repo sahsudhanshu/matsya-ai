@@ -7,10 +7,10 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { View, Image, StyleSheet, Text } from "react-native";
+import { View, Image, Text } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
 import type { BoundingBox } from "../lib/detection";
-import { COLORS, FONTS, SPACING, RADIUS } from "../lib/constants";
+import { COLORS } from "../lib/constants";
 
 interface Props {
   imageUri: string;
@@ -58,10 +58,8 @@ export function BoundingBoxOverlay({
 
   return (
     <View
-      style={[
-        styles.container,
-        { width: containerWidth, height: containerHeight },
-      ]}
+      className="relative overflow-hidden rounded-[20px] bg-black"
+      style={{ width: containerWidth, height: containerHeight }}
     >
       <Image
         source={{ uri: imageUri }}
@@ -77,10 +75,17 @@ export function BoundingBoxOverlay({
         const height = (box.y2 - box.y1) * renderedH;
 
         return (
-          <View key={idx} style={[styles.box, { left, top, width, height }]}>
+          <View
+            key={idx}
+            className="absolute rounded-[6px] border-[2.5px] bg-[rgba(16,185,129,0.08)]"
+            style={{ left, top, width, height, borderColor: BOX_COLOR }}
+          >
             {/* Small confidence badge in bottom-right corner */}
-            <View style={styles.confBadge}>
-              <Text style={styles.confText}>
+            <View
+              className="absolute bottom-[-1px] right-[-1px] rounded-bl-[6px] rounded-br-[4px] px-[5px] py-[1px]"
+              style={{ backgroundColor: BOX_COLOR }}
+            >
+              <Text className="text-[9px] font-bold text-white">
                 {(box.confidence * 100).toFixed(0)}%
               </Text>
             </View>
@@ -89,57 +94,17 @@ export function BoundingBoxOverlay({
       })}
 
       {/* Detection count badge */}
-      <View style={styles.countBadge}>
+      <View
+        className="absolute right-2 top-2 flex-row items-center rounded-full px-4 py-1"
+        style={{ backgroundColor: "rgba(0,0,0,0.7)" }}
+      >
         <Ionicons name="fish" size={16} color={COLORS.white} />
-        <Text style={styles.countText}>{detections.length} detected</Text>
+        <Text className="text-[10px] font-bold text-white">
+          {detections.length} detected
+        </Text>
       </View>
     </View>
   );
 }
 
 const BOX_COLOR = "#10b981"; // COLORS.success
-
-const styles = StyleSheet.create({
-  container: {
-    position: "relative",
-    borderRadius: RADIUS.xl,
-    overflow: "hidden",
-    backgroundColor: "#000",
-  },
-  box: {
-    position: "absolute",
-    borderWidth: 2.5,
-    borderColor: BOX_COLOR,
-    borderRadius: 6,
-    backgroundColor: "rgba(16, 185, 129, 0.08)",
-  },
-  confBadge: {
-    position: "absolute",
-    bottom: -1,
-    right: -1,
-    backgroundColor: BOX_COLOR,
-    borderTopLeftRadius: 6,
-    borderBottomRightRadius: 4,
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-  },
-  confText: {
-    color: "#fff",
-    fontSize: 9,
-    fontWeight: "700",
-  },
-  countBadge: {
-    position: "absolute",
-    top: SPACING.sm,
-    right: SPACING.sm,
-    backgroundColor: "rgba(0,0,0,0.7)",
-    borderRadius: RADIUS.full,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs,
-  },
-  countText: {
-    color: "#fff",
-    fontSize: FONTS.sizes.xs,
-    fontWeight: FONTS.weights.bold,
-  },
-});

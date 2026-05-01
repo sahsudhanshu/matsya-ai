@@ -11,7 +11,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
-  StyleSheet,
+  
   TouchableOpacity,
   ScrollView,
   Image,
@@ -333,35 +333,35 @@ export function GroupFishPickerModal({ visible, onClose, onSelectFish }: Props) 
       {/* Back button on fish step */}
       {step === "fish" && selectedGroup && (
         <TouchableOpacity
-          style={styles.backButton}
+          className="mb-4 flex-row items-center gap-2 border-b border-[#334155] py-2 px-1"
           onPress={handleBack}
           activeOpacity={0.7}
         >
           <Ionicons name="arrow-back" size={16} color={COLORS.primaryLight} />
-          <Text style={styles.backButtonText}>Back to groups</Text>
+          <Text className="text-[14px] font-medium text-[#3b82f6]">Back to groups</Text>
         </TouchableOpacity>
       )}
 
       {/* Loading state */}
       {loading && (
-        <View style={styles.centerContainer}>
+        <View className="flex-1 justify-center items-center p-xl min-h-[300px]">
           <ActivityIndicator size="large" color={COLORS.primaryLight} />
-          <Text style={styles.loadingText}>Loading your catch history…</Text>
+          <Text className="text-[12px] text-textMuted mt-md">Loading your catch history…</Text>
         </View>
       )}
 
       {/* Error state */}
       {!loading && error && (
-        <View style={styles.centerContainer}>
+        <View className="flex-1 justify-center items-center p-xl min-h-[300px]">
           <Ionicons name="fish-outline" size={48} color={COLORS.textSubtle} />
-          <Text style={styles.emptyText}>{error}</Text>
+          <Text className="text-[12px] text-textMuted mt-xs text-center">{error}</Text>
           <TouchableOpacity
-            style={styles.retryButton}
+            className="mt-lg bg-primary px-lg py-sm rounded-lg flex-row items-center"
             onPress={loadGroups}
             activeOpacity={0.7}
           >
             <Ionicons name="refresh" size={16} color={COLORS.primaryLight} />
-            <Text style={styles.retryText}>Retry</Text>
+            <Text className="ml-2 text-sm font-medium text-white">Retry</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -369,53 +369,55 @@ export function GroupFishPickerModal({ visible, onClose, onSelectFish }: Props) 
       {/* ── Step: Group selection ── */}
       {!loading && !error && step === "groups" && (
         <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
+          className="flex-1"
+          contentContainerStyle={{ paddingBottom: 24 }}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.stepHint}>
+          <Text className="mb-4 text-[13px] text-[#94a3b8]">
             Choose the scan group that contains the fish you want to weigh.
           </Text>
           {groups.map((group) => (
             <TouchableOpacity
               key={`${group.source}-${group.groupId}`}
-              style={styles.groupRow}
+              className="mb-3 flex-row items-center rounded-xl border border-[#334155] bg-[#1e293b] p-3"
               onPress={() => handleSelectGroup(group)}
               activeOpacity={0.7}
             >
               {group.thumbnailUrl ? (
                 <Image
                   source={{ uri: group.thumbnailUrl }}
-                  style={styles.groupThumb}
+                  className="mr-4 h-[60px] w-[60px] rounded-lg"
                   resizeMode="cover"
                 />
               ) : (
-                <View style={[styles.groupThumb, styles.groupThumbPlaceholder]}>
+                <View className="mr-4 h-[60px] w-[60px] items-center justify-center rounded-lg bg-[#0f172a]">
                   <Ionicons name="images" size={22} color={COLORS.primaryLight} />
                 </View>
               )}
-              <View style={styles.groupInfo}>
-                <View style={styles.groupTitleRow}>
-                  <Text style={styles.groupSpecies} numberOfLines={1}>
+              <View className="flex-1 justify-center">
+                <View className="mb-1 flex-row items-center justify-between">
+                  <Text className="mr-2 flex-1 text-[15px] font-bold text-[#f8fafc]" numberOfLines={1}>
                     {group.topSpecies}
                   </Text>
                   <View
-                    style={[
-                      styles.sourceBadge,
-                      group.source === "offline" && styles.sourceBadgeOffline,
-                    ]}
+                    className={
+                      group.source === "offline"
+                        ? "rounded-md border border-[#f59e0b66] bg-[#f59e0b33] px-2 py-0.5"
+                        : "rounded-md border border-[#3b82f666] bg-[#3b82f633] px-2 py-0.5"
+                    }
                   >
                     <Text
-                      style={[
-                        styles.sourceBadgeText,
-                        group.source === "offline" && styles.sourceBadgeTextOffline,
-                      ]}
+                      className={
+                        group.source === "offline"
+                          ? "text-[10px] font-bold uppercase tracking-wider text-[#f59e0b]"
+                          : "text-[10px] font-bold uppercase tracking-wider text-[#3b82f6]"
+                      }
                     >
                       {group.source === "online" ? "Cloud" : "Local"}
                     </Text>
                   </View>
                 </View>
-                <Text style={styles.groupMeta}>
+                <Text className="text-[12px] text-[#94a3b8]">
                   {group.fishCount} fish · {formatDate(group.createdAt)}
                 </Text>
               </View>
@@ -432,20 +434,20 @@ export function GroupFishPickerModal({ visible, onClose, onSelectFish }: Props) 
       {/* ── Step: Fish selection ── */}
       {!loading && !error && step === "fish" && selectedGroup && (
         <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
+          className="flex-1"
+          contentContainerStyle={{ paddingBottom: 24 }}
           showsVerticalScrollIndicator={false}
         >
           {/* Group summary badge */}
-          <View style={styles.groupSummaryBadge}>
+          <View className="mb-4 flex-row items-center gap-2 rounded-lg border border-[#334155] bg-[#1e293b] p-3">
             <Ionicons name="images-outline" size={14} color={COLORS.textMuted} />
-            <Text style={styles.groupSummaryText}>
+            <Text className="flex-1 text-[12px] font-medium text-[#e2e8f0]">
               {selectedGroup.topSpecies} · {selectedGroup.fishCount} fish ·{" "}
               {formatDate(selectedGroup.createdAt)}
             </Text>
           </View>
 
-          <Text style={styles.stepHint}>
+          <Text className="mb-4 text-[13px] text-[#94a3b8]">
             Select the fish you want to estimate the weight for.
           </Text>
 
@@ -454,18 +456,22 @@ export function GroupFishPickerModal({ visible, onClose, onSelectFish }: Props) 
             return (
               <TouchableOpacity
                 key={fish.fishIndex}
-                style={[styles.fishRow, hasMeasurement && styles.fishRowMeasured]}
+                className={
+                  hasMeasurement
+                    ? "mb-3 flex-row items-center rounded-xl border border-[#10b98166] bg-[#10b98111] p-3"
+                    : "mb-3 flex-row items-center rounded-xl border border-[#334155] bg-[#1e293b] p-3"
+                }
                 onPress={() => handleSelectFish(fish)}
                 activeOpacity={0.7}
               >
                 {fish.cropUrl ? (
                   <Image
                     source={{ uri: fish.cropUrl }}
-                    style={styles.fishThumb}
+                    className="mr-3 h-[50px] w-[50px] rounded-lg"
                     resizeMode="cover"
                   />
                 ) : (
-                  <View style={[styles.fishThumb, styles.fishThumbPlaceholder]}>
+                  <View className="mr-3 h-[50px] w-[50px] items-center justify-center rounded-lg bg-[#0f172a]">
                     <Ionicons
                       name="fish"
                       size={20}
@@ -473,35 +479,35 @@ export function GroupFishPickerModal({ visible, onClose, onSelectFish }: Props) 
                     />
                   </View>
                 )}
-                <View style={styles.fishInfo}>
-                  <Text style={styles.fishLabel}>
+                <View className="flex-1">
+                  <Text className="mb-1 text-[11px] font-bold uppercase tracking-wider text-[#94a3b8]">
                     Fish #{fish.fishIndex + 1}
                   </Text>
-                  <Text style={styles.fishSpecies}>{fish.species}</Text>
-                  <Text style={styles.fishMeta}>
+                  <Text className="mb-[2px] text-[13px] font-semibold text-[#f8fafc]">{fish.species}</Text>
+                  <Text className="mt-1 flex-row items-center gap-2 text-[12px] text-[#94a3b8]">
                     {(fish.confidence * 100).toFixed(0)}% conf · {fish.diseaseStatus}
                   </Text>
                 </View>
-                <View style={styles.fishAction}>
+                <View className="items-end justify-center pl-2">
                   {hasMeasurement ? (
-                    <View style={styles.measuredBadge}>
+                    <View className="flex-row items-center gap-[4px] rounded-sm bg-[#10b98115] px-[6px] py-[2px]">
                       <Ionicons
                         name="checkmark-circle"
                         size={16}
                         color={COLORS.success}
                       />
-                      <Text style={styles.measuredText}>
+                      <Text className="text-[12px] font-bold text-[#10b981]">
                         {(fish.existingWeightG! / 1000).toFixed(2)} kg
                       </Text>
                     </View>
                   ) : (
-                    <View style={styles.measureBadge}>
+                    <View className="flex-row items-center gap-1 rounded-lg border border-[#3b82f644] bg-[#3b82f622] px-2 py-1.5">
                       <Ionicons
                         name="scale-outline"
                         size={16}
                         color={COLORS.primaryLight}
                       />
-                      <Text style={styles.measureText}>Weigh</Text>
+                      <Text className="text-[11px] font-bold uppercase tracking-wider text-[#3b82f6]">Weigh</Text>
                     </View>
                   )}
                 </View>
@@ -513,223 +519,3 @@ export function GroupFishPickerModal({ visible, onClose, onSelectFish }: Props) 
     </Modal>
   );
 }
-
-// ── Styles ─────────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  centerContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: SPACING["2xl"],
-    gap: SPACING.md,
-  },
-  loadingText: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-    marginTop: SPACING.sm,
-  },
-  emptyText: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-    textAlign: "center",
-    lineHeight: 20,
-    paddingHorizontal: SPACING.lg,
-  },
-  retryButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
-    backgroundColor: COLORS.primaryLight + "18",
-    borderRadius: RADIUS.full,
-    marginTop: SPACING.sm,
-  },
-  retryText: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.primaryLight,
-    fontWeight: "600" as const,
-  },
-
-  backButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingVertical: SPACING.xs,
-    marginBottom: SPACING.sm,
-  },
-  backButtonText: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.primaryLight,
-    fontWeight: "500" as const,
-  },
-
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    gap: SPACING.sm,
-    paddingBottom: SPACING.md,
-  },
-
-  stepHint: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-    marginBottom: SPACING.xs,
-    lineHeight: 20,
-  },
-
-  // ── Group rows ──
-  groupRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.lg,
-    padding: SPACING.sm,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  groupThumb: {
-    width: 52,
-    height: 52,
-    borderRadius: RADIUS.md,
-    overflow: "hidden",
-  },
-  groupThumbPlaceholder: {
-    backgroundColor: COLORS.bgDark,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  groupInfo: {
-    flex: 1,
-    marginLeft: SPACING.sm,
-  },
-  groupTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.xs,
-  },
-  groupSpecies: {
-    fontSize: FONTS.sizes.base,
-    color: COLORS.textPrimary,
-    fontWeight: "600" as const,
-    flex: 1,
-  },
-  sourceBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    borderRadius: RADIUS.full,
-    backgroundColor: COLORS.primaryLight + "20",
-  },
-  sourceBadgeOffline: {
-    backgroundColor: "#f59e0b" + "20",
-  },
-  sourceBadgeText: {
-    fontSize: 10,
-    color: COLORS.primaryLight,
-    fontWeight: "600" as const,
-  },
-  sourceBadgeTextOffline: {
-    color: "#f59e0b",
-  },
-  groupMeta: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textSubtle,
-    marginTop: 2,
-  },
-
-  groupSummaryBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: SPACING.xs,
-    backgroundColor: COLORS.bgSurface,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    marginBottom: SPACING.xs,
-  },
-  groupSummaryText: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    fontWeight: "500" as const,
-  },
-
-  // ── Fish rows ──
-  fishRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.lg,
-    padding: SPACING.sm,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  fishRowMeasured: {
-    borderColor: COLORS.success + "40",
-    backgroundColor: COLORS.success + "08",
-  },
-  fishThumb: {
-    width: 48,
-    height: 48,
-    borderRadius: RADIUS.md,
-    overflow: "hidden",
-  },
-  fishThumbPlaceholder: {
-    backgroundColor: COLORS.bgDark,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  fishInfo: {
-    flex: 1,
-    marginLeft: SPACING.sm,
-  },
-  fishLabel: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    fontWeight: "600" as const,
-    textTransform: "uppercase" as const,
-    letterSpacing: 0.5,
-  },
-  fishSpecies: {
-    fontSize: FONTS.sizes.base,
-    color: COLORS.textPrimary,
-    fontWeight: "600" as const,
-  },
-  fishMeta: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textSubtle,
-  },
-  fishAction: {
-    marginLeft: SPACING.sm,
-  },
-  measuredBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: COLORS.success + "18",
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: SPACING.xs,
-    borderRadius: RADIUS.full,
-  },
-  measuredText: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.success,
-    fontWeight: "600" as const,
-  },
-  measureBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: COLORS.primaryLight + "18",
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: SPACING.xs,
-    borderRadius: RADIUS.full,
-  },
-  measureText: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.primaryLight,
-    fontWeight: "600" as const,
-  },
-});

@@ -197,7 +197,9 @@ class ChatStreamClient {
 
       xhr.onabort = () => {
         this.isStreaming = false;
-        resolve(); // user-initiated stop, not an error
+        const err = new Error("AbortError");
+        err.name = "AbortError";
+        reject(err);
       };
 
       xhr.onreadystatechange = () => {

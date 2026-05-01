@@ -1,6 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-import { COLORS, FONTS, SPACING, RADIUS } from "../../lib/constants";
+import { View, Text } from "react-native";
 import { Card } from "../ui/Card";
 
 interface SettingsSectionProps {
@@ -10,29 +9,13 @@ interface SettingsSectionProps {
 
 export function SettingsSection({ title, children }: SettingsSectionProps) {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{title}</Text>
-      <Card padding={0} style={styles.card}>
+    <View className="mb-md">
+      <Text className="text-xs text-textSubtle font-medium tracking-[0.8px] uppercase mb-xs px-xs">
+        {title}
+      </Text>
+      <Card padding={0} className="overflow-hidden">
         {children}
       </Card>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    marginBottom: SPACING.md,
-  },
-  title: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textSubtle,
-    fontWeight: FONTS.weights.medium,
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-    marginBottom: SPACING.xs,
-    paddingHorizontal: SPACING.xs,
-  },
-  card: {
-    overflow: "hidden",
-  },
-});

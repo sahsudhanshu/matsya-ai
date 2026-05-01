@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   Modal,
   ScrollView,
@@ -10,7 +9,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { COLORS, FONTS, SPACING, RADIUS } from "../../lib/constants";
+import { COLORS } from "../../lib/constants";
 import { SettingsSection } from "./SettingsSection";
 import { PreferenceRow } from "./PreferenceRow";
 import {
@@ -315,17 +314,14 @@ export function PreferencesManager({
         animationType="slide"
         onRequestClose={() => setLanguageModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalSheet}>
-            <Text style={styles.modalTitle}>Select Language</Text>
+        <View className="flex-1 bg-black/70 justify-end">
+          <View className="bg-bgCard rounded-t-2xl p-xl pb-3xl max-h-[70%]">
+            <Text className="text-lg font-bold text-textPrimary mb-md">Select Language</Text>
             <ScrollView showsVerticalScrollIndicator={false}>
               {LANGUAGES.map((lang) => (
                 <TouchableOpacity
                   key={lang.value}
-                  style={[
-                    styles.option,
-                    preferences.language === lang.value && styles.optionActive,
-                  ]}
+                  className={`flex-row justify-between items-center py-md border-b border-border ${preferences.language === lang.value ? "bg-primary/15 rounded-md px-sm" : ""}`}
                   onPress={() => {
                     updatePreference({ language: lang.value });
                     setLanguageModalVisible(false);
@@ -333,11 +329,7 @@ export function PreferencesManager({
                   activeOpacity={0.8}
                 >
                   <Text
-                    style={[
-                      styles.optionText,
-                      preferences.language === lang.value &&
-                        styles.optionTextActive,
-                    ]}
+                    className={`text-base ${preferences.language === lang.value ? "text-primaryLight font-bold" : "text-textSecondary"}`}
                   >
                     {lang.label}
                   </Text>
@@ -362,18 +354,14 @@ export function PreferencesManager({
         animationType="slide"
         onRequestClose={() => setWeightUnitModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalSheet}>
-            <Text style={styles.modalTitle}>Select Weight Unit</Text>
+        <View className="flex-1 bg-black/70 justify-end">
+          <View className="bg-bgCard rounded-t-2xl p-xl pb-3xl max-h-[70%]">
+            <Text className="text-lg font-bold text-textPrimary mb-md">Select Weight Unit</Text>
             <ScrollView showsVerticalScrollIndicator={false}>
               {WEIGHT_UNITS.map((unit) => (
                 <TouchableOpacity
                   key={unit.value}
-                  style={[
-                    styles.option,
-                    preferences.units.weight === unit.value &&
-                      styles.optionActive,
-                  ]}
+                  className={`flex-row justify-between items-center py-md border-b border-border ${preferences.units.weight === unit.value ? "bg-primary/15 rounded-md px-sm" : ""}`}
                   onPress={() => {
                     updateUnits("weight", unit.value);
                     setWeightUnitModalVisible(false);
@@ -381,11 +369,7 @@ export function PreferencesManager({
                   activeOpacity={0.8}
                 >
                   <Text
-                    style={[
-                      styles.optionText,
-                      preferences.units.weight === unit.value &&
-                        styles.optionTextActive,
-                    ]}
+                    className={`text-base ${preferences.units.weight === unit.value ? "text-primaryLight font-bold" : "text-textSecondary"}`}
                   >
                     {unit.label}
                   </Text>
@@ -410,18 +394,14 @@ export function PreferencesManager({
         animationType="slide"
         onRequestClose={() => setTemperatureUnitModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalSheet}>
-            <Text style={styles.modalTitle}>Select Temperature Unit</Text>
+        <View className="flex-1 bg-black/70 justify-end">
+          <View className="bg-bgCard rounded-t-2xl p-xl pb-3xl max-h-[70%]">
+            <Text className="text-lg font-bold text-textPrimary mb-md">Select Temperature Unit</Text>
             <ScrollView showsVerticalScrollIndicator={false}>
               {TEMPERATURE_UNITS.map((unit) => (
                 <TouchableOpacity
                   key={unit.value}
-                  style={[
-                    styles.option,
-                    preferences.units.temperature === unit.value &&
-                      styles.optionActive,
-                  ]}
+                  className={`flex-row justify-between items-center py-md border-b border-border ${preferences.units.temperature === unit.value ? "bg-primary/15 rounded-md px-sm" : ""}`}
                   onPress={() => {
                     updateUnits("temperature", unit.value);
                     setTemperatureUnitModalVisible(false);
@@ -429,11 +409,7 @@ export function PreferencesManager({
                   activeOpacity={0.8}
                 >
                   <Text
-                    style={[
-                      styles.optionText,
-                      preferences.units.temperature === unit.value &&
-                        styles.optionTextActive,
-                    ]}
+                    className={`text-base ${preferences.units.temperature === unit.value ? "text-primaryLight font-bold" : "text-textSecondary"}`}
                   >
                     {unit.label}
                   </Text>
@@ -458,18 +434,14 @@ export function PreferencesManager({
         animationType="slide"
         onRequestClose={() => setDistanceUnitModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalSheet}>
-            <Text style={styles.modalTitle}>Select Distance Unit</Text>
+        <View className="flex-1 bg-black/70 justify-end">
+          <View className="bg-bgCard rounded-t-2xl p-xl pb-3xl max-h-[70%]">
+            <Text className="text-lg font-bold text-textPrimary mb-md">Select Distance Unit</Text>
             <ScrollView showsVerticalScrollIndicator={false}>
               {DISTANCE_UNITS.map((unit) => (
                 <TouchableOpacity
                   key={unit.value}
-                  style={[
-                    styles.option,
-                    preferences.units.distance === unit.value &&
-                      styles.optionActive,
-                  ]}
+                  className={`flex-row justify-between items-center py-md border-b border-border ${preferences.units.distance === unit.value ? "bg-primary/15 rounded-md px-sm" : ""}`}
                   onPress={() => {
                     updateUnits("distance", unit.value);
                     setDistanceUnitModalVisible(false);
@@ -477,11 +449,7 @@ export function PreferencesManager({
                   activeOpacity={0.8}
                 >
                   <Text
-                    style={[
-                      styles.optionText,
-                      preferences.units.distance === unit.value &&
-                        styles.optionTextActive,
-                    ]}
+                    className={`text-base ${preferences.units.distance === unit.value ? "text-primaryLight font-bold" : "text-textSecondary"}`}
                   >
                     {unit.label}
                   </Text>
@@ -506,18 +474,14 @@ export function PreferencesManager({
         animationType="slide"
         onRequestClose={() => setCacheSizeModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalSheet}>
-            <Text style={styles.modalTitle}>Select Cache Size</Text>
+        <View className="flex-1 bg-black/70 justify-end">
+          <View className="bg-bgCard rounded-t-2xl p-xl pb-3xl max-h-[70%]">
+            <Text className="text-lg font-bold text-textPrimary mb-md">Select Cache Size</Text>
             <ScrollView showsVerticalScrollIndicator={false}>
               {CACHE_SIZES.map((size) => (
                 <TouchableOpacity
                   key={size.value}
-                  style={[
-                    styles.option,
-                    preferences.offlineSync.cacheSize === size.value &&
-                      styles.optionActive,
-                  ]}
+                  className={`flex-row justify-between items-center py-md border-b border-border ${preferences.offlineSync.cacheSize === size.value ? "bg-primary/15 rounded-md px-sm" : ""}`}
                   onPress={() => {
                     updateOfflineSync("cacheSize", size.value);
                     setCacheSizeModalVisible(false);
@@ -525,11 +489,7 @@ export function PreferencesManager({
                   activeOpacity={0.8}
                 >
                   <Text
-                    style={[
-                      styles.optionText,
-                      preferences.offlineSync.cacheSize === size.value &&
-                        styles.optionTextActive,
-                    ]}
+                    className={`text-base ${preferences.offlineSync.cacheSize === size.value ? "text-primaryLight font-bold" : "text-textSecondary"}`}
                   >
                     {size.label}
                   </Text>
@@ -549,46 +509,3 @@ export function PreferencesManager({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.7)",
-    justifyContent: "flex-end",
-  },
-  modalSheet: {
-    backgroundColor: COLORS.bgCard,
-    borderTopLeftRadius: RADIUS["2xl"],
-    borderTopRightRadius: RADIUS["2xl"],
-    padding: SPACING.xl,
-    paddingBottom: SPACING["3xl"],
-    maxHeight: "70%",
-  },
-  modalTitle: {
-    fontSize: FONTS.sizes.lg,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-    marginBottom: SPACING.md,
-  },
-  option: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: SPACING.md,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  optionActive: {
-    backgroundColor: COLORS.primary + "15",
-    borderRadius: RADIUS.md,
-    paddingHorizontal: SPACING.sm,
-  },
-  optionText: {
-    fontSize: FONTS.sizes.base,
-    color: COLORS.textSecondary,
-  },
-  optionTextActive: {
-    color: COLORS.primaryLight,
-    fontWeight: FONTS.weights.bold,
-  },
-});

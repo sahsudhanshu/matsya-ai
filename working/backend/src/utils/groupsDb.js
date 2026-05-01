@@ -185,6 +185,9 @@ async function getGroup(groupId) {
         if (group.s3Keys && typeof group.s3Keys === 'string') group.s3Keys = JSON.parse(group.s3Keys);
         if (group.analysisResult && typeof group.analysisResult === 'string') group.analysisResult = JSON.parse(group.analysisResult);
         if (group.errors && typeof group.errors === 'string') group.errors = JSON.parse(group.errors);
+        if (group.weightEstimates && typeof group.weightEstimates === 'string') group.weightEstimates = JSON.parse(group.weightEstimates);
+        if (group.latitude !== null && group.latitude !== undefined) group.latitude = Number(group.latitude);
+        if (group.longitude !== null && group.longitude !== undefined) group.longitude = Number(group.longitude);
         
         return group;
     } catch (error) {
@@ -207,6 +210,9 @@ async function queryGroupsByUserId(userId, options = {}) {
             if (group.s3Keys && typeof group.s3Keys === 'string') group.s3Keys = JSON.parse(group.s3Keys);
             if (group.analysisResult && typeof group.analysisResult === 'string') group.analysisResult = JSON.parse(group.analysisResult);
             if (group.errors && typeof group.errors === 'string') group.errors = JSON.parse(group.errors);
+            if (group.weightEstimates && typeof group.weightEstimates === 'string') group.weightEstimates = JSON.parse(group.weightEstimates);
+            if (group.latitude !== null && group.latitude !== undefined) group.latitude = Number(group.latitude);
+            if (group.longitude !== null && group.longitude !== undefined) group.longitude = Number(group.longitude);
             return group;
         });
 

@@ -4,7 +4,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS, FONTS, SPACING } from "../../lib/constants";
 import { useLanguage } from "../../lib/i18n";
-import { View, StyleSheet, Platform } from "react-native";
+import { View,  Platform } from "react-native";
 import { ConnectionQualityIcon } from "../../components/ui/ConnectionQualityIcon";
 import { ToolsOrbit } from "../../components/ToolsOrbit";
 
@@ -17,7 +17,7 @@ export default function TabsLayout() {
 
   // Header right component with connection quality
   const HeaderRight = () => (
-    <View style={styles.headerRight}>
+    <View className="flex-row items-center gap-2 mr-4">
       <ConnectionQualityIcon size={18} />
     </View>
   );
@@ -65,12 +65,3 @@ export default function TabsLayout() {
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  headerRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.sm,
-    marginRight: SPACING.md,
-  },
-});

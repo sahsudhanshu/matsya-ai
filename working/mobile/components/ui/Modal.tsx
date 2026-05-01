@@ -3,7 +3,6 @@ import {
   View,
   Text,
   Modal as RNModal,
-  StyleSheet,
   TouchableOpacity,
   Dimensions,
   Animated,
@@ -12,7 +11,7 @@ import {
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { COLORS, FONTS, SPACING, RADIUS } from "../../lib/constants";
+import { COLORS } from "../../lib/constants";
 
 interface ModalProps {
   visible: boolean;
@@ -21,6 +20,7 @@ interface ModalProps {
   children: React.ReactNode;
   footer?: React.ReactNode;
   size?: "sm" | "md" | "lg" | "full";
+  className?: string;
 }
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -39,6 +39,7 @@ export function Modal({
   children,
   footer,
   size = "md",
+  className = "",
 }: ModalProps) {
   const insets = useSafeAreaInsets();
   const scaleAnim = React.useRef(new Animated.Value(0.9)).current;
@@ -86,26 +87,31 @@ export function Modal({
       statusBarTranslucent
     >
       <TouchableWithoutFeedback onPress={onClose}>
-        <View style={styles.backdrop}>
+        <View className="flex-1 bg-black/75 justify-center items-center p-6">
           <TouchableWithoutFeedback>
             <Animated.View
+              className={`bg-slate-800 rounded-[24px] overflow-hidden w-full min-h-[200px] ${className}`}
               style={[
-                styles.container,
                 {
                   maxHeight,
-                  paddingBottom: insets.bottom || SPACING.md,
+                  paddingBottom: insets.bottom || 16,
                   transform: [{ scale: scaleAnim }],
                   opacity: opacityAnim,
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: -4 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 8,
+                  elevation: 8,
                 },
               ]}
             >
               {/* Header */}
-              <View style={styles.header}>
-                <View style={styles.handle} />
-                <Text style={styles.title}>{title}</Text>
+              <View className="pt-2 px-6 pb-2 border-b border-slate-700 items-center bg-slate-800">
+                <View className="w-8 h-[3px] bg-slate-600 rounded-full mb-2" />
+                <Text className="text-[15px] font-semibold text-slate-100 text-center">{title}</Text>
                 <TouchableOpacity
                   onPress={onClose}
-                  style={styles.closeButton}
+                  className="absolute right-4 top-2 w-7 h-7 rounded-full bg-slate-700 justify-center items-center"
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
                   <Ionicons name="close" size={16} color={COLORS.textMuted} />
@@ -114,8 +120,8 @@ export function Modal({
 
               {/* Content */}
               <KeyboardAwareScrollView
-                style={styles.content}
-                contentContainerStyle={styles.contentContainer}
+                className="grow bg-slate-800"
+                contentContainerStyle={{ paddingHorizontal: 24, paddingVertical: 16, flexGrow: 1 }}
                 showsVerticalScrollIndicator={false}
                 bounces={false}
                 enableOnAndroid={true}
@@ -124,7 +130,7 @@ export function Modal({
               </KeyboardAwareScrollView>
 
               {/* Footer */}
-              {footer && <View style={styles.footer}>{footer}</View>}
+              {footer && <View className="p-6 border-t border-slate-700 bg-slate-800">{footer}</View>}
             </Animated.View>
           </TouchableWithoutFeedback>
         </View>
@@ -132,73 +138,3 @@ export function Modal({
     </RNModal>
   );
 }
-
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.75)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: SPACING.lg,
-  },
-  container: {
-    backgroundColor: "#1e293b",
-    borderRadius: RADIUS["2xl"],
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-    width: "100%",
-    minHeight: 200,
-  },
-  header: {
-    paddingTop: SPACING.sm,
-    paddingHorizontal: SPACING.lg,
-    paddingBottom: SPACING.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: "#334155",
-    alignItems: "center",
-    backgroundColor: "#1e293b",
-  },
-  handle: {
-    width: 32,
-    height: 3,
-    backgroundColor: "#475569",
-    borderRadius: RADIUS.full,
-    marginBottom: SPACING.sm,
-  },
-  title: {
-    fontSize: FONTS.sizes.md,
-    fontWeight: FONTS.weights.semibold,
-    color: "#f1f5f9",
-    textAlign: "center",
-  },
-  closeButton: {
-    position: "absolute",
-    right: SPACING.md,
-    top: SPACING.sm,
-    width: 28,
-    height: 28,
-    borderRadius: RADIUS.full,
-    backgroundColor: "#334155",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  content: {
-    flexGrow: 1,
-    backgroundColor: "#1e293b",
-  },
-  contentContainer: {
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
-    flexGrow: 1,
-  },
-  footer: {
-    padding: SPACING.lg,
-    borderTopWidth: 1,
-    borderTopColor: "#334155",
-    backgroundColor: "#1e293b",
-  },
-});

@@ -50,17 +50,17 @@ export function generateMockSupplement(speciesLabel: string, cropIndex: number =
     const r2 = seededRandom(hash + 31);
     const r3 = seededRandom(hash + 67);
 
-    const length_mm = data.minSize + r1 * 200;
-    const weight_g = (length_mm / 1000) ** 3 * 1e6 * (0.01 + r2 * 0.005);
-    const grade = GRADES[Math.floor(r3 * 2.5)] ?? "Standard";
+    const length_mm = 0;
+    const weight_g = 0;
+    const grade = "Standard";
 
     return {
         scientificName: data.scientific,
         qualityGrade: grade,
-        isSustainable: length_mm >= data.minSize,
-        weight_kg: Math.round(weight_g) / 1000,
-        length_mm: Math.round(length_mm),
+        isSustainable: false,
+        weight_kg: 0,
+        length_mm: 0,
         marketPricePerKg: data.pricePerKg,
-        estimatedValue: Math.round((weight_g / 1000) * data.pricePerKg),
+        estimatedValue: 0,
     };
 }

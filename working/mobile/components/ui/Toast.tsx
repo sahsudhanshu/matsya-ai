@@ -2,12 +2,11 @@ import React, { useEffect, useRef } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   Animated,
   TouchableOpacity,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS, FONTS, SPACING, RADIUS } from "../../lib/constants";
+import { COLORS } from "../../lib/constants";
 
 export type ToastType = "success" | "error" | "warning" | "info";
 
@@ -17,6 +16,7 @@ interface ToastProps {
   type?: ToastType;
   duration?: number;
   onHide: () => void;
+  className?: string;
 }
 
 export function Toast({
@@ -25,6 +25,7 @@ export function Toast({
   type = "info",
   duration = 3000,
   onHide,
+  className = "",
 }: ToastProps) {
   const translateY = useRef(new Animated.Value(-100)).current;
   const opacity = useRef(new Animated.Value(0)).current;
@@ -97,18 +98,23 @@ export function Toast({
 
   return (
     <Animated.View
+      className={`absolute top-[50px] left-4 right-4 rounded-xl py-2 px-4 z-[9999] ${className}`}
       style={[
-        styles.container,
         {
           backgroundColor: toastStyle.backgroundColor,
           transform: [{ translateY }],
           opacity,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.3,
+          shadowRadius: 8,
+          elevation: 8,
         },
       ]}
     >
-      <View style={styles.content}>
+      <View className="flex-row items-center gap-2">
         <Ionicons name={toastStyle.icon} size={18} color="#ffffff" />
-        <Text style={styles.message} numberOfLines={2}>
+        <Text className="flex-1 text-[12px] font-semibold text-white" numberOfLines={2}>
           {message}
         </Text>
         <TouchableOpacity
@@ -121,32 +127,3 @@ export function Toast({
     </Animated.View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    position: "absolute",
-    top: 50,
-    left: SPACING.md,
-    right: SPACING.md,
-    borderRadius: RADIUS.md,
-    paddingVertical: SPACING.sm,
-    paddingHorizontal: SPACING.md,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-    zIndex: 9999,
-  },
-  content: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.sm,
-  },
-  message: {
-    flex: 1,
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.semibold as any,
-    color: "#ffffff",
-  },
-});

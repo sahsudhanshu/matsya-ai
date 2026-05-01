@@ -6,7 +6,7 @@ import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
-  StyleSheet,
+  
   TouchableOpacity,
   Animated,
   Dimensions,
@@ -135,24 +135,24 @@ export function AgentOnboarding({ onComplete }: Props) {
   const isLastStep = currentStep === STEPS.length - 1;
 
   return (
-    <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
+    <Animated.View className="flex-1 bg-[#0D1724] pt-[50px]" style={{ opacity: fadeAnim }}>
       {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.agentAvatar}>
+      <View className="flex-row items-center gap-3 px-6 pb-4 pt-2">
+        <View className="h-11 w-11 items-center justify-center rounded-full border-2 border-[#3b82f640] bg-[#1e40af]">
           <Ionicons name="chatbubble" size={20} color="#fff" />
         </View>
         <View>
-          <Text style={styles.agentName}>Matsya AI</Text>
-          <Text style={styles.agentSub}>Your AI Fishing Assistant</Text>
+          <Text className="text-[15px] font-bold text-[#f8fafc]">Matsya AI</Text>
+          <Text className="text-[10px] text-[#94a3b8]">Your AI Fishing Assistant</Text>
         </View>
         <TouchableOpacity
-          style={styles.skipBtn}
+          className="ml-auto px-3 py-1.5"
           onPress={async () => {
             await AsyncStorage.setItem(ONBOARDING_KEY, "true");
             onComplete();
           }}
         >
-          <Text style={styles.skipText}>Skip</Text>
+          <Text className="text-[12px] font-medium text-[#94a3b8]">Skip</Text>
         </TouchableOpacity>
       </View>
 
@@ -161,17 +161,18 @@ export function AgentOnboarding({ onComplete }: Props) {
         ref={listRef}
         data={visibleMessages}
         keyExtractor={(item) => `msg_${item.id}_${item.isAgent}`}
-        style={styles.messageList}
-        contentContainerStyle={styles.messageContent}
+        className="flex-1"
+        contentContainerStyle={{ padding: 24, gap: 12 }}
         renderItem={({ item }) => (
           <View
-            style={[
-              styles.messageBubble,
-              item.isAgent ? styles.agentBubble : styles.userBubble,
-            ]}
+            className={`max-w-[85%] flex-row gap-2 p-3.5 ${
+              item.isAgent
+                ? "self-start rounded-[16px] bg-[#1D2A3D]"
+                : "self-end rounded-[16px] rounded-br-[4px] bg-[#3B82F6]"
+            }`}
           >
             {item.isAgent && (
-              <View style={styles.bubbleAvatar}>
+              <View className="mt-[1px] h-[22px] w-[22px] items-center justify-center rounded-full bg-[#3b82f615]">
                 <Ionicons
                   name="hardware-chip-outline"
                   size={12}
@@ -180,10 +181,9 @@ export function AgentOnboarding({ onComplete }: Props) {
               </View>
             )}
             <Text
-              style={[
-                styles.messageText,
-                !item.isAgent && styles.userMessageText,
-              ]}
+              className={`flex-1 text-[12px] leading-[22px] ${
+                item.isAgent ? "text-[#e2e8f0]" : "text-white"
+              }`}
             >
               {item.text}
             </Text>
@@ -192,18 +192,18 @@ export function AgentOnboarding({ onComplete }: Props) {
       />
 
       {/* Options */}
-      <View style={styles.optionsArea}>
+      <View className="border-t border-white/10 bg-[#131F30] px-6 pb-8 pt-4">
         {step.type === "choice" && step.options && !choices[currentStep] && (
-          <View style={styles.optionsGrid}>
+          <View className="mb-4 flex-row flex-wrap gap-2.5">
             {step.options.map((opt) => (
               <TouchableOpacity
                 key={opt.value}
-                style={styles.optionBtn}
+                className="w-[47%] flex-grow flex-row items-center gap-2 rounded-[16px] border border-[#334155] bg-[#0f172a] px-4 py-3"
                 onPress={() => handleChoice(currentStep, opt.value, opt.label)}
                 activeOpacity={0.8}
               >
-                {opt.icon && <Text style={styles.optionIcon}>{opt.icon}</Text>}
-                <Text style={styles.optionLabel}>{opt.label}</Text>
+                {opt.icon && <Text className="text-[20px]">{opt.icon}</Text>}
+                <Text className="flex-1 text-[12px] font-semibold text-[#f8fafc]">{opt.label}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -211,11 +211,11 @@ export function AgentOnboarding({ onComplete }: Props) {
 
         {step.type === "info" && (
           <TouchableOpacity
-            style={styles.continueBtn}
+            className="mb-4 flex-row items-center justify-center gap-2 rounded-[16px] bg-[#1e40af] py-3.5"
             onPress={() => handleContinue(currentStep)}
             activeOpacity={0.85}
           >
-            <Text style={styles.continueBtnText}>
+            <Text className="text-[13px] font-semibold text-white">
               {isLastStep ? "Get Started" : "Continue"}
             </Text>
             <Ionicons name="arrow-forward" size={16} color="#fff" />
@@ -223,15 +223,17 @@ export function AgentOnboarding({ onComplete }: Props) {
         )}
 
         {/* Progress dots */}
-        <View style={styles.progressRow}>
+        <View className="flex-row justify-center gap-2">
           {STEPS.map((_, i) => (
             <View
               key={i}
-              style={[
-                styles.progressDot,
-                i === currentStep && styles.progressDotActive,
-                i < currentStep && styles.progressDotDone,
-              ]}
+              className={`h-2 rounded-full ${
+                i === currentStep
+                  ? "w-5 bg-[#3b82f6]"
+                  : i < currentStep
+                  ? "w-2 bg-[#3b82f660]"
+                  : "w-2 bg-[#334155]"
+              }`}
             />
           ))}
         </View>
@@ -250,163 +252,3 @@ export async function shouldShowOnboarding(): Promise<boolean> {
     return true;
   }
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0D1724",
-    paddingTop: 50,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingHorizontal: SPACING.lg,
-    paddingBottom: SPACING.md,
-    paddingTop: SPACING.sm,
-  },
-  agentAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: COLORS.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 2,
-    borderColor: COLORS.primaryLight + "40",
-  },
-  agentName: {
-    fontSize: FONTS.sizes.md,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-  },
-  agentSub: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-  },
-  skipBtn: {
-    marginLeft: "auto",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-  },
-  skipText: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-    fontWeight: FONTS.weights.medium,
-  },
-
-  messageList: {
-    flex: 1,
-  },
-  messageContent: {
-    padding: SPACING.lg,
-    gap: 12,
-  },
-  messageBubble: {
-    maxWidth: "85%",
-    borderRadius: RADIUS.lg,
-    padding: 14,
-    flexDirection: "row",
-    gap: 8,
-  },
-  agentBubble: {
-    alignSelf: "flex-start",
-    backgroundColor: "#1D2A3D",
-    borderWidth: 0,
-  },
-  userBubble: {
-    alignSelf: "flex-end",
-    backgroundColor: "#3B82F6",
-    borderBottomRightRadius: 4,
-  },
-  bubbleAvatar: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: COLORS.primaryLight + "15",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 1,
-  },
-  messageText: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textSecondary,
-    lineHeight: 22,
-    flex: 1,
-  },
-  userMessageText: {
-    color: "#fff",
-  },
-
-  optionsArea: {
-    paddingHorizontal: SPACING.lg,
-    paddingBottom: SPACING.xl,
-    paddingTop: SPACING.md,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.08)",
-    backgroundColor: "#131F30",
-  },
-  optionsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-    marginBottom: SPACING.md,
-  },
-  optionBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    backgroundColor: COLORS.bgDark,
-    borderRadius: RADIUS.lg,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    width: "47%",
-    flexGrow: 1,
-  },
-  optionIcon: {
-    fontSize: 20,
-  },
-  optionLabel: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.semibold,
-    color: COLORS.textPrimary,
-    flex: 1,
-  },
-
-  continueBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: COLORS.primary,
-    borderRadius: RADIUS.lg,
-    paddingVertical: 14,
-    gap: 8,
-    marginBottom: SPACING.md,
-  },
-  continueBtnText: {
-    fontSize: FONTS.sizes.base,
-    fontWeight: FONTS.weights.semibold,
-    color: "#fff",
-  },
-
-  progressRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 8,
-  },
-  progressDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: COLORS.border,
-  },
-  progressDotActive: {
-    backgroundColor: COLORS.primaryLight,
-    width: 20,
-  },
-  progressDotDone: {
-    backgroundColor: COLORS.primaryLight + "60",
-  },
-});

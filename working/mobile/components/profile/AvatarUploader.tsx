@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { View, Text, ActivityIndicator, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { toastService } from "../../lib/toast-service";
 import { Avatar } from "../ui/Avatar";
 import { Modal } from "../ui/Modal";
 import { Button } from "../ui/Button";
 import { AvatarService } from "../../lib/avatar-service";
-import { COLORS, SPACING, FONTS } from "../../lib/constants";
+import { COLORS } from "../../lib/constants";
 
 interface AvatarUploaderProps {
   currentUri?: string;
@@ -131,44 +131,46 @@ export function AvatarUploader({
         size="sm"
       >
         {previewUri ? (
-          <View style={styles.previewContainer}>
+          <View className="items-center">
             <Avatar uri={previewUri} name={userName} size="xl" />
 
             {uploading && (
-              <View style={styles.progressContainer}>
+              <View className="mt-6 items-center">
                 <ActivityIndicator size="large" color={COLORS.primary} />
-                <Text style={styles.progressText}>
+                <Text className="mt-2 text-[12px] text-[#e2e8f0]">
                   Uploading... {uploadProgress}%
                 </Text>
               </View>
             )}
 
-            <View style={styles.buttonContainer}>
+            <View className="mt-8 w-full flex-row gap-4">
               <Button
                 label="Cancel"
                 onPress={handleCancel}
                 variant="outline"
                 disabled={uploading}
-                style={styles.button}
+                className="flex-1"
               />
               <Button
                 label="Upload"
                 onPress={handleUpload}
                 disabled={uploading}
-                style={styles.button}
+                className="flex-1"
               />
             </View>
           </View>
         ) : (
-          <View style={styles.optionsContainer}>
-            <Text style={styles.optionsTitle}>Choose Photo Source</Text>
+          <View className="gap-2 py-2">
+            <Text className="mb-1 text-center text-[12px] font-semibold text-[#f8fafc]">
+              Choose Photo Source
+            </Text>
             <Button
               label="Take Photo"
               onPress={() => handlePickImage("camera")}
               variant="primary"
               icon={<Ionicons name="camera" size={20} color="#fff" />}
               iconPosition="left"
-              style={styles.optionButton}
+              className="w-full min-h-[44px]"
               fullWidth
             />
             <Button
@@ -179,7 +181,7 @@ export function AvatarUploader({
                 <Ionicons name="images" size={20} color={COLORS.primaryLight} />
               }
               iconPosition="left"
-              style={styles.optionButton}
+              className="w-full min-h-[44px]"
               fullWidth
             />
             {currentUri && onRemove && (
@@ -195,10 +197,7 @@ export function AvatarUploader({
                   />
                 }
                 iconPosition="left"
-                style={{
-                  ...styles.optionButton,
-                  ...styles.removeButton,
-                }}
+                className="mt-4 w-full min-h-[44px] border-[#ef4444]"
                 fullWidth
               />
             )}
@@ -208,46 +207,3 @@ export function AvatarUploader({
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  previewContainer: {
-    alignItems: "center",
-  },
-  progressContainer: {
-    marginTop: SPACING.lg,
-    alignItems: "center",
-  },
-  progressText: {
-    marginTop: SPACING.sm,
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textSecondary,
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    marginTop: SPACING.xl,
-    gap: SPACING.md,
-    width: "100%",
-  },
-  button: {
-    flex: 1,
-  },
-  optionsContainer: {
-    gap: SPACING.sm,
-    paddingVertical: SPACING.sm,
-  },
-  optionsTitle: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.semibold,
-    color: COLORS.textPrimary,
-    marginBottom: SPACING.xs,
-    textAlign: "center",
-  },
-  optionButton: {
-    width: "100%",
-    minHeight: 44,
-  },
-  removeButton: {
-    borderColor: COLORS.danger,
-    marginTop: SPACING.md,
-  },
-});

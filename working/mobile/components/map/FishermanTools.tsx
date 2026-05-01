@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
-  StyleSheet,
+  
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
@@ -75,18 +75,18 @@ export function FishermanTools({ location, onRefresh }: FishermanToolsProps) {
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <View style={styles.header}>
+      <View className="flex-1 p-4">
+        <View className="mb-4 flex-row items-center gap-2">
           <Ionicons
             name="compass-outline"
             size={20}
             color={COLORS.primaryLight}
           />
-          <Text style={styles.title}>Fisherman Tools</Text>
+          <Text className="text-[13px] font-bold text-[#f8fafc]">Fisherman Tools</Text>
         </View>
-        <View style={styles.loadingContainer}>
+        <View className="items-center justify-center py-8">
           <ActivityIndicator size="small" color={COLORS.primaryLight} />
-          <Text style={styles.loadingText}>Loading fishing data...</Text>
+          <Text className="mt-2 text-[12px] text-[#94a3b8]">Loading fishing data...</Text>
         </View>
       </View>
     );
@@ -94,24 +94,24 @@ export function FishermanTools({ location, onRefresh }: FishermanToolsProps) {
 
   if (error) {
     return (
-      <View style={styles.container}>
-        <View style={styles.header}>
+      <View className="flex-1 p-4">
+        <View className="mb-4 flex-row items-center gap-2">
           <Ionicons
             name="compass-outline"
             size={20}
             color={COLORS.primaryLight}
           />
-          <Text style={styles.title}>Fisherman Tools</Text>
+          <Text className="text-[13px] font-bold text-[#f8fafc]">Fisherman Tools</Text>
         </View>
-        <View style={styles.errorContainer}>
+        <View className="items-center justify-center py-8">
           <Ionicons
             name="alert-circle-outline"
             size={36}
             color={COLORS.error}
           />
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={handleRefresh}>
-            <Text style={styles.retryButtonText}>Retry</Text>
+          <Text className="mt-2 text-center text-[12px] text-[#ef4444]">{error}</Text>
+          <TouchableOpacity className="mt-4 rounded-[12px] bg-[#3b82f6] px-6 py-2" onPress={handleRefresh}>
+            <Text className="text-[12px] font-bold text-[#f8fafc]">Retry</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -156,78 +156,78 @@ export function FishermanTools({ location, onRefresh }: FishermanToolsProps) {
   };
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.header}>
+    <ScrollView className="flex-1 p-4" showsVerticalScrollIndicator={false}>
+      <View className="mb-4 flex-row items-center gap-2">
         <Ionicons
           name="compass-outline"
           size={20}
           color={COLORS.primaryLight}
         />
-        <Text style={styles.title}>Fisherman Tools</Text>
+        <Text className="text-[13px] font-bold text-[#f8fafc]">Fisherman Tools</Text>
       </View>
 
-      <View style={styles.toolsGrid}>
+      <View className="mb-4 flex-row flex-wrap gap-2">
         {/* Sunrise/Sunset */}
-        <View style={[styles.toolCard, { borderColor: "#f59e0b30" }]}>
+        <View className="w-[48%] rounded-[16px] border border-[#f59e0b30] bg-[#334155] p-2">
           <Ionicons
             name="sunny-outline"
             size={22}
             color="#fbbf24"
             style={{ marginBottom: 4 }}
           />
-          <Text style={[styles.toolLabel, { color: "#fbbf24" }]}>Sunrise</Text>
-          <Text style={styles.toolValue}>{data.sunrise}</Text>
-          <Text style={styles.toolSub}>Sunset {data.sunset}</Text>
+          <Text className="mt-1 text-[10px] font-bold text-[#fbbf24]">Sunrise</Text>
+          <Text className="mt-0.5 text-[12px] font-bold text-[#f8fafc]">{data.sunrise}</Text>
+          <Text className="mt-0.5 text-[10px] text-[#94a3b8]">Sunset {data.sunset}</Text>
         </View>
 
         {/* Moon Phase */}
-        <View style={[styles.toolCard, { borderColor: "#818cf830" }]}>
+        <View className="w-[48%] rounded-[16px] border border-[#818cf830] bg-[#334155] p-2">
           <Ionicons
             name="moon-outline"
             size={22}
             color="#a5b4fc"
             style={{ marginBottom: 4 }}
           />
-          <Text style={[styles.toolLabel, { color: "#a5b4fc" }]}>Moon</Text>
-          <Text style={styles.toolValue}>
+          <Text className="mt-1 text-[10px] font-bold text-[#a5b4fc]">Moon</Text>
+          <Text className="mt-0.5 text-[12px] font-bold text-[#f8fafc]">
             {formatMoonPhase(data.moonPhase.phase)}
           </Text>
-          <Text style={styles.toolSub}>
+          <Text className="mt-0.5 text-[10px] text-[#94a3b8]">
             {Math.round(data.moonPhase.illumination * 100)}% illuminated
           </Text>
         </View>
 
         {/* Tide Information */}
-        <View style={[styles.toolCard, { borderColor: "#22d3ee30" }]}>
+        <View className="w-[48%] rounded-[16px] border border-[#22d3ee30] bg-[#334155] p-2">
           <Ionicons
             name="water-outline"
             size={22}
             color="#67e8f9"
             style={{ marginBottom: 4 }}
           />
-          <Text style={[styles.toolLabel, { color: "#67e8f9" }]}>Tide</Text>
-          <Text style={styles.toolValue}>
+          <Text className="mt-1 text-[10px] font-bold text-[#67e8f9]">Tide</Text>
+          <Text className="mt-0.5 text-[12px] font-bold text-[#f8fafc]">
             {nextTide.type === "high" ? "High" : "Low"} →{" "}
             {nextTide.height.toFixed(1)}m
           </Text>
-          <Text style={styles.toolSub}>Next: {nextTide.time}</Text>
+          <Text className="mt-0.5 text-[10px] text-[#94a3b8]">Next: {nextTide.time}</Text>
         </View>
 
         {/* Best Fishing Times */}
-        <View style={[styles.toolCard, { borderColor: "#34d39930" }]}>
+        <View className="w-[48%] rounded-[16px] border border-[#34d39930] bg-[#334155] p-2">
           <Ionicons
             name="time-outline"
             size={22}
             color="#6ee7b7"
             style={{ marginBottom: 4 }}
           />
-          <Text style={[styles.toolLabel, { color: "#6ee7b7" }]}>
+          <Text className="mt-1 text-[10px] font-bold text-[#6ee7b7]">
             Best Time
           </Text>
-          <Text style={styles.toolValue}>
+          <Text className="mt-0.5 text-[12px] font-bold text-[#f8fafc]">
             {bestTime.start} – {bestTime.end}
           </Text>
-          <Text style={styles.toolSub}>
+          <Text className="mt-0.5 text-[10px] text-[#94a3b8]">
             {bestTime.quality.charAt(0).toUpperCase() +
               bestTime.quality.slice(1)}{" "}
             activity
@@ -236,24 +236,24 @@ export function FishermanTools({ location, onRefresh }: FishermanToolsProps) {
       </View>
 
       {/* Tide Timeline */}
-      <View style={styles.timelineSection}>
-        <Text style={styles.sectionTitle}>Tide Schedule</Text>
-        <View style={styles.timeline}>
+      <View className="my-4">
+        <Text className="mb-2 text-[12px] font-bold text-[#f8fafc]">Tide Schedule</Text>
+        <View className="rounded-[16px] border border-[#334155] bg-[#334155] p-4">
           {data.tides.map((tide, index) => (
-            <View key={index} style={styles.timelineItem}>
-              <View style={styles.timelineDot}>
+            <View key={index} className="mb-2 flex-row items-start">
+              <View className="mr-2 h-[22px] w-[22px] items-center justify-center rounded-full bg-[#1e293b]">
                 <Ionicons
                   name={tide.type === "high" ? "arrow-up" : "arrow-down"}
                   size={12}
                   color={tide.type === "high" ? "#67e8f9" : "#a5b4fc"}
                 />
               </View>
-              <View style={styles.timelineContent}>
-                <Text style={styles.timelineTime}>{tide.time}</Text>
-                <Text style={styles.timelineLabel}>
+              <View className="flex-1">
+                <Text className="text-[12px] font-bold text-[#f8fafc]">{tide.time}</Text>
+                <Text className="mt-0.5 text-[10px] text-[#e2e8f0]">
                   {tide.type === "high" ? "High" : "Low"} Tide
                 </Text>
-                <Text style={styles.timelineValue}>
+                <Text className="mt-0.5 text-[10px] text-[#94a3b8]">
                   {tide.height.toFixed(1)}m
                 </Text>
               </View>
@@ -263,16 +263,14 @@ export function FishermanTools({ location, onRefresh }: FishermanToolsProps) {
       </View>
 
       {/* Best Fishing Times Timeline */}
-      <View style={styles.timelineSection}>
-        <Text style={styles.sectionTitle}>Best Fishing Times</Text>
-        <View style={styles.timeline}>
+      <View className="my-4">
+        <Text className="mb-2 text-[12px] font-bold text-[#f8fafc]">Best Fishing Times</Text>
+        <View className="rounded-[16px] border border-[#334155] bg-[#334155] p-4">
           {data.bestFishingTimes.map((time, index) => (
-            <View key={index} style={styles.timelineItem}>
+            <View key={index} className="mb-2 flex-row items-start">
               <View
-                style={[
-                  styles.timelineDot,
-                  { backgroundColor: getQualityColor(time.quality) + "30" },
-                ]}
+                className="mr-2 h-[22px] w-[22px] items-center justify-center rounded-full"
+                style={{ backgroundColor: getQualityColor(time.quality) + "30" }}
               >
                 <Ionicons
                   name="fish-outline"
@@ -280,15 +278,13 @@ export function FishermanTools({ location, onRefresh }: FishermanToolsProps) {
                   color={getQualityColor(time.quality)}
                 />
               </View>
-              <View style={styles.timelineContent}>
-                <Text style={styles.timelineTime}>
+              <View className="flex-1">
+                <Text className="text-[12px] font-bold text-[#f8fafc]">
                   {time.start} – {time.end}
                 </Text>
                 <Text
-                  style={[
-                    styles.timelineLabel,
-                    { color: getQualityColor(time.quality) },
-                  ]}
+                  className="mt-0.5 text-[10px]"
+                  style={{ color: getQualityColor(time.quality) }}
                 >
                   {time.quality.charAt(0).toUpperCase() + time.quality.slice(1)}{" "}
                   Fishing
@@ -299,157 +295,14 @@ export function FishermanTools({ location, onRefresh }: FishermanToolsProps) {
         </View>
       </View>
 
-      <TouchableOpacity style={styles.refreshButton} onPress={handleRefresh}>
+      <TouchableOpacity className="my-4 flex-row items-center justify-center gap-1.5 py-2" onPress={handleRefresh}>
         <Ionicons
           name="refresh-outline"
           size={16}
           color={COLORS.primaryLight}
         />
-        <Text style={styles.refreshText}>Refresh Data</Text>
+        <Text className="text-[12px] font-bold text-[#3b82f6]">Refresh Data</Text>
       </TouchableOpacity>
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: SPACING.md,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: SPACING.md,
-  },
-  title: {
-    fontSize: FONTS.sizes.base,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-  },
-  loadingContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: SPACING.xl,
-  },
-  loadingText: {
-    marginTop: SPACING.sm,
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-  },
-  errorContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: SPACING.xl,
-  },
-  errorText: {
-    marginTop: SPACING.sm,
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.error,
-    textAlign: "center",
-  },
-  retryButton: {
-    marginTop: SPACING.md,
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.sm,
-    backgroundColor: COLORS.primaryLight,
-    borderRadius: RADIUS.md,
-  },
-  retryButtonText: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-  },
-  toolsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: SPACING.md,
-  },
-  toolCard: {
-    width: "48%",
-    backgroundColor: COLORS.bgSurface,
-    borderRadius: RADIUS.lg,
-    padding: SPACING.sm,
-    borderWidth: 1,
-  },
-  toolLabel: {
-    fontSize: FONTS.sizes.xs,
-    fontWeight: FONTS.weights.bold,
-    marginTop: 4,
-  },
-  toolValue: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-    marginTop: 2,
-  },
-  toolSub: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    marginTop: 2,
-  },
-  timelineSection: {
-    marginTop: SPACING.md,
-    marginBottom: SPACING.md,
-  },
-  sectionTitle: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-    marginBottom: SPACING.sm,
-  },
-  timeline: {
-    backgroundColor: COLORS.bgSurface,
-    borderRadius: RADIUS.lg,
-    padding: SPACING.md,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  timelineItem: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    marginBottom: SPACING.sm,
-  },
-  timelineDot: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: COLORS.bgCard,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: SPACING.sm,
-  },
-  timelineContent: {
-    flex: 1,
-  },
-  timelineTime: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-  },
-  timelineLabel: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textSecondary,
-    marginTop: 2,
-  },
-  timelineValue: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    marginTop: 2,
-  },
-  refreshButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    paddingVertical: SPACING.sm,
-    marginTop: SPACING.sm,
-    marginBottom: SPACING.md,
-  },
-  refreshText: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.primaryLight,
-  },
-});

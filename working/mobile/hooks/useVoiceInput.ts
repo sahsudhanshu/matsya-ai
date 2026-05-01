@@ -1,5 +1,9 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import { Platform, Alert } from "react-native";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { Alert } from "react-native";
+import {
+  ExpoSpeechRecognitionModule,
+  useSpeechRecognitionEvent,
+} from "expo-speech-recognition";
 
 interface UseVoiceInputProps {
   lang?: string;
@@ -11,91 +15,64 @@ export function useVoiceInput({
   onResult,
 }: UseVoiceInputProps) {
   const [isListening, setIsListening] = useState(false);
-  const recognitionRef = useRef<any>(null);
-
   const onResultRef = useRef(onResult);
 
   useEffect(() => {
     onResultRef.current = onResult;
   }, [onResult]);
 
-  useEffect(() => {
-    if (Platform.OS === "web") {
-      const SpeechRecognition =
-        (window as any).SpeechRecognition ||
-        (window as any).webkitSpeechRecognition;
-      if (SpeechRecognition) {
-        recognitionRef.current = new SpeechRecognition();
-        recognitionRef.current.continuous = false;
-        recognitionRef.current.interimResults = false;
-
-        recognitionRef.current.onstart = () => {
-          setIsListening(true);
-        };
-
-        recognitionRef.current.onresult = (event: any) => {
-          const transcript = event.results[0][0].transcript;
-          if (onResultRef.current && transcript) {
-            onResultRef.current(transcript);
-          }
-        };
-
-        recognitionRef.current.onerror = (event: any) => {
-          console.error("Speech recognition error", event.error);
-          setIsListening(false);
-        };
-
-        recognitionRef.current.onend = () => {
-          setIsListening(false);
-        };
+  useSpeechRecognitionEvent("start", () => setIsListening(true));
+  useSpeechRecognitionEvent("end", () => setIsListening(false));
+  useSpeechRecognitionEvent("error", (event) => {
+    console.error("Speech recognition error:", event.error, event.message);
+    setIsListening(false);
+  });
+  
+  useSpeechRecognitionEvent("result", (event) => {
+    // The final or most confident result is usually the first one.
+    if (event.isFinal && event.results.length > 0) {
+      const transcript = event.results[0]?.transcript;
+      if (transcript && onResultRef.current) {
+        onResultRef.current(transcript);
       }
     }
+  });
 
-    return () => {
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.stop();
-        } catch (e) {
-          // Ignore
-        }
+  const startListening = useCallback(async () => {
+    try {
+      const perm = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert(
+          "Permission Required",
+          "Voice input requires microphone and speech recognition permissions.",
+        );
+        return;
       }
-    };
-  }, []);
 
-  useEffect(() => {
-    if (recognitionRef.current) {
-      recognitionRef.current.lang = lang;
+      // Stop any existing session before starting a new one
+      try {
+        ExpoSpeechRecognitionModule.stop();
+      } catch (e) {
+        // ignore
+      }
+
+      ExpoSpeechRecognitionModule.start({
+        lang,
+        interimResults: false,
+        requiresOnDeviceRecognition: false,
+      });
+    } catch (e: any) {
+      console.error("Failed to start speech recognition:", e);
+      Alert.alert("Error", e.message || "Could not start voice recognition.");
+      setIsListening(false);
     }
   }, [lang]);
 
-  const startListening = useCallback(() => {
-    if (Platform.OS === "web") {
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.start();
-        } catch (e) {
-          console.error("Failed to start speech recognition", e);
-        }
-      } else {
-        alert("Speech recognition is not supported in this browser.");
-      }
-    } else {
-      Alert.alert(
-        "Not Supported",
-        "Voice input is currently only available on the web version.",
-      );
-      // Fallback behavior if needed
-      setIsListening(false);
-    }
-  }, []);
-
   const stopListening = useCallback(() => {
-    if (Platform.OS === "web" && recognitionRef.current) {
-      try {
-        recognitionRef.current.stop();
-      } catch (e) {
-        // Ignore
-      }
+    try {
+      ExpoSpeechRecognitionModule.stop();
+    } catch (e) {
+      // Ignore
     }
     setIsListening(false);
   }, []);

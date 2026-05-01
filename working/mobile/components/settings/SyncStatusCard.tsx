@@ -2,11 +2,10 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
-import { COLORS, FONTS, SPACING, RADIUS } from "../../lib/constants";
+import { COLORS } from "../../lib/constants";
 import { Card } from "../ui/Card";
 import { SyncService, type SyncStatus } from "../../lib/sync-service";
 import { toastService } from "../../lib/toast-service";
@@ -78,80 +77,31 @@ export function SyncStatusCard() {
   };
 
   return (
-    <Card style={styles.card}>
-      <View style={styles.row}>
-        <View style={styles.left}>
-          <View style={styles.statusRow}>
+    <Card className="mb-sm">
+      <View className="flex-row justify-between items-center">
+        <View className="flex-1">
+          <View className="flex-row items-center gap-sm mb-xs">
             <View
-              style={[styles.indicator, { backgroundColor: getStatusColor() }]}
+              className="w-2 h-2 rounded-full"
+              style={{ backgroundColor: getStatusColor() }}
             />
-            <Text style={styles.statusText}>{getStatusText()}</Text>
+            <Text className="text-sm text-textPrimary font-medium">{getStatusText()}</Text>
           </View>
-          <Text style={styles.lastSync}>Last sync: {formatLastSync()}</Text>
+          <Text className="text-xs text-textSubtle">Last sync: {formatLastSync()}</Text>
         </View>
 
         <TouchableOpacity
-          style={[styles.button, status.syncing && styles.buttonDisabled]}
+          className={`bg-primary/15 border border-primary/40 rounded-md px-sm py-[5px] ${status.syncing ? "opacity-50" : ""}`}
           onPress={handleSyncNow}
           disabled={status.syncing}
         >
           {status.syncing ? (
             <ActivityIndicator size="small" color={COLORS.primary} />
           ) : (
-            <Text style={styles.buttonText}>Sync Now</Text>
+            <Text className="text-xs text-primary font-semibold">Sync Now</Text>
           )}
         </TouchableOpacity>
       </View>
     </Card>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    marginBottom: SPACING.sm,
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  left: {
-    flex: 1,
-  },
-  statusRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.sm,
-    marginBottom: SPACING.xs,
-  },
-  indicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  statusText: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textPrimary,
-    fontWeight: FONTS.weights.medium,
-  },
-  lastSync: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textSubtle,
-  },
-  button: {
-    backgroundColor: COLORS.primary + "15",
-    borderWidth: 1,
-    borderColor: COLORS.primary + "40",
-    borderRadius: RADIUS.md,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 5,
-  },
-  buttonText: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.primary,
-    fontWeight: FONTS.weights.semibold,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-});

@@ -2,12 +2,11 @@ import React from "react";
 import {
   View,
   Text,
-  StyleSheet,
   Modal,
   TouchableOpacity,
   ScrollView,
 } from "react-native";
-import { COLORS, FONTS, SPACING, RADIUS } from "../../lib/constants";
+import { COLORS } from "../../lib/constants";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 interface TelegramIntegrationModalProps {
@@ -28,99 +27,99 @@ export function TelegramIntegrationModal({
       animationType="fade"
       onRequestClose={onClose}
     >
-      <View style={styles.overlay}>
-        <View style={styles.modal}>
+      <View className="flex-1 bg-[rgba(0,0,0,0.7)] justify-center items-center p-lg">
+        <View className="bg-bgCard rounded-2xl w-full max-w-[500px] max-h-[90%] border border-borderDark shadow-lg shadow-black/30">
           {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.headerIcon}>
+          <View className="flex-row justify-between items-center p-lg border-b border-borderDark">
+            <View className="w-[48px] h-[48px] rounded-[24px] bg-[#1e40af20] justify-center items-center">
               <Ionicons
                 name="paper-plane"
                 size={28}
                 color={COLORS.primaryLight}
               />
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+            <TouchableOpacity onPress={onClose} className="p-xs">
               <Ionicons name="close" size={24} color={COLORS.textMuted} />
             </TouchableOpacity>
           </View>
 
           {/* Content */}
           <ScrollView
-            style={styles.content}
+            className="p-lg"
             showsVerticalScrollIndicator={false}
           >
-            <Text style={styles.title}>Connect to Telegram</Text>
-            <Text style={styles.description}>
+            <Text className="text-[20px] font-bold text-textPrimary mb-sm">Connect to Telegram</Text>
+            <Text className="text-[13px] text-textSecondary leading-[24px] mb-lg">
               Get Matsya AI assistance directly in Telegram! Chat with our AI
               assistant, get fishing advice, and receive notifications about
               ocean conditions.
             </Text>
 
             {/* Features */}
-            <View style={styles.featuresSection}>
-              <Text style={styles.sectionTitle}>What you can do:</Text>
+            <View className="mb-lg">
+              <Text className="text-[15px] font-semibold text-textPrimary mb-md">What you can do:</Text>
 
-              <View style={styles.feature}>
-                <View style={styles.featureIcon}>
+              <View className="flex-row items-start mb-md">
+                <View className="w-[40px] h-[40px] rounded-[20px] bg-[#1e40af15] justify-center items-center mr-sm">
                   <Ionicons
                     name="chatbubbles"
                     size={20}
                     color={COLORS.primaryLight}
                   />
                 </View>
-                <View style={styles.featureText}>
-                  <Text style={styles.featureTitle}>
+                <View className="flex-1">
+                  <Text className="text-[13px] font-semibold text-textPrimary mb-[2px]">
                     Chat with AI Assistant
                   </Text>
-                  <Text style={styles.featureDesc}>
+                  <Text className="text-[12px] text-textMuted leading-[18px]">
                     Get instant fishing advice and market insights
                   </Text>
                 </View>
               </View>
 
-              <View style={styles.feature}>
-                <View style={styles.featureIcon}>
+              <View className="flex-row items-start mb-md">
+                <View className="w-[40px] h-[40px] rounded-[20px] bg-[#1e40af15] justify-center items-center mr-sm">
                   <Ionicons
                     name="notifications"
                     size={20}
                     color={COLORS.primaryLight}
                   />
                 </View>
-                <View style={styles.featureText}>
-                  <Text style={styles.featureTitle}>Receive Alerts</Text>
-                  <Text style={styles.featureDesc}>
+                <View className="flex-1">
+                  <Text className="text-[13px] font-semibold text-textPrimary mb-[2px]">Receive Alerts</Text>
+                  <Text className="text-[12px] text-textMuted leading-[18px]">
                     Get notified about weather warnings and ocean conditions
                   </Text>
                 </View>
               </View>
 
-              <View style={styles.feature}>
-                <View style={styles.featureIcon}>
+              <View className="flex-row items-start mb-md">
+                <View className="w-[40px] h-[40px] rounded-[20px] bg-[#1e40af15] justify-center items-center mr-sm">
                   <Ionicons
                     name="images"
                     size={20}
                     color={COLORS.primaryLight}
                   />
                 </View>
-                <View style={styles.featureText}>
-                  <Text style={styles.featureTitle}>Analyze Catches</Text>
-                  <Text style={styles.featureDesc}>
+                <View className="flex-1">
+                  <Text className="text-[13px] font-semibold text-textPrimary mb-[2px]">Analyze Catches</Text>
+                  <Text className="text-[12px] text-textMuted leading-[18px]">
                     Send fish photos for instant species and quality analysis
                   </Text>
                 </View>
               </View>
 
-              <View style={styles.feature}>
-                <View style={styles.featureIcon}>
+              <View className="flex-row items-start mb-md">
+                <View className="w-[40px] h-[40px] rounded-[20px] bg-[#1e40af15] justify-center items-center mr-sm">
                   <Ionicons
                     name="location"
                     size={20}
                     color={COLORS.primaryLight}
                   />
                 </View>
-                <View style={styles.featureText}>
-                  <Text style={styles.featureTitle}>Location-Based Tips</Text>
-                  <Text style={styles.featureDesc}>
+                <View className="flex-1">
+                  <Text className="text-[13px] font-semibold text-textPrimary mb-[2px]">Location-Based Tips</Text>
+                  <Text className="text-[12px] text-textMuted leading-[18px]">
                     Get recommendations based on your current location
                   </Text>
                 </View>
@@ -128,60 +127,60 @@ export function TelegramIntegrationModal({
             </View>
 
             {/* Instructions */}
-            <View style={styles.instructionsSection}>
-              <Text style={styles.sectionTitle}>How to connect:</Text>
-              <View style={styles.step}>
-                <View style={styles.stepNumber}>
-                  <Text style={styles.stepNumberText}>1</Text>
+            <View className="mb-lg">
+              <Text className="text-[15px] font-semibold text-textPrimary mb-md">How to connect:</Text>
+              <View className="flex-row items-start mb-md">
+                <View className="w-[28px] h-[28px] rounded-[14px] bg-primary justify-center items-center mr-sm">
+                  <Text className="text-[12px] font-bold text-white">1</Text>
                 </View>
-                <Text style={styles.stepText}>
+                <Text className="flex-1 text-[13px] text-textSecondary leading-[22px] pt-1">
                   Tap "Open Telegram" below to launch the Telegram app
                 </Text>
               </View>
-              <View style={styles.step}>
-                <View style={styles.stepNumber}>
-                  <Text style={styles.stepNumberText}>2</Text>
+              <View className="flex-row items-start mb-md">
+                <View className="w-[28px] h-[28px] rounded-[14px] bg-primary justify-center items-center mr-sm">
+                  <Text className="text-[12px] font-bold text-white">2</Text>
                 </View>
-                <Text style={styles.stepText}>
+                <Text className="flex-1 text-[13px] text-textSecondary leading-[22px] pt-1">
                   Tap "Start" in the Telegram chat to begin
                 </Text>
               </View>
-              <View style={styles.step}>
-                <View style={styles.stepNumber}>
-                  <Text style={styles.stepNumberText}>3</Text>
+              <View className="flex-row items-start mb-md">
+                <View className="w-[28px] h-[28px] rounded-[14px] bg-primary justify-center items-center mr-sm">
+                  <Text className="text-[12px] font-bold text-white">3</Text>
                 </View>
-                <Text style={styles.stepText}>
+                <Text className="flex-1 text-[13px] text-textSecondary leading-[22px] pt-1">
                   Start chatting with Matsya AI Assistant on Telegram!
                 </Text>
               </View>
             </View>
 
-            <View style={styles.note}>
+            <View className="flex-row items-start bg-[#3b82f615] rounded-md p-md gap-sm mb-lg">
               <Ionicons
                 name="information-circle"
                 size={16}
                 color={COLORS.info}
               />
-              <Text style={styles.noteText}>
+              <Text className="flex-1 text-[12px] text-textSecondary leading-[18px]">
                 You'll need the Telegram app installed to use this feature.
               </Text>
             </View>
           </ScrollView>
 
           {/* Actions */}
-          <View style={styles.actions}>
+          <View className="p-lg border-t border-borderDark gap-sm">
             <TouchableOpacity
-              style={styles.primaryBtn}
+              className="flex-row items-center justify-center bg-primary rounded-xl p-md gap-sm shadow-sm shadow-primary/30"
               onPress={() => {
                 onOpenTelegram();
                 onClose();
               }}
             >
               <Ionicons name="paper-plane" size={20} color="#fff" />
-              <Text style={styles.primaryBtnText}>Open Telegram</Text>
+              <Text className="text-[13px] font-bold text-white">Open Telegram</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.secondaryBtn} onPress={onClose}>
-              <Text style={styles.secondaryBtnText}>Maybe Later</Text>
+            <TouchableOpacity className="items-center p-sm" onPress={onClose}>
+              <Text className="text-[13px] text-textMuted">Maybe Later</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -189,174 +188,3 @@ export function TelegramIntegrationModal({
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: SPACING.lg,
-  },
-  modal: {
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS["2xl"],
-    width: "100%",
-    maxWidth: 500,
-    maxHeight: "90%",
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: SPACING.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  headerIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: COLORS.primary + "20",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  closeBtn: {
-    padding: SPACING.xs,
-  },
-  content: {
-    padding: SPACING.lg,
-  },
-  title: {
-    fontSize: FONTS.sizes.xl,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-    marginBottom: SPACING.sm,
-  },
-  description: {
-    fontSize: FONTS.sizes.base,
-    color: COLORS.textSecondary,
-    lineHeight: 24,
-    marginBottom: SPACING.lg,
-  },
-  featuresSection: {
-    marginBottom: SPACING.lg,
-  },
-  sectionTitle: {
-    fontSize: FONTS.sizes.md,
-    fontWeight: FONTS.weights.semibold,
-    color: COLORS.textPrimary,
-    marginBottom: SPACING.md,
-  },
-  feature: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    marginBottom: SPACING.md,
-  },
-  featureIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: COLORS.primary + "15",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: SPACING.sm,
-  },
-  featureText: {
-    flex: 1,
-  },
-  featureTitle: {
-    fontSize: FONTS.sizes.base,
-    fontWeight: FONTS.weights.semibold,
-    color: COLORS.textPrimary,
-    marginBottom: 2,
-  },
-  featureDesc: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-    lineHeight: 18,
-  },
-  instructionsSection: {
-    marginBottom: SPACING.lg,
-  },
-  step: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    marginBottom: SPACING.md,
-  },
-  stepNumber: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: COLORS.primary,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: SPACING.sm,
-  },
-  stepNumberText: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.bold,
-    color: "#fff",
-  },
-  stepText: {
-    flex: 1,
-    fontSize: FONTS.sizes.base,
-    color: COLORS.textSecondary,
-    lineHeight: 22,
-    paddingTop: 4,
-  },
-  note: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    backgroundColor: COLORS.info + "15",
-    borderRadius: RADIUS.md,
-    padding: SPACING.md,
-    gap: SPACING.sm,
-  },
-  noteText: {
-    flex: 1,
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textSecondary,
-    lineHeight: 18,
-  },
-  actions: {
-    padding: SPACING.lg,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-    gap: SPACING.sm,
-  },
-  primaryBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: COLORS.primary,
-    borderRadius: RADIUS.xl,
-    padding: SPACING.md,
-    gap: SPACING.sm,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  primaryBtnText: {
-    fontSize: FONTS.sizes.base,
-    fontWeight: FONTS.weights.bold,
-    color: "#fff",
-  },
-  secondaryBtn: {
-    alignItems: "center",
-    padding: SPACING.sm,
-  },
-  secondaryBtnText: {
-    fontSize: FONTS.sizes.base,
-    color: COLORS.textMuted,
-  },
-});

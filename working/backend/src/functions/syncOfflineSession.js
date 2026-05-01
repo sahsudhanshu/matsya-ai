@@ -187,17 +187,18 @@ async function handleCommit(event, userId) {
 
         try {
             await pool.execute(
-                `INSERT INTO images (imageId, userId, source, s3Key, s3Path, latitude, longitude, locationMapped, status, analysisResult, createdAt, updatedAt)
-                 VALUES (?, ?, 'offline', ?, ?, ?, ?, ?, 'completed', ?, ?, ?)
+                `INSERT INTO images (imageId, userId, status, analysisResult, latitude, longitude, s3Key, createdAt, updatedAt)
+                 VALUES (?, ?, 'completed', ?, ?, ?, ?, ?, ?)
                  ON DUPLICATE KEY UPDATE updatedAt = VALUES(updatedAt)`,
                 [
-                    imageId, userId,
-                    s3Key || null,
-                    s3Key ? `s3://${BUCKET}/${s3Key}` : null,
-                    lat, lng,
-                    lat !== null && lng !== null ? 1 : 0,
+                    imageId, 
+                    userId,
                     analysisResult ? JSON.stringify(analysisResult) : null,
-                    createdAt, syncedAt,
+                    lat, 
+                    lng,
+                    s3Key || null,
+                    createdAt, 
+                    syncedAt
                 ]
             );
         } catch (err) {
@@ -215,17 +216,19 @@ async function handleCommit(event, userId) {
 
         try {
             await pool.execute(
-                `INSERT INTO \`groups\` (groupId, userId, source, imageCount, s3Keys, latitude, longitude, locationMapped, status, analysisResult, createdAt, updatedAt)
-                 VALUES (?, ?, 'offline', ?, ?, ?, ?, ?, 'completed', ?, ?, ?)
+                `INSERT INTO \`groups\` (groupId, userId, status, imageCount, s3Keys, analysisResult, latitude, longitude, createdAt, updatedAt)
+                 VALUES (?, ?, 'completed', ?, ?, ?, ?, ?, ?, ?)
                  ON DUPLICATE KEY UPDATE updatedAt = VALUES(updatedAt)`,
                 [
-                    groupId, userId,
+                    groupId, 
+                    userId,
                     images.length,
                     JSON.stringify(s3Keys),
-                    lat, lng,
-                    lat !== null && lng !== null ? 1 : 0,
                     JSON.stringify(analysisResult),
-                    createdAt, syncedAt,
+                    lat, 
+                    lng,
+                    createdAt, 
+                    syncedAt
                 ]
             );
         } catch (err) {

@@ -49,15 +49,9 @@ function matchSpecies(label) {
  * @returns {Object} Supplement data with weight_kg and estimatedValue
  */
 function generateMockSupplement(speciesLabel) {
-    const matched = matchSpecies(speciesLabel);
-    const length_mm = matched.minSize + Math.round(Math.random() * 200);
-    const weight_g = Math.round((length_mm / 1000) ** 3 * 1e6 * (0.012 + Math.random() * 0.004));
-    const weight_kg = weight_g / 1000;
-    const estimatedValue = Math.round(weight_kg * matched.pricePerKg);
-
     return {
-        weight_kg,
-        estimatedValue,
+        weight_kg: 0,
+        estimatedValue: 0,
     };
 }
 

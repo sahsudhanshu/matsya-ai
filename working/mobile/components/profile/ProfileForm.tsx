@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, Alert } from "react-native";
+import { View, Text, Alert } from "react-native";
 import { Button, Input } from "../ui";
 import type { UserProfile } from "../../lib/types";
-import { COLORS, FONTS, SPACING, RADIUS } from "../../lib/constants";
+import { COLORS } from "../../lib/constants";
 
 interface ProfileFormProps {
   initialValues: UserProfile;
@@ -110,13 +110,17 @@ export function ProfileForm({
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.content}>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Personal Information</Text>
+    <View className="flex-1">
+      <View className="p-4 pb-16">
+        <View className="mb-6">
+          <Text className="mb-3 text-[13px] font-semibold text-[#f8fafc]">
+            Personal Information
+          </Text>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>Name *</Text>
+          <View className="mb-6">
+            <Text className="mb-1 text-[12px] font-medium text-[#f8fafc]">
+              Name *
+            </Text>
             <Input
               value={name}
               onChangeText={setName}
@@ -125,19 +129,26 @@ export function ProfileForm({
             />
           </View>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>Email</Text>
+          <View className="mb-6">
+            <Text className="mb-1 text-[12px] font-medium text-[#f8fafc]">
+              Email
+            </Text>
             <Input
               value={initialValues.email}
               editable={false}
               placeholder="Email"
-              style={styles.disabledInput}
+              className="opacity-60"
+              containerStyle={{ backgroundColor: COLORS.border }}
             />
-            <Text style={styles.helpText}>(cannot be changed)</Text>
+            <Text className="mt-1 text-[10px] text-[#e2e8f0]">
+              (cannot be changed)
+            </Text>
           </View>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>Phone</Text>
+          <View className="mb-6">
+            <Text className="mb-1 text-[12px] font-medium text-[#f8fafc]">
+              Phone
+            </Text>
             <Input
               value={phone}
               onChangeText={setPhone}
@@ -148,19 +159,23 @@ export function ProfileForm({
           </View>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Fishing Information</Text>
+        <View className="mb-6">
+          <Text className="mb-3 text-[13px] font-semibold text-[#f8fafc]">
+            Fishing Information
+          </Text>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>Role</Text>
+          <View className="mb-6">
+            <Text className="mb-1 text-[12px] font-medium text-[#f8fafc]">
+              Role
+            </Text>
             <Button
               label={role || "Select role"}
               variant="outline"
               onPress={() => setShowRolePicker(!showRolePicker)}
-              style={styles.pickerButton}
+              className="justify-start"
             />
             {showRolePicker && (
-              <View style={styles.pickerOptions}>
+              <View className="mt-1 max-h-[250px] overflow-hidden rounded-xl border border-[#334155] bg-[#334155]">
                 {ROLE_OPTIONS.map((option) => (
                   <Button
                     key={option}
@@ -170,23 +185,25 @@ export function ProfileForm({
                       setRole(option);
                       setShowRolePicker(false);
                     }}
-                    style={styles.pickerOption}
+                    className="rounded-none border-b border-[#334155]"
                   />
                 ))}
               </View>
             )}
           </View>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>Primary Fishing Port</Text>
+          <View className="mb-6">
+            <Text className="mb-1 text-[12px] font-medium text-[#f8fafc]">
+              Primary Fishing Port
+            </Text>
             <Button
               label={port || "Select port"}
               variant="outline"
               onPress={() => setShowPortPicker(!showPortPicker)}
-              style={styles.pickerButton}
+              className="justify-start"
             />
             {showPortPicker && (
-              <View style={styles.pickerOptions}>
+              <View className="mt-1 max-h-[250px] overflow-hidden rounded-xl border border-[#334155] bg-[#334155]">
                 {PORT_OPTIONS.map((option) => (
                   <Button
                     key={option}
@@ -196,7 +213,7 @@ export function ProfileForm({
                       setPort(option);
                       setShowPortPicker(false);
                     }}
-                    style={styles.pickerOption}
+                    className="rounded-none border-b border-[#334155]"
                   />
                 ))}
               </View>
@@ -204,8 +221,10 @@ export function ProfileForm({
           </View>
 
           {port === "Other (Enter Manually)" && (
-            <View style={styles.field}>
-              <Text style={styles.label}>Custom Port Name *</Text>
+            <View className="mb-6">
+              <Text className="mb-1 text-[12px] font-medium text-[#f8fafc]">
+                Custom Port Name *
+              </Text>
               <Input
                 value={customPort}
                 onChangeText={setCustomPort}
@@ -215,8 +234,10 @@ export function ProfileForm({
             </View>
           )}
 
-          <View style={styles.field}>
-            <Text style={styles.label}>Region</Text>
+          <View className="mb-6">
+            <Text className="mb-1 text-[12px] font-medium text-[#f8fafc]">
+              Region
+            </Text>
             <Input
               value={region}
               onChangeText={setRegion}
@@ -224,16 +245,18 @@ export function ProfileForm({
             />
           </View>
 
-          <View style={styles.field}>
-            <Text style={styles.label}>Boat Type</Text>
+          <View className="mb-6">
+            <Text className="mb-1 text-[12px] font-medium text-[#f8fafc]">
+              Boat Type
+            </Text>
             <Button
               label={boatType || "Select boat type"}
               variant="outline"
               onPress={() => setShowBoatTypePicker(!showBoatTypePicker)}
-              style={styles.pickerButton}
+              className="justify-start"
             />
             {showBoatTypePicker && (
-              <View style={styles.pickerOptions}>
+              <View className="mt-1 max-h-[250px] overflow-hidden rounded-xl border border-[#334155] bg-[#334155]">
                 {BOAT_TYPE_OPTIONS.map((option) => (
                   <Button
                     key={option}
@@ -243,7 +266,7 @@ export function ProfileForm({
                       setBoatType(option as typeof boatType);
                       setShowBoatTypePicker(false);
                     }}
-                    style={styles.pickerOption}
+                    className="rounded-none border-b border-[#334155]"
                   />
                 ))}
               </View>
@@ -251,13 +274,13 @@ export function ProfileForm({
           </View>
         </View>
 
-        <View style={styles.actions}>
+        <View className="mt-6 flex-row gap-4 border-t border-[#334155] pt-6">
           <Button
             label="Cancel"
             variant="outline"
             onPress={onCancel}
             disabled={loading}
-            style={styles.actionButton}
+            className="flex-1"
           />
           <Button
             label="Save Changes"
@@ -265,73 +288,10 @@ export function ProfileForm({
             onPress={handleSave}
             loading={loading}
             disabled={loading}
-            style={styles.actionButton}
+            className="flex-1"
           />
         </View>
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  content: {
-    padding: SPACING.md,
-    paddingBottom: SPACING.xl * 2,
-  },
-  section: {
-    marginBottom: SPACING.lg,
-  },
-  sectionTitle: {
-    fontSize: FONTS.sizes.base,
-    fontWeight: FONTS.weights.semibold as any,
-    color: COLORS.textPrimary,
-    marginBottom: SPACING.sm,
-  },
-  field: {
-    marginBottom: SPACING.lg,
-  },
-  label: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.medium as any,
-    color: COLORS.textPrimary,
-    marginBottom: SPACING.xs,
-  },
-  helpText: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textSecondary,
-    marginTop: SPACING.xs,
-  },
-  disabledInput: {
-    backgroundColor: COLORS.border,
-    opacity: 0.6,
-  },
-  pickerButton: {
-    justifyContent: "flex-start",
-  },
-  pickerOptions: {
-    marginTop: SPACING.xs,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: RADIUS.md,
-    backgroundColor: COLORS.bgSurface,
-    maxHeight: 250,
-    overflow: "hidden",
-  },
-  pickerOption: {
-    borderRadius: 0,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  actions: {
-    flexDirection: "row",
-    gap: SPACING.md,
-    marginTop: SPACING.xl,
-    paddingTop: SPACING.lg,
-  },
-  actionButton: {
-    flex: 1,
-  },
-});

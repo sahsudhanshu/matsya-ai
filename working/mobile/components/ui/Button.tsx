@@ -2,13 +2,12 @@ import React from "react";
 import {
   TouchableOpacity,
   Text,
-  StyleSheet,
   ActivityIndicator,
   View,
   ViewStyle,
   TextStyle,
 } from "react-native";
-import { COLORS, FONTS, SPACING, RADIUS } from "../../lib/constants";
+import { COLORS } from "../../lib/constants";
 
 interface ButtonProps {
   label: string;
@@ -22,7 +21,37 @@ interface ButtonProps {
   style?: ViewStyle;
   textStyle?: TextStyle;
   fullWidth?: boolean;
+  className?: string;
+  labelClassName?: string;
 }
+
+const SIZE_CLASSES = {
+  sm: "px-3 py-1.5 min-h-[30px]",
+  md: "px-4 py-2.5 min-h-[40px]",
+  lg: "px-5 py-3 min-h-[46px]",
+};
+
+const VARIANT_CLASSES = {
+  primary: "bg-primary",
+  secondary: "bg-secondary",
+  outline: "bg-transparent border-[1.5px] border-primary",
+  ghost: "bg-primary/10",
+  danger: "bg-error",
+};
+
+const LABEL_SIZE_CLASSES = {
+  sm: "text-sm",
+  md: "text-base",
+  lg: "text-lg", // Approximate of md size in constants if needed
+};
+
+const LABEL_VARIANT_CLASSES = {
+  primary: "text-white",
+  secondary: "text-white",
+  outline: "text-primary",
+  ghost: "text-primary",
+  danger: "text-white",
+};
 
 export function Button({
   label,
@@ -36,31 +65,34 @@ export function Button({
   style,
   textStyle,
   fullWidth = false,
+  className = "",
+  labelClassName = "",
 }: ButtonProps) {
   const isDisabled = disabled || loading;
 
-  const containerStyles: any[] = [
-    styles.base,
-    styles[`size_${size}`],
-    styles[`variant_${variant}`],
-    fullWidth && styles.fullWidth,
-    isDisabled && styles.disabled,
-    style ?? {},
-  ];
+  const containerClasses = [
+    "rounded-xl items-center justify-center flex-row",
+    SIZE_CLASSES[size],
+    VARIANT_CLASSES[variant],
+    fullWidth ? "w-full" : "",
+    isDisabled ? "opacity-50" : "",
+    className
+  ].filter(Boolean).join(" ");
 
-  const labelStyles: any[] = [
-    styles.label,
-    styles[`labelSize_${size}`],
-    styles[`labelVariant_${variant}`],
-    textStyle ?? {},
-  ];
+  const labelClasses = [
+    "font-semibold tracking-wide",
+    LABEL_SIZE_CLASSES[size],
+    LABEL_VARIANT_CLASSES[variant],
+    labelClassName
+  ].filter(Boolean).join(" ");
 
   return (
     <TouchableOpacity
       onPress={onPress}
       disabled={isDisabled}
       activeOpacity={0.75}
-      style={containerStyles}
+      style={style}
+      className={containerClasses}
     >
       {loading ? (
         <ActivityIndicator
@@ -72,66 +104,16 @@ export function Button({
           }
         />
       ) : (
-        <View style={styles.content}>
+        <View className="flex-row items-center">
           {icon && iconPosition === "left" && (
-            <View style={styles.iconLeft}>{icon}</View>
+            <View className="mr-3">{icon}</View>
           )}
-          <Text style={labelStyles}>{label}</Text>
+          <Text style={textStyle} className={labelClasses}>{label}</Text>
           {icon && iconPosition === "right" && (
-            <View style={styles.iconRight}>{icon}</View>
+            <View className="ml-3">{icon}</View>
           )}
         </View>
       )}
     </TouchableOpacity>
   );
 }
-
-const styles = StyleSheet.create({
-  base: {
-    borderRadius: RADIUS.lg,
-    alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "row",
-  },
-  fullWidth: { width: "100%" },
-  content: { flexDirection: "row", alignItems: "center" },
-  iconLeft: { marginRight: SPACING.sm },
-  iconRight: { marginLeft: SPACING.sm },
-  disabled: { opacity: 0.5 },
-
-  // Sizes
-  size_sm: { paddingHorizontal: SPACING.sm, paddingVertical: 6, minHeight: 30 },
-  size_md: {
-    paddingHorizontal: SPACING.md,
-    paddingVertical: 10,
-    minHeight: 40,
-  },
-  size_lg: {
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: 12,
-    minHeight: 46,
-  },
-
-  // Variants
-  variant_primary: { backgroundColor: COLORS.primary },
-  variant_secondary: { backgroundColor: COLORS.secondary },
-  variant_outline: {
-    backgroundColor: "transparent",
-    borderWidth: 1.5,
-    borderColor: COLORS.primary,
-  },
-  variant_ghost: { backgroundColor: "rgba(30,64,175,0.1)" },
-  variant_danger: { backgroundColor: COLORS.error },
-
-  // Labels
-  label: { fontWeight: FONTS.weights.semibold, letterSpacing: 0.2 },
-  labelSize_sm: { fontSize: FONTS.sizes.sm },
-  labelSize_md: { fontSize: FONTS.sizes.base },
-  labelSize_lg: { fontSize: FONTS.sizes.md },
-
-  labelVariant_primary: { color: "#fff" },
-  labelVariant_secondary: { color: "#fff" },
-  labelVariant_outline: { color: COLORS.primary },
-  labelVariant_ghost: { color: COLORS.primary },
-  labelVariant_danger: { color: "#fff" },
-});

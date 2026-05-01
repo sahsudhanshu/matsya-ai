@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  StyleSheet,
+  
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
@@ -196,16 +196,16 @@ export default function HistoryDetailScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safe}>
-        <View style={styles.header}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#0f172a" }}>
+        <View className="flex-row items-center gap-2 border-b border-[#334155] px-4 py-2">
           <TouchableOpacity onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={24} color={COLORS.textPrimary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Loading...</Text>
+          <Text className="flex-1 text-[15px] font-bold text-[#f8fafc]">Loading...</Text>
         </View>
         <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.content}
+          className="flex-1"
+          contentContainerStyle={{ flex: 1 }}
         >
           <SkeletonList itemCount={3} />
         </ScrollView>
@@ -215,16 +215,16 @@ export default function HistoryDetailScreen() {
 
   if (error || !group) {
     return (
-      <SafeAreaView style={styles.safe}>
-        <View style={styles.errorContainer}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#0f172a" }}>
+        <View className="flex-1 items-center justify-center p-8">
           <Ionicons name="warning" size={48} color={COLORS.error} />
-          <Text style={styles.errorTitle}>Failed to Load</Text>
-          <Text style={styles.errorText}>{error || "Group not found"}</Text>
+          <Text className="mb-1 text-[15px] font-bold text-[#f8fafc]">Failed to Load</Text>
+          <Text className="mb-6 text-center text-[13px] text-[#94a3b8]">{error || "Group not found"}</Text>
           <TouchableOpacity
-            style={styles.retryBtn}
+            className="rounded-[12px] bg-[#1e40af] px-8 py-2"
             onPress={() => loadGroupDetails()}
           >
-            <Text style={styles.retryText}>Retry</Text>
+            <Text className="text-[13px] font-bold text-[#f8fafc]">Retry</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -244,26 +244,26 @@ export default function HistoryDetailScreen() {
     : null;
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#0f172a" }}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+      <View className="flex-row items-center gap-2 border-b border-[#334155] px-4 py-2">
+        <TouchableOpacity onPress={() => router.back()} className="p-1">
           <Ionicons name="arrow-back" size={24} color={COLORS.textPrimary} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
-          <Text style={styles.title}>Analysis Details</Text>
-          <Text style={styles.subtitle}>
+          <Text className="text-[15px] font-bold text-[#f8fafc]">Analysis Details</Text>
+          <Text className="text-[11px] text-[#94a3b8]">
             Group ID: {groupId.substring(0, 8)}...
           </Text>
         </View>
-        <TouchableOpacity onPress={handleExportPDF} style={styles.iconBtn}>
+        <TouchableOpacity onPress={handleExportPDF} className="p-1">
           <Ionicons
             name="document-outline"
             size={24}
             color={COLORS.primaryLight}
           />
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleAskAI} style={styles.iconBtn}>
+        <TouchableOpacity onPress={handleAskAI} className="p-1">
           <Ionicons
             name="chatbubble-outline"
             size={24}
@@ -273,8 +273,8 @@ export default function HistoryDetailScreen() {
       </View>
 
       <ScrollView
-        style={styles.content}
-        contentContainerStyle={styles.contentContainer}
+        className="flex-1"
+        contentContainerStyle={{ padding: 24 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -285,10 +285,10 @@ export default function HistoryDetailScreen() {
         }
       >
         {/* Metadata */}
-        <View style={styles.metadataCard}>
-          <View style={styles.metadataRow}>
-            <Text style={styles.metadataLabel}>Created</Text>
-            <Text style={styles.metadataValue}>
+        <View className="mb-4 rounded-[12px] border border-[#334155] bg-[#1e293b] p-4">
+          <View className="flex-row items-center justify-between py-1">
+            <Text className="text-[13px] text-[#94a3b8]">Created</Text>
+            <Text className="text-[13px] font-semibold text-[#f8fafc]">
               {createdDate.toLocaleDateString("en-IN", {
                 day: "numeric",
                 month: "short",
@@ -299,9 +299,9 @@ export default function HistoryDetailScreen() {
             </Text>
           </View>
           {completedDate && (
-            <View style={styles.metadataRow}>
-              <Text style={styles.metadataLabel}>Completed</Text>
-              <Text style={styles.metadataValue}>
+            <View className="flex-row items-center justify-between py-1">
+              <Text className="text-[13px] text-[#94a3b8]">Completed</Text>
+              <Text className="text-[13px] font-semibold text-[#f8fafc]">
                 {completedDate.toLocaleTimeString("en-IN", {
                   hour: "2-digit",
                   minute: "2-digit",
@@ -310,24 +310,24 @@ export default function HistoryDetailScreen() {
             </View>
           )}
           {duration && (
-            <View style={styles.metadataRow}>
-              <Text style={styles.metadataLabel}>Duration</Text>
-              <Text style={styles.metadataValue}>{duration}s</Text>
+            <View className="flex-row items-center justify-between py-1">
+              <Text className="text-[13px] text-[#94a3b8]">Duration</Text>
+              <Text className="text-[13px] font-semibold text-[#f8fafc]">{duration}s</Text>
             </View>
           )}
         </View>
 
         {/* Location */}
         {group.latitude && group.longitude && (
-          <View style={styles.locationCard}>
+          <View className="mb-4 flex-row items-center rounded-[12px] border border-[#334155] bg-[#1e293b] p-4">
             <View style={{ flex: 1 }}>
-              <Text style={styles.locationTitle}>Scan Location</Text>
-              <Text style={styles.locationCoords}>
-                {group.latitude.toFixed(6)}°N, {group.longitude.toFixed(6)}°E
+              <Text className="mb-0.5 text-[13px] font-bold text-[#f8fafc]">Scan Location</Text>
+              <Text className="text-[11px] text-[#94a3b8]">
+                {Number(group.latitude).toFixed(6)}°N, {Number(group.longitude).toFixed(6)}°E
               </Text>
             </View>
-            <TouchableOpacity style={styles.mapBtn} onPress={handleViewOnMap}>
-              <Text style={styles.mapBtnText}>View on Map</Text>
+            <TouchableOpacity className="rounded-[10px] bg-[#1e40af] px-4 py-2" onPress={handleViewOnMap}>
+              <Text className="text-[11px] font-bold text-[#f8fafc]">View on Map</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -354,8 +354,8 @@ export default function HistoryDetailScreen() {
 
         {/* Original Images Gallery */}
         {group.presignedViewUrls && group.presignedViewUrls.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
+          <View className="mb-6">
+            <Text className="text-[15px] font-bold text-[#f8fafc]">
               Original Images ({group.presignedViewUrls.length})
             </Text>
             <ScrollView
@@ -367,7 +367,8 @@ export default function HistoryDetailScreen() {
                 <Image
                   key={index}
                   source={{ uri: url }}
-                  style={styles.originalImage}
+                  className="mr-2 h-[200px] rounded-[12px] bg-[#334155]"
+                  style={{ width: SCREEN_WIDTH * 0.65 }}
                   resizeMode="cover"
                 />
               ))}
@@ -378,15 +379,15 @@ export default function HistoryDetailScreen() {
         {/* YOLO Detection Visualizations */}
         {group.analysisResult?.yoloVisualizationUrls &&
           group.analysisResult.yoloVisualizationUrls.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Detection Visualizations</Text>
+            <View className="mb-6">
+              <Text className="mb-2 text-[15px] font-bold text-[#f8fafc]">Detection Visualizations</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 {group.analysisResult.yoloVisualizationUrls.map(
                   (url, index) => (
                     <Image
                       key={index}
                       source={{ uri: url }}
-                      style={styles.yoloImage}
+                      className="mr-2 h-[160px] w-[160px] rounded-[12px] bg-[#334155]"
                       resizeMode="cover"
                     />
                   ),
@@ -396,16 +397,16 @@ export default function HistoryDetailScreen() {
           )}
 
         {/* Individual Fish Detections */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>
+        <View className="mb-6">
+          <View className="mb-4 flex-row items-center justify-between">
+            <Text className="text-[15px] font-bold text-[#f8fafc]">
               Individual Fish ({filteredDetections.length})
             </Text>
             <TouchableOpacity
-              style={styles.filterBtn}
+              className="rounded-[10px] border border-[#334155] bg-[#1e293b] px-4 py-1"
               onPress={() => setShowDiseasedOnly(!showDiseasedOnly)}
             >
-              <Text style={styles.filterBtnText}>
+              <Text className="text-[11px] font-semibold text-[#e2e8f0]">
                 {showDiseasedOnly ? "All" : "Diseased"}
               </Text>
             </TouchableOpacity>
@@ -421,13 +422,13 @@ export default function HistoryDetailScreen() {
           ))}
 
           {filteredDetections.length === 0 && (
-            <View style={styles.emptyState}>
+            <View className="items-center p-6">
               <Ionicons
                 name="checkmark-circle"
                 size={48}
                 color={COLORS.success}
               />
-              <Text style={styles.emptyText}>
+              <Text className="mt-4 text-center text-[13px] text-[#94a3b8]">
                 {showDiseasedOnly
                   ? "No diseased fish detected"
                   : "No fish detections available"}
@@ -439,200 +440,3 @@ export default function HistoryDetailScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: COLORS.bgDark,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
-    gap: SPACING.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  headerTitle: {
-    fontSize: FONTS.sizes.base,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-    flex: 1,
-  },
-  scroll: {
-    flex: 1,
-  },
-  backBtn: {
-    padding: SPACING.xs,
-  },
-  title: {
-    fontSize: FONTS.sizes.base,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-  },
-  subtitle: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-  },
-  iconBtn: {
-    padding: SPACING.xs,
-  },
-  content: {
-    flex: 1,
-  },
-  contentContainer: {
-    padding: SPACING.lg,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingText: {
-    marginTop: SPACING.md,
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: SPACING.xl,
-  },
-  errorIcon: {
-    fontSize: 34,
-    marginBottom: SPACING.md,
-  },
-  errorTitle: {
-    fontSize: FONTS.sizes.base,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-    marginBottom: SPACING.xs,
-  },
-  errorText: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-    textAlign: "center",
-    marginBottom: SPACING.lg,
-  },
-  retryBtn: {
-    backgroundColor: COLORS.primary,
-    borderRadius: RADIUS.lg,
-    paddingHorizontal: SPACING.xl,
-    paddingVertical: SPACING.sm,
-  },
-  retryText: {
-    color: COLORS.textPrimary,
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.bold,
-  },
-  metadataCard: {
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.lg,
-    padding: SPACING.md,
-    marginBottom: SPACING.md,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  metadataRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: SPACING.xs,
-  },
-  metadataLabel: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-  },
-  metadataValue: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.semibold,
-    color: COLORS.textPrimary,
-  },
-  locationCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.lg,
-    padding: SPACING.md,
-    marginBottom: SPACING.md,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  locationTitle: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-    marginBottom: 2,
-  },
-  locationCoords: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-  },
-  mapBtn: {
-    backgroundColor: COLORS.primary,
-    borderRadius: RADIUS.md,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
-  },
-  mapBtnText: {
-    fontSize: FONTS.sizes.xs,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-  },
-  section: {
-    marginBottom: SPACING.lg,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: SPACING.md,
-  },
-  sectionTitle: {
-    fontSize: FONTS.sizes.base,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-  },
-  filterBtn: {
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.md,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  filterBtnText: {
-    fontSize: FONTS.sizes.xs,
-    fontWeight: FONTS.weights.semibold,
-    color: COLORS.textSecondary,
-  },
-  yoloImage: {
-    width: 160,
-    height: 160,
-    borderRadius: RADIUS.lg,
-    marginRight: SPACING.sm,
-    backgroundColor: COLORS.bgSurface,
-  },
-  originalImage: {
-    width: SCREEN_WIDTH * 0.65,
-    height: 200,
-    borderRadius: RADIUS.lg,
-    marginRight: SPACING.sm,
-    backgroundColor: COLORS.bgSurface,
-  },
-  emptyState: {
-    alignItems: "center",
-    padding: SPACING.lg,
-  },
-  emptyIcon: {
-    fontSize: 28,
-    marginBottom: SPACING.md,
-  },
-  emptyText: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-    textAlign: "center",
-  },
-});

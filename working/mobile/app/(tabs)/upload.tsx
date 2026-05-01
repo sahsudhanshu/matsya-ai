@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
-  StyleSheet,
+  
   ScrollView,
   TouchableOpacity,
   Image,
@@ -14,7 +14,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import {
@@ -139,6 +140,7 @@ export default function UploadScreen() {
   // ── Weight estimation state ──
   const [weightModalVisible, setWeightModalVisible] = useState(false);
   const [weightSpecies, setWeightSpecies] = useState("Tilapia");
+  const [weightFishIndex, setWeightFishIndex] = useState(0);
   const [uploadGroupId, setUploadGroupId] = useState<string | null>(null);
 
   const refreshModelStatus = () => {
@@ -191,6 +193,7 @@ export default function UploadScreen() {
 
       if (firstDetection?.species) {
         setWeightSpecies(firstDetection.species);
+        setWeightFishIndex(0);
         // Small delay to let the UI settle
         setTimeout(() => {
           setWeightModalVisible(true);
@@ -198,6 +201,79 @@ export default function UploadScreen() {
       }
     }
   }, [step, groupAnalysis]);
+
+  // Synchronise offline weight updates when coming back from detailed analysis
+  useFocusEffect(
+    React.useCallback(() => {
+      async function syncOfflineWeights() {
+        if (!offlineResults.length || !imageUri) return;
+        let needsUpdate = false;
+        const newResults = [...offlineResults];
+        
+        for (let i = 0; i < newResults.length; i++) {
+          const storageKey = `weight_estimate::${imageUri}::${i}`;
+          const val = await AsyncStorage.getItem(storageKey);
+          if (val !== null) {
+            const weightG = parseFloat(val);
+            if (newResults[i].weightG !== weightG) {
+              newResults[i].weightG = weightG;
+              needsUpdate = true;
+            }
+          }
+        }
+        
+        if (needsUpdate) {
+          setOfflineResults(newResults);
+        }
+      }
+      syncOfflineWeights();
+    }, [offlineResults, imageUri])
+  );
+
+  useFocusEffect(
+    React.useCallback(() => {
+      async function syncOnlineWeights() {
+        if (!groupAnalysis || !imageUris.length) return;
+        let needsUpdate = false;
+        let totalWeightG = 0;
+
+        let globalFishIndex = 0;
+        for (let i = 0; i < groupAnalysis.images.length; i++) {
+          const img = groupAnalysis.images[i];
+          const crops = Object.entries(img.crops).filter(
+            ([, c]) => c.yolo_confidence >= YOLO_CONFIDENCE_THRESHOLD
+          );
+          
+          for (let j = 0; j < crops.length; j++) {
+            const [, crop] = crops[j];
+            const storageKey = `weight_estimate::${uploadGroupId || imageUris[i]}::${globalFishIndex}`;
+            const val = await AsyncStorage.getItem(storageKey);
+            
+            // If the user estimated the weight, use it. Else fallback to supplement mock.
+            if (val !== null) {
+              totalWeightG += parseFloat(val);
+              needsUpdate = true;
+            } else {
+              // fallback to mock supplement if not overridden
+              const supplement = generateMockSupplement(crop.species.label, globalFishIndex);
+              totalWeightG += supplement.weight_kg * 1000;
+            }
+            globalFishIndex++;
+          }
+        }
+        
+        if (needsUpdate && Math.abs(totalWeightG / 1000 - groupAnalysis.aggregateStats.totalEstimatedWeight) > 0.01) {
+          const newGroupAnalysis = { ...groupAnalysis };
+          newGroupAnalysis.aggregateStats = {
+            ...newGroupAnalysis.aggregateStats,
+            totalEstimatedWeight: totalWeightG / 1000,
+          };
+          setGroupAnalysis(newGroupAnalysis);
+        }
+      }
+      syncOnlineWeights();
+    }, [groupAnalysis, imageUris, uploadGroupId])
+  );
 
   const handleReloadModel = async () => {
     setIsReloadingModel(true);
@@ -368,6 +444,21 @@ export default function UploadScreen() {
         setOfflineProcessingTime(processingTime);
         setIsDetecting(false);
 
+        // Persist locally for offline history (queued for backend sync)
+        let localRecordId: string | undefined;
+        try {
+          const record = await saveLocalAnalysis({
+            mode: "offline",
+            offlineResults: offlineDets,
+            processingTime,
+            imageUri: targetUri,
+            location,
+          });
+          localRecordId = record.id;
+        } catch (e) {
+          console.warn("[Upload] Local history save failed:", e);
+        }
+
         // Save to analysis store for detailed report page
         setAnalysisData({
           mode: "offline",
@@ -375,16 +466,8 @@ export default function UploadScreen() {
           processingTime,
           imageUri: targetUri,
           location,
+          localRecordId,
         });
-
-        // Persist locally for offline history (queued for backend sync)
-        saveLocalAnalysis({
-          mode: "offline",
-          offlineResults: offlineDets,
-          processingTime,
-          imageUri: targetUri,
-          location,
-        }).catch((e) => console.warn("[Upload] Local history save failed:", e));
 
         // Extract detection boxes for the BoundingBoxOverlay
         if (offlineDets.length > 0) {
@@ -797,40 +880,40 @@ export default function UploadScreen() {
   if (!isLoaded) return null;
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#0f172a" }}>
       <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
+        className="flex-1"
+        contentContainerClassName="p-lg pb-3xl"
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.title}>{t("upload.title")}</Text>
-            <Text style={styles.subtitle}>{t("upload.subtitle")}</Text>
+        <View className="mb-lg flex-row justify-between items-center">
+          <View className="flex-1">
+            <Text className="text-xl text-textPrimary font-bold">{t("upload.title")}</Text>
+            <Text className="text-sm text-textMuted mt-xs">{t("upload.subtitle")}</Text>
           </View>
           <ProfileMenu size={36} />
         </View>
 
         {/* Upload Zone */}
         {imageUris.length === 0 && !imageUri ? (
-          <View style={styles.uploadZone}>
+          <View className="bg-bgCard rounded-xl border-[1.5px] border-borderDark border-dashed p-xl items-center mb-lg">
             <Ionicons
               name="camera-outline"
               size={36}
               color={COLORS.textMuted}
               style={{ marginBottom: SPACING.sm }}
             />
-            <Text style={styles.uploadTitle}>{t("upload.cta")}</Text>
-            <Text style={styles.uploadHint}>{t("upload.hint")}</Text>
-            <View style={styles.uploadBtns}>
+            <Text className="text-lg text-textPrimary font-semibold mb-xs">{t("upload.cta")}</Text>
+            <Text className="text-sm text-textMuted text-center mb-lg px-lg">{t("upload.hint")}</Text>
+            <View className="flex-row gap-sm mb-lg">
               <Button
                 label={t("upload.btnCamera")}
                 onPress={captureFromCamera}
                 variant="primary"
                 icon={<Ionicons name="camera" size={16} color="#fff" />}
                 iconPosition="left"
-                style={styles.uploadBtn}
+                className="min-w-[130px]"
               />
               <Button
                 label={t("upload.btnGallery")}
@@ -844,16 +927,16 @@ export default function UploadScreen() {
                   />
                 }
                 iconPosition="left"
-                style={styles.uploadBtn}
+                className="min-w-[130px]"
               />
             </View>
             {/* Tips */}
-            <View style={styles.tipsBox}>
-              <Text style={styles.tipsTitle}>{t("upload.tipsTitle")}</Text>
-              <Text style={styles.tipItem}>• {t("upload.tip1")}</Text>
-              <Text style={styles.tipItem}>• {t("upload.tip2")}</Text>
-              <Text style={styles.tipItem}>• {t("upload.tip3")}</Text>
-              <Text style={styles.tipItem}>
+            <View className="bg-bgDark rounded-lg p-md w-full">
+              <Text className="text-primaryLight font-bold text-sm mb-xs">{t("upload.tipsTitle")}</Text>
+              <Text className="text-textMuted text-sm leading-[22px]">• {t("upload.tip1")}</Text>
+              <Text className="text-textMuted text-sm leading-[22px]">• {t("upload.tip2")}</Text>
+              <Text className="text-textMuted text-sm leading-[22px]">• {t("upload.tip3")}</Text>
+              <Text className="text-textMuted text-sm leading-[22px]">
                 • Select multiple images for batch analysis
               </Text>
             </View>
@@ -862,7 +945,7 @@ export default function UploadScreen() {
           <>
             {/* Multi-Image Preview Grid */}
             {imageUris.length > 1 && (
-              <Card style={styles.multiImageCard} padding={SPACING.md}>
+              <Card className="mb-md" padding={SPACING.md}>
                 <View
                   style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
                 >
@@ -871,39 +954,36 @@ export default function UploadScreen() {
                     size={16}
                     color={COLORS.primaryLight}
                   />
-                  <Text style={styles.multiImageTitle}>
+                  <Text className="text-md font-bold text-textPrimary mb-sm">
                     {imageUris.length} Images Selected
                   </Text>
                 </View>
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.multiImageScroll}
+                  contentContainerClassName="gap-sm pr-sm"
                 >
                   {imageUris.map((uri, idx) => (
-                    <View key={idx} style={styles.multiImageItem}>
+                    <View key={idx} className="w-[100px] h-[100px] rounded-md overflow-hidden relative border-2 border-borderDark">
                       <Image
                         source={{ uri }}
-                        style={styles.multiImageThumb}
+                        className="w-full h-full"
                         resizeMode="cover"
                       />
                       {step === "idle" && (
                         <TouchableOpacity
-                          style={styles.multiImageRemove}
+                          className="absolute top-[4px] right-[4px] bg-error rounded-full w-[24px] h-[24px] items-center justify-center"
                           onPress={() => removeImage(idx)}
                         >
-                          <Text style={styles.multiImageRemoveText}>✕</Text>
+                          <Text className="text-white text-sm font-bold">✕</Text>
                         </TouchableOpacity>
                       )}
-                      <Text style={styles.multiImageIndex}>#{idx + 1}</Text>
+                      <Text className="absolute bottom-[4px] left-[4px] bg-black/70 text-white text-xs px-xs py-[2px] rounded-sm font-bold">#{idx + 1}</Text>
                       {step === "uploading" &&
                         uploadProgress[idx] !== undefined && (
-                          <View style={styles.multiImageProgress}>
+                          <View className="absolute bottom-0 left-0 right-0 h-[4px] bg-black/30">
                             <View
-                              style={[
-                                styles.multiImageProgressFill,
-                                { width: `${uploadProgress[idx]}%` },
-                              ]}
+                              className="h-full bg-primary" style={{ width: `${uploadProgress[idx]}%` }}
                             />
                           </View>
                         )}
@@ -915,14 +995,14 @@ export default function UploadScreen() {
 
             {/* Single Image Preview */}
             {imageUris.length === 1 && imageUri && (
-              <View style={styles.previewCard}>
+              <View className="rounded-2xl overflow-hidden mb-md relative">
                 <Image
                   source={{ uri: imageUri }}
-                  style={styles.previewImage}
+                  className="w-full h-[280px]"
                   resizeMode="cover"
                 />
                 {location && (
-                  <View style={styles.locationBadge}>
+                  <View className="absolute top-md left-md bg-black/70 rounded-full px-md py-xs">
                     <View
                       style={{
                         flexDirection: "row",
@@ -935,7 +1015,7 @@ export default function UploadScreen() {
                         size={12}
                         color={COLORS.textMuted}
                       />
-                      <Text style={styles.locationText}>
+                      <Text className="text-white text-xs font-mono">
                         {location.lat.toFixed(3)}°N, {location.lng.toFixed(3)}
                         °E
                       </Text>
@@ -947,37 +1027,34 @@ export default function UploadScreen() {
 
             {/* Progress */}
             {isAnalyzing && (
-              <Card style={styles.progressCard} padding={SPACING.md}>
-                <Text style={styles.progressLabel}>
+              <Card className="mb-md" padding={SPACING.md}>
+                <Text className="text-sm text-textPrimary font-medium mb-sm">
                   {step === "uploading"
                     ? `${t("upload.uploading")}...`
                     : `${t("upload.analyzing")}...`}
                 </Text>
-                <View style={styles.progressBar}>
+                <View className="h-2 bg-borderDark rounded-full overflow-hidden">
                   <Animated.View
-                    style={[
-                      styles.progressFill,
-                      {
+                    className="h-full bg-primary rounded-full" style={{
                         width: progressAnim.interpolate({
                           inputRange: [0, 100],
                           outputRange: ["0%", "100%"],
                         }),
-                      },
-                    ]}
+                      }}
                   />
                 </View>
                 {step === "processing" &&
                   (analysisMode === "offline" && offlineStep ? (
-                    <View style={styles.offlineStepRow}>
+                    <View className="flex-row items-center justify-center gap-[5px] mt-xs">
                       <ActivityIndicator
                         size="small"
                         color={COLORS.primaryLight}
                         style={{ transform: [{ scale: 0.7 }] }}
                       />
-                      <Text style={styles.progressHint}>{offlineStep}</Text>
+                      <Text className="text-xs text-textMuted mt-xs italic text-center">{offlineStep}</Text>
                     </View>
                   ) : (
-                    <Text style={styles.progressHint}>
+                    <Text className="text-xs text-textMuted mt-xs italic text-center">
                       {analysisMode === "offline"
                         ? "On-device: YOLOv8 → Species → Disease → GradCAM"
                         : "YOLOv11 → Species Classification → Weight Estimation"}
@@ -995,17 +1072,14 @@ export default function UploadScreen() {
                   size="lg"
                   fullWidth
                 />
-                <View style={styles.offlineToggleRow}>
+                <View className="flex-row items-center justify-between mt-xs mb-sm">
                   <TouchableOpacity
-                    style={styles.offlineToggle}
+                    className="flex-row items-center gap-[5px]"
                     onPress={() => setForceOffline((v) => !v)}
                     activeOpacity={0.7}
                   >
                     <View
-                      style={[
-                        styles.offlineToggleBox,
-                        forceOffline && styles.offlineToggleBoxOn,
-                      ]}
+                      className={`w-[14px] h-[14px] rounded-[3px] border-[1.5px] border-textMuted items-center justify-center ${forceOffline ? "border-primary bg-primary" : ""}`}
                     >
                       {forceOffline && (
                         <Ionicons name="checkmark" size={10} color="#fff" />
@@ -1019,10 +1093,8 @@ export default function UploadScreen() {
                       }
                     />
                     <Text
-                      style={[
-                        styles.offlineToggleText,
-                        forceOffline && { color: COLORS.primaryLight },
-                      ]}
+                      className="text-xs text-textMuted"
+                      style={forceOffline ? { color: COLORS.primaryLight } : undefined}
                     >
                       Use on-device inference
                     </Text>
@@ -1037,7 +1109,7 @@ export default function UploadScreen() {
               </View>
             )}
             {step === "error" && (
-              <View style={styles.controlRow}>
+              <View className="flex-row gap-md mb-md">
                 <Button
                   label="Retry"
                   onPress={startAnalysis}
@@ -1064,10 +1136,10 @@ export default function UploadScreen() {
         )}
 
         {isDetecting && (
-          <Card style={styles.detectionCard} padding={SPACING.md}>
-            <View style={styles.detectingRow}>
+          <Card className="mb-sm overflow-hidden rounded-xl" padding={SPACING.md}>
+            <View className="flex-row items-center gap-sm">
               <ActivityIndicator size="small" color={COLORS.primaryLight} />
-              <Text style={styles.detectingText}>
+              <Text className="text-textMuted text-sm">
                 Running on-device detection…
               </Text>
             </View>
@@ -1075,7 +1147,7 @@ export default function UploadScreen() {
         )}
 
         {detections.length > 0 && imageUri && (
-          <View style={styles.detectionSection}>
+          <View className="mt-sm mb-md">
             <View
               style={{
                 flexDirection: "row",
@@ -1089,11 +1161,11 @@ export default function UploadScreen() {
                 size={16}
                 color={COLORS.primaryLight}
               />
-              <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>
+              <Text className="text-base font-semibold text-textPrimary mb-sm" style={{ marginBottom: 0 }}>
                 Detection Results
               </Text>
             </View>
-            <Card style={styles.detectionCard} padding={0}>
+            <Card className="mb-sm overflow-hidden rounded-xl" padding={0}>
               <BoundingBoxOverlay
                 imageUri={imageUri}
                 detections={detections}
@@ -1102,25 +1174,25 @@ export default function UploadScreen() {
               />
             </Card>
             {detectionTime !== null && (
-              <Text style={styles.detectionMeta}>
+              <Text className="text-xs text-textMuted text-center font-mono mt-xs">
                 {detections.length} fish detected in {detectionTime}ms
                 (on-device)
               </Text>
             )}
 
             {cropUris.length > 0 && (
-              <View style={styles.cropsSection}>
-                <Text style={styles.cropsTitle}>Detected Crops</Text>
+              <View className="mt-sm">
+                <Text className="text-textSecondary text-sm mb-sm font-semibold">Detected Crops</Text>
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.cropsRow}
+                  contentContainerClassName="gap-sm pr-sm"
                 >
                   {cropUris.map((uri, idx) => (
-                    <View key={`${uri}-${idx}`} style={styles.cropItem}>
+                    <View key={`${uri}-${idx}`} className="w-[100px] h-[100px] rounded-md overflow-hidden border border-borderDark bg-bgCard">
                       <Image
                         source={{ uri }}
-                        style={styles.cropImage}
+                        className="w-full h-full"
                         resizeMode="cover"
                       />
                     </View>
@@ -1133,7 +1205,7 @@ export default function UploadScreen() {
 
         {/* ═══ GROUP ANALYSIS RESULTS ═══ */}
         {groupAnalysis && (
-          <View style={styles.groupSection}>
+          <View className="mt-xl">
             {/* Aggregate Statistics Card */}
             <View
               style={{
@@ -1148,32 +1220,32 @@ export default function UploadScreen() {
                 size={16}
                 color={COLORS.primaryLight}
               />
-              <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>
+              <Text className="text-base font-semibold text-textPrimary mb-sm" style={{ marginBottom: 0 }}>
                 Group Analysis Summary
               </Text>
             </View>
-            <Card style={styles.aggregateCard} padding={SPACING.xl}>
-              <View style={styles.aggregateHeader}>
-                <Text style={styles.aggregateTitle}>
+            <Card className="mb-md" padding={SPACING.xl}>
+              <View className="flex-row justify-between items-center mb-md pb-sm border-b border-borderDark">
+                <Text className="flex-1 text-lg font-bold text-primaryLight mr-sm">
                   {groupAnalysis.images.length} Images Analyzed
                 </Text>
-                <Text style={styles.aggregateTime}>
+                <Text className="text-xs text-textMuted">
                   {new Date(groupAnalysis.processedAt).toLocaleTimeString()}
                 </Text>
               </View>
 
               {/* Total Fish Count */}
-              <View style={styles.aggregateRow}>
-                <Text style={styles.aggregateLabel}>Total Fish Detected</Text>
-                <Text style={styles.aggregateValue}>
+              <View className="flex-row justify-between items-center py-sm border-b border-borderDark">
+                <Text className="text-sm text-textSecondary font-medium">Total Fish Detected</Text>
+                <Text className="text-lg font-bold text-textPrimary">
                   {groupAnalysis.aggregateStats.totalFishCount}
                 </Text>
               </View>
 
               {/* Average Confidence */}
-              <View style={styles.aggregateRow}>
-                <Text style={styles.aggregateLabel}>Average Confidence</Text>
-                <Text style={styles.aggregateValue}>
+              <View className="flex-row justify-between items-center py-sm border-b border-borderDark">
+                <Text className="text-sm text-textSecondary font-medium">Average Confidence</Text>
+                <Text className="text-lg font-bold text-textPrimary">
                   {(
                     groupAnalysis.aggregateStats.averageConfidence * 100
                   ).toFixed(1)}
@@ -1182,18 +1254,18 @@ export default function UploadScreen() {
               </View>
 
               {/* Total Weight */}
-              <View style={styles.aggregateRow}>
-                <Text style={styles.aggregateLabel}>Total Weight</Text>
-                <Text style={styles.aggregateValue}>
+              <View className="flex-row justify-between items-center py-sm border-b border-borderDark">
+                <Text className="text-sm text-textSecondary font-medium">Total Weight</Text>
+                <Text className="text-lg font-bold text-textPrimary">
                   {groupAnalysis.aggregateStats.totalEstimatedWeight.toFixed(2)}{" "}
                   kg
                 </Text>
               </View>
 
               {/* Total Value */}
-              <View style={styles.aggregateRow}>
-                <Text style={styles.aggregateLabel}>Total Value</Text>
-                <Text style={styles.aggregateValue}>
+              <View className="flex-row justify-between items-center py-sm border-b border-borderDark">
+                <Text className="text-sm text-textSecondary font-medium">Total Value</Text>
+                <Text className="text-lg font-bold text-textPrimary">
                   ₹
                   {groupAnalysis.aggregateStats.totalEstimatedValue.toLocaleString(
                     "en-IN",
@@ -1202,28 +1274,22 @@ export default function UploadScreen() {
               </View>
 
               {/* Disease Detection */}
-              <View style={styles.aggregateRow}>
-                <Text style={styles.aggregateLabel}>Disease Status</Text>
+              <View className="flex-row justify-between items-center py-sm border-b border-borderDark">
+                <Text className="text-sm text-textSecondary font-medium">Disease Status</Text>
                 <View
-                  style={[
-                    styles.diseaseStatusBadge,
-                    {
+                  className="rounded-full px-sm py-[4px]" style={{
                       backgroundColor: groupAnalysis.aggregateStats
                         .diseaseDetected
                         ? COLORS.warning + "20"
                         : COLORS.success + "20",
-                    },
-                  ]}
+                    }}
                 >
                   <Text
-                    style={[
-                      styles.diseaseStatusText,
-                      {
+                    className="text-sm font-bold" style={{
                         color: groupAnalysis.aggregateStats.diseaseDetected
                           ? COLORS.warning
                           : COLORS.success,
-                      },
-                    ]}
+                      }}
                   >
                     {groupAnalysis.aggregateStats.diseaseDetected
                       ? "Disease Detected"
@@ -1235,27 +1301,24 @@ export default function UploadScreen() {
               {/* Species Distribution */}
               {Object.keys(groupAnalysis.aggregateStats.speciesDistribution)
                 .length > 0 && (
-                <View style={styles.speciesDistSection}>
-                  <Text style={styles.speciesDistTitle}>Species Breakdown</Text>
+                <View className="mt-md pt-md border-t border-borderDark">
+                  <Text className="text-sm font-bold text-textPrimary mb-sm">Species Breakdown</Text>
                   {Object.entries(
                     groupAnalysis.aggregateStats.speciesDistribution,
                   )
                     .sort(([, a], [, b]) => b - a)
                     .map(([species, count]) => (
-                      <View key={species} style={styles.speciesDistRow}>
-                        <Text style={styles.speciesDistName}>
+                      <View key={species} className="flex-row justify-between items-center mb-sm">
+                        <Text className="text-sm text-textSecondary flex-1">
                           {translateFishName(species, locale)}
                         </Text>
-                        <View style={styles.speciesDistRight}>
-                          <Text style={styles.speciesDistCount}>{count}</Text>
-                          <View style={styles.speciesDistBar}>
+                        <View className="flex-row items-center gap-sm flex-1">
+                          <Text className="text-sm font-bold text-textPrimary min-w-[30px] text-right">{count}</Text>
+                          <View className="flex-1 h-[8px] bg-borderDark rounded-full overflow-hidden">
                             <View
-                              style={[
-                                styles.speciesDistBarFill,
-                                {
+                              className="h-full bg-primaryLight rounded-full" style={{
                                   width: `${(count / groupAnalysis.aggregateStats.totalFishCount) * 100}%`,
-                                },
-                              ]}
+                                }}
                             />
                           </View>
                         </View>
@@ -1266,14 +1329,14 @@ export default function UploadScreen() {
             </Card>
 
             {/* Action Buttons */}
-            <View style={styles.actionButtonsRow}>
+            <View className="flex-row gap-md mt-md mb-md">
               <Button
                 label="View Detailed Report"
                 onPress={() => router.push("/analysis/detail")}
                 variant="primary"
                 icon={<Ionicons name="document-text" size={16} color="#fff" />}
                 iconPosition="left"
-                style={styles.actionButton}
+                className="flex-1"
               />
               <Button
                 label="Export PDF"
@@ -1295,7 +1358,7 @@ export default function UploadScreen() {
                   />
                 }
                 iconPosition="left"
-                style={styles.actionButton}
+                className="flex-1"
               />
             </View>
             <Button
@@ -1328,231 +1391,14 @@ export default function UploadScreen() {
 
             {/* Results for Current Image */}
             {groupAnalysis.images[currentImageIndex] && (
-              <View style={styles.currentImageSection}>
+              <View className="mt-sm">
                 {/* Error Message */}
                 {groupAnalysis.images[currentImageIndex].error && (
-                  <Card style={styles.errorCard} padding={SPACING.md}>
-                    <Text style={styles.errorText}>
+                  <Card className="mb-md bg-error/10 border border-error/40" padding={SPACING.md}>
+                    <Text className="text-sm text-error text-center">
                       ⚠️ {groupAnalysis.images[currentImageIndex].error}
                     </Text>
                   </Card>
-                )}
-
-                {/* Crops for Current Image */}
-                {Object.keys(groupAnalysis.images[currentImageIndex].crops)
-                  .length > 0 ? (
-                  <View style={styles.cropsSection}>
-                    {(() => {
-                      const allCrops = Object.entries(
-                        groupAnalysis.images[currentImageIndex].crops,
-                      );
-                      const visibleCrops = allCrops.filter(
-                        ([, c]) =>
-                          c.yolo_confidence >= YOLO_CONFIDENCE_THRESHOLD,
-                      );
-                      const filteredCount =
-                        allCrops.length - visibleCrops.length;
-                      return (
-                        <>
-                          <View
-                            style={{
-                              flexDirection: "row",
-                              alignItems: "center",
-                              gap: 8,
-                              marginBottom: SPACING.md,
-                            }}
-                          >
-                            <Ionicons
-                              name="fish-outline"
-                              size={16}
-                              color={COLORS.primaryLight}
-                            />
-                            <Text
-                              style={[styles.sectionTitle, { marginBottom: 0 }]}
-                            >
-                              Detected Fish ({visibleCrops.length})
-                            </Text>
-                            {filteredCount > 0 && (
-                              <Text
-                                style={{
-                                  color: COLORS.textMuted,
-                                  fontSize: FONTS.sizes.sm,
-                                }}
-                              >
-                                {" "}
-                                · {filteredCount} below 30% confidence hidden
-                              </Text>
-                            )}
-                          </View>
-                          {visibleCrops.map(([cropKey, crop], cropIdx) => {
-                            const supplement = generateMockSupplement(
-                              crop.species.label,
-                              cropIdx,
-                            );
-                            const diseaseColor =
-                              crop.disease.label === "Healthy Fish"
-                                ? COLORS.success
-                                : COLORS.warning;
-                            const translatedSpecies = translateFishName(
-                              crop.species.label,
-                              locale,
-                            );
-                            const translatedDisease = translateDiseaseName(
-                              crop.disease.label,
-                              locale,
-                            );
-                            const qualColor =
-                              supplement.qualityGrade === "Premium"
-                                ? COLORS.success
-                                : supplement.qualityGrade === "Standard"
-                                  ? COLORS.warning
-                                  : COLORS.error;
-
-                            return (
-                              <Card
-                                key={cropKey}
-                                style={styles.cropCard}
-                                padding={SPACING.md}
-                              >
-                                {/* Header */}
-                                <View style={styles.cropCardHeader}>
-                                  <Text style={styles.cropCardTitle}>
-                                    Fish #{cropIdx + 1}
-                                  </Text>
-                                  <View
-                                    style={[
-                                      styles.cropConfBadge,
-                                      {
-                                        backgroundColor:
-                                          COLORS.primaryLight + "20",
-                                      },
-                                    ]}
-                                  >
-                                    <Text
-                                      style={[
-                                        styles.cropConfText,
-                                        { color: COLORS.primaryLight },
-                                      ]}
-                                    >
-                                      {(crop.yolo_confidence * 100).toFixed(1)}%
-                                      YOLO
-                                    </Text>
-                                  </View>
-                                </View>
-
-                                {/* Species */}
-                                <Text style={styles.cropSpecies}>
-                                  {translatedSpecies}
-                                </Text>
-                                <Text style={styles.cropScientific}>
-                                  {supplement.scientificName}
-                                </Text>
-
-                                {/* Disease */}
-                                <View style={styles.cropRow}>
-                                  <Text style={styles.cropLabel}>Health:</Text>
-                                  <Text
-                                    style={[
-                                      styles.cropValue,
-                                      { color: diseaseColor },
-                                    ]}
-                                  >
-                                    {translatedDisease}
-                                  </Text>
-                                </View>
-
-                                {/* Quality */}
-                                <View style={styles.cropRow}>
-                                  <Text style={styles.cropLabel}>Quality:</Text>
-                                  <Text
-                                    style={[
-                                      styles.cropValue,
-                                      { color: qualColor },
-                                    ]}
-                                  >
-                                    {supplement.qualityGrade}
-                                  </Text>
-                                </View>
-
-                                {/* Measurements */}
-                                <View style={styles.cropMetrics}>
-                                  <View style={styles.cropMetricItem}>
-                                    <Text style={styles.cropMetricVal}>
-                                      {supplement.weight_kg.toFixed(2)} kg
-                                    </Text>
-                                    <Text style={styles.cropMetricLabel}>
-                                      Weight
-                                    </Text>
-                                  </View>
-                                  <View style={styles.cropMetricItem}>
-                                    <Text style={styles.cropMetricVal}>
-                                      {supplement.length_mm} mm
-                                    </Text>
-                                    <Text style={styles.cropMetricLabel}>
-                                      Length
-                                    </Text>
-                                  </View>
-                                  <View style={styles.cropMetricItem}>
-                                    <Text style={styles.cropMetricVal}>
-                                      ₹{supplement.estimatedValue}
-                                    </Text>
-                                    <Text style={styles.cropMetricLabel}>
-                                      Value
-                                    </Text>
-                                  </View>
-                                </View>
-
-                                {/* Legal size */}
-                                <View
-                                  style={[
-                                    styles.cropRow,
-                                    { marginBottom: SPACING.sm },
-                                  ]}
-                                >
-                                  <Text style={styles.cropLabel}>
-                                    Legal Size:
-                                  </Text>
-                                  <Text
-                                    style={[
-                                      styles.cropValue,
-                                      {
-                                        color: supplement.isSustainable
-                                          ? COLORS.success
-                                          : COLORS.error,
-                                      },
-                                    ]}
-                                  >
-                                    {supplement.isSustainable
-                                      ? "Legal"
-                                      : "Below Limit"}
-                                  </Text>
-                                </View>
-
-                                {/* Detailed Report Button */}
-                                <Button
-                                  label="View Detailed Report →"
-                                  onPress={() =>
-                                    router.push("/analysis/detail")
-                                  }
-                                  variant="outline"
-                                  size="sm"
-                                  fullWidth
-                                />
-                              </Card>
-                            );
-                          })}
-                        </>
-                      );
-                    })()}
-                  </View>
-                ) : (
-                  !groupAnalysis.images[currentImageIndex].error && (
-                    <Card style={styles.noFishCard} padding={SPACING.xl}>
-                      <Text style={styles.noFishText}>
-                        🔍 No fish detected in this image
-                      </Text>
-                    </Card>
-                  )
                 )}
               </View>
             )}
@@ -1583,7 +1429,7 @@ export default function UploadScreen() {
               {},
             );
             return (
-              <View style={styles.groupSection}>
+              <View className="mt-xl">
                 <View
                   style={{
                     flexDirection: "row",
@@ -1597,55 +1443,59 @@ export default function UploadScreen() {
                     size={16}
                     color={COLORS.primaryLight}
                   />
-                  <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>
+                  <Text className="text-base font-semibold text-textPrimary mb-sm" style={{ marginBottom: 0 }}>
                     Offline Analysis Summary
                   </Text>
                 </View>
-                <Card style={styles.aggregateCard} padding={SPACING.xl}>
-                  <View style={styles.aggregateHeader}>
-                    <Text style={styles.aggregateTitle}>
+                <Card className="mb-md" padding={SPACING.xl}>
+                  <View className="flex-row justify-between items-center mb-md pb-sm border-b border-borderDark">
+                    <Text className="flex-1 text-lg font-bold text-primaryLight mr-sm">
                       {totalFish} Fish Detected (On-Device)
                     </Text>
                     {offlineProcessingTime !== null && (
-                      <Text style={styles.aggregateTime}>
+                      <Text className="text-xs text-textMuted">
                         {offlineProcessingTime}ms
                       </Text>
                     )}
                   </View>
 
-                  <View style={styles.aggregateRow}>
-                    <Text style={styles.aggregateLabel}>Total Fish</Text>
-                    <Text style={styles.aggregateValue}>{totalFish}</Text>
+                  <View className="flex-row justify-between items-center py-sm border-b border-borderDark">
+                    <Text className="text-sm text-textSecondary font-medium">Total Fish</Text>
+                    <Text className="text-lg font-bold text-textPrimary">{totalFish}</Text>
                   </View>
 
-                  <View style={styles.aggregateRow}>
-                    <Text style={styles.aggregateLabel}>Avg Confidence</Text>
-                    <Text style={styles.aggregateValue}>
+                  <View className="flex-row justify-between items-center py-sm border-b border-borderDark">
+                    <Text className="text-sm text-textSecondary font-medium">Avg Confidence</Text>
+                    <Text className="text-lg font-bold text-textPrimary">
                       {(avgConf * 100).toFixed(1)}%
                     </Text>
                   </View>
 
+                  <View className="flex-row justify-between items-center py-sm border-b border-borderDark">
+                    <Text className="text-sm text-textSecondary font-medium">Total Weight</Text>
+                    <Text className="text-lg font-bold text-textPrimary">{totalWeightKg.toFixed(2)} kg</Text>
+                  </View>
 
+                  {totalValue > 0 && (
+                    <View className="flex-row justify-between items-center py-sm border-b border-borderDark">
+                      <Text className="text-sm text-textSecondary font-medium">Total Value</Text>
+                      <Text className="text-lg font-bold text-textPrimary">₹{totalValue}</Text>
+                    </View>
+                  )}
 
-                  <View style={styles.aggregateRow}>
-                    <Text style={styles.aggregateLabel}>Disease Status</Text>
+                  <View className="flex-row justify-between items-center py-sm border-b border-borderDark">
+                    <Text className="text-sm text-textSecondary font-medium">Disease Status</Text>
                     <View
-                      style={[
-                        styles.diseaseStatusBadge,
-                        {
+                      className="rounded-full px-sm py-[4px]" style={{
                           backgroundColor: anyDisease
                             ? COLORS.warning + "20"
                             : COLORS.success + "20",
-                        },
-                      ]}
+                        }}
                     >
                       <Text
-                        style={[
-                          styles.diseaseStatusText,
-                          {
+                        className="text-sm font-bold" style={{
                             color: anyDisease ? COLORS.warning : COLORS.success,
-                          },
-                        ]}
+                          }}
                       >
                         {anyDisease ? "Disease Detected" : "All Healthy"}
                       </Text>
@@ -1653,27 +1503,24 @@ export default function UploadScreen() {
                   </View>
 
                   {Object.keys(speciesDist).length > 0 && (
-                    <View style={styles.speciesDistSection}>
-                      <Text style={styles.speciesDistTitle}>
+                    <View className="mt-md pt-md border-t border-borderDark">
+                      <Text className="text-sm font-bold text-textPrimary mb-sm">
                         Species Breakdown
                       </Text>
                       {Object.entries(speciesDist)
                         .sort(([, a], [, b]) => b - a)
                         .map(([species, count]) => (
-                          <View key={species} style={styles.speciesDistRow}>
-                            <Text style={styles.speciesDistName}>
+                          <View key={species} className="flex-row justify-between items-center mb-sm">
+                            <Text className="text-sm text-textSecondary flex-1">
                               {translateFishName(species, locale)}
                             </Text>
-                            <View style={styles.speciesDistRight}>
-                              <Text style={styles.speciesDistCount}>
+                            <View className="flex-row items-center gap-sm flex-1">
+                              <Text className="text-sm font-bold text-textPrimary min-w-[30px] text-right">
                                 {count}
                               </Text>
-                              <View style={styles.speciesDistBar}>
+                              <View className="flex-1 h-[8px] bg-borderDark rounded-full overflow-hidden">
                                 <View
-                                  style={[
-                                    styles.speciesDistBarFill,
-                                    { width: `${(count / totalFish) * 100}%` },
-                                  ]}
+                                  className="h-full bg-primaryLight rounded-full" style={{ width: `${(count / totalFish) * 100}%` }}
                                 />
                               </View>
                             </View>
@@ -1684,7 +1531,7 @@ export default function UploadScreen() {
                 </Card>
 
                 {/* Action Buttons */}
-                <View style={styles.actionButtonsRow}>
+                <View className="flex-row gap-md mt-md mb-md">
                   <Button
                     label="View Detailed Report"
                     onPress={() => router.push("/analysis/detail")}
@@ -1693,7 +1540,7 @@ export default function UploadScreen() {
                       <Ionicons name="document-text" size={16} color="#fff" />
                     }
                     iconPosition="left"
-                    style={styles.actionButton}
+                    className="flex-1"
                   />
                   <Button
                     label="Export PDF"
@@ -1715,7 +1562,7 @@ export default function UploadScreen() {
                       />
                     }
                     iconPosition="left"
-                    style={styles.actionButton}
+                    className="flex-1"
                   />
                 </View>
                 <Button
@@ -1745,829 +1592,8 @@ export default function UploadScreen() {
         onClose={handleWeightCancel}
         onConfirm={handleWeightComplete}
         species={weightSpecies}
-        fishIndex={0}
+        fishIndex={weightFishIndex}
       />
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.bgDark },
-  scroll: { flex: 1 },
-  content: { padding: SPACING.lg, paddingBottom: SPACING["3xl"] },
-
-  header: {
-    marginBottom: SPACING.lg,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  title: {
-    fontSize: FONTS.sizes.xl,
-    color: COLORS.textPrimary,
-    fontWeight: FONTS.weights.bold,
-  },
-  subtitle: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-    marginTop: SPACING.xs,
-  },
-
-  uploadZone: {
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.xl,
-    borderWidth: 1.5,
-    borderColor: COLORS.border,
-    borderStyle: "dashed",
-    padding: SPACING.xl,
-    alignItems: "center",
-    marginBottom: SPACING.lg,
-  },
-
-  uploadTitle: {
-    fontSize: FONTS.sizes.lg,
-    color: COLORS.textPrimary,
-    fontWeight: FONTS.weights.semibold,
-    marginBottom: SPACING.xs,
-  },
-  uploadHint: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-    textAlign: "center",
-    marginBottom: SPACING.lg,
-    paddingHorizontal: SPACING.lg,
-  },
-  uploadBtns: {
-    flexDirection: "row",
-    gap: SPACING.sm,
-    marginBottom: SPACING.lg,
-  },
-  uploadBtn: { minWidth: 130 },
-
-  tipsBox: {
-    backgroundColor: COLORS.bgDark,
-    borderRadius: RADIUS.lg,
-    padding: SPACING.md,
-    width: "100%",
-  },
-  tipsTitle: {
-    color: COLORS.primaryLight,
-    fontWeight: FONTS.weights.bold,
-    fontSize: FONTS.sizes.sm,
-    marginBottom: SPACING.xs,
-  },
-  tipItem: {
-    color: COLORS.textMuted,
-    fontSize: FONTS.sizes.sm,
-    lineHeight: 22,
-  },
-
-  previewCard: {
-    borderRadius: RADIUS["2xl"],
-    overflow: "hidden",
-    marginBottom: SPACING.md,
-    position: "relative",
-  },
-  previewImage: { width: "100%", height: 280 },
-  locationBadge: {
-    position: "absolute",
-    top: SPACING.md,
-    left: SPACING.md,
-    backgroundColor: "rgba(0,0,0,0.7)",
-    borderRadius: RADIUS.full,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs,
-  },
-  locationText: {
-    color: "#fff",
-    fontSize: FONTS.sizes.xs,
-    fontFamily: "monospace",
-  },
-
-  progressCard: { marginBottom: SPACING.md },
-  progressLabel: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textPrimary,
-    fontWeight: FONTS.weights.medium,
-    marginBottom: SPACING.sm,
-  },
-  progressBar: {
-    height: 8,
-    backgroundColor: COLORS.border,
-    borderRadius: RADIUS.full,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    backgroundColor: COLORS.primary,
-    borderRadius: RADIUS.full,
-  },
-  progressHint: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    marginTop: SPACING.xs,
-    fontStyle: "italic",
-    textAlign: "center",
-  },
-  offlineStepRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 5,
-    marginTop: SPACING.xs,
-  },
-
-  controlRow: {
-    flexDirection: "row",
-    gap: SPACING.md,
-    marginBottom: SPACING.md,
-  },
-  analyzeBtn: { flex: 1 },
-  removeBtn: { minWidth: 90 },
-
-  offlineToggleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: SPACING.xs,
-    marginBottom: SPACING.sm,
-  },
-  offlineToggle: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-  },
-  offlineToggleBox: {
-    width: 14,
-    height: 14,
-    borderRadius: 3,
-    borderWidth: 1.5,
-    borderColor: COLORS.textMuted,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  offlineToggleBoxOn: {
-    borderColor: COLORS.primary,
-    backgroundColor: COLORS.primary,
-  },
-  offlineToggleText: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-  },
-
-  resultsSection: { marginTop: SPACING.sm },
-  sectionTitle: {
-    fontSize: FONTS.sizes.base,
-    fontWeight: FONTS.weights.semibold,
-    color: COLORS.textPrimary,
-    marginBottom: SPACING.sm,
-  },
-
-  resultCard: { marginBottom: SPACING.md },
-  statusRow: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    marginBottom: SPACING.sm,
-  },
-  statusChip: {
-    borderRadius: RADIUS.full,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: SPACING.xs,
-    maxWidth: "75%",
-  },
-  statusChipText: {
-    fontSize: FONTS.sizes.xs,
-    fontWeight: FONTS.weights.bold,
-  },
-  speciesLabel: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    fontWeight: FONTS.weights.bold,
-    letterSpacing: 1.5,
-    textTransform: "uppercase",
-    marginBottom: SPACING.xs,
-  },
-  speciesName: {
-    fontSize: FONTS.sizes.xl,
-    color: COLORS.primaryLight,
-    fontWeight: FONTS.weights.bold,
-    marginBottom: SPACING.xs,
-    flexShrink: 1,
-    maxWidth: "100%",
-  },
-  scientificName: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-    fontStyle: "italic",
-    marginBottom: SPACING.md,
-    flexShrink: 1,
-    maxWidth: "100%",
-  },
-  confidenceRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  confidenceLabel: { fontSize: FONTS.sizes.sm, color: COLORS.textMuted },
-  confidenceValue: {
-    fontSize: FONTS.sizes.md,
-    color: COLORS.textPrimary,
-    fontWeight: FONTS.weights.bold,
-  },
-
-  metricsGrid: {
-    flexDirection: "row",
-    gap: SPACING.md,
-    marginBottom: SPACING.md,
-  },
-  metricCard: { flex: 1 },
-
-  metricLabel: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-    marginBottom: SPACING.xs,
-  },
-  metricValue: {
-    fontSize: FONTS.sizes.xl,
-    color: COLORS.textPrimary,
-    fontWeight: FONTS.weights.extrabold,
-  },
-  metricSub: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textSubtle,
-    marginTop: SPACING.xs,
-  },
-
-  marketCard: { marginBottom: SPACING.md },
-  marketRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    flexWrap: "wrap",
-    gap: SPACING.md,
-  },
-  marketPrimaryBlock: { flexShrink: 1, minWidth: 170, maxWidth: "100%" },
-  marketSecondaryBlock: { marginLeft: "auto", minWidth: 120, maxWidth: "100%" },
-  marketLabel: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.primaryLight,
-    fontWeight: FONTS.weights.bold,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-    marginBottom: SPACING.xs,
-  },
-  marketValue: {
-    fontSize: FONTS.sizes.xl,
-    color: COLORS.textPrimary,
-    fontWeight: FONTS.weights.extrabold,
-    flexShrink: 1,
-  },
-  marketRate: { fontSize: FONTS.sizes.xs, color: COLORS.textMuted },
-  legalLabel: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    textAlign: "right",
-    marginBottom: SPACING.xs,
-  },
-  legalBadge: {
-    borderRadius: RADIUS.full,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: SPACING.xs,
-  },
-  legalText: { fontSize: FONTS.sizes.xs, fontWeight: FONTS.weights.bold },
-
-  sustainCard: {
-    borderWidth: 1,
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: SPACING.sm,
-  },
-  sustainText: {
-    flex: 1,
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textSecondary,
-    lineHeight: 22,
-  },
-
-  modelStatusCard: { marginBottom: SPACING.md },
-  modelStatusTitle: {
-    color: COLORS.textPrimary,
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.bold,
-    marginBottom: SPACING.xs,
-  },
-  modelStatusPath: {
-    color: COLORS.textMuted,
-    fontSize: FONTS.sizes.xs,
-    fontFamily: "monospace",
-  },
-  modelRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: SPACING.sm,
-    paddingVertical: SPACING.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  modelDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginTop: 4,
-  },
-  modelRowLabel: {
-    color: COLORS.textSecondary,
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.semibold,
-  },
-  modelActionsRow: { marginTop: SPACING.md, flexDirection: "row" },
-  reloadButton: { minWidth: 150 },
-  modelStatusError: {
-    color: COLORS.warning,
-    fontSize: FONTS.sizes.xs,
-    marginTop: SPACING.sm,
-  },
-
-  // Detection styles
-  detectionSection: { marginTop: SPACING.sm, marginBottom: SPACING.md },
-  detectionCard: {
-    marginBottom: SPACING.sm,
-    overflow: "hidden",
-    borderRadius: RADIUS.xl,
-  },
-  detectingRow: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
-  detectingText: { color: COLORS.textMuted, fontSize: FONTS.sizes.sm },
-  cropsSection: { marginTop: SPACING.sm },
-  cropsTitle: {
-    color: COLORS.textSecondary,
-    fontSize: FONTS.sizes.sm,
-    marginBottom: SPACING.sm,
-    fontWeight: FONTS.weights.semibold,
-  },
-  cropsRow: { gap: SPACING.sm, paddingRight: SPACING.sm },
-  cropItem: {
-    width: 100,
-    height: 100,
-    borderRadius: RADIUS.md,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.bgCard,
-  },
-  cropImage: { width: "100%", height: "100%" },
-  detectionMeta: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    textAlign: "center",
-    fontFamily: "monospace",
-    marginTop: SPACING.xs,
-  },
-
-  // ── Offline per-fish result styles ──
-  offlineSection: { marginTop: SPACING.xl },
-  fishCard: { marginBottom: SPACING.md },
-  fishCardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: SPACING.sm,
-  },
-  fishCardTitle: {
-    fontSize: FONTS.sizes.md,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-  },
-  fishConfBadge: {
-    borderRadius: RADIUS.full,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 2,
-  },
-  fishConfText: {
-    fontSize: FONTS.sizes.xs,
-    fontWeight: FONTS.weights.bold,
-  },
-  fishSpecies: {
-    fontSize: FONTS.sizes.lg,
-    fontWeight: FONTS.weights.extrabold,
-    color: COLORS.primaryLight,
-    marginBottom: SPACING.sm,
-  },
-  fishRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: SPACING.xs,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  fishLabel: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-  },
-  fishValue: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.semibold,
-    color: COLORS.textPrimary,
-  },
-  fishMetrics: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginVertical: SPACING.md,
-    paddingVertical: SPACING.sm,
-    backgroundColor: COLORS.bgDark,
-    borderRadius: RADIUS.lg,
-  },
-  fishMetricItem: { alignItems: "center" },
-  fishMetricVal: {
-    fontSize: FONTS.sizes.md,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-  },
-  fishMetricLabel: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    marginTop: 2,
-  },
-  fishImages: {
-    flexDirection: "row",
-    gap: SPACING.md,
-    marginTop: SPACING.sm,
-  },
-  fishImgBox: {
-    flex: 1,
-    alignItems: "center",
-  },
-  fishImg: {
-    width: "100%",
-    height: 120,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  fishImgLabel: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    marginTop: SPACING.xs,
-  },
-  fishError: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.warning,
-    marginTop: SPACING.sm,
-    fontStyle: "italic",
-  },
-  modeBadge: {
-    alignItems: "center",
-    paddingVertical: SPACING.sm,
-    marginTop: SPACING.md,
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.lg,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  modeBadgeText: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textSecondary,
-    fontWeight: FONTS.weights.semibold,
-  },
-  modeBadgeSub: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    marginTop: 2,
-    fontFamily: "monospace",
-  },
-
-  // ── Multi-image preview styles ──
-  multiImageCard: {
-    marginBottom: SPACING.md,
-  },
-  multiImageTitle: {
-    fontSize: FONTS.sizes.md,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-    marginBottom: SPACING.sm,
-  },
-  multiImageScroll: {
-    gap: SPACING.sm,
-    paddingRight: SPACING.sm,
-  },
-  multiImageItem: {
-    width: 100,
-    height: 100,
-    borderRadius: RADIUS.md,
-    overflow: "hidden",
-    position: "relative",
-    borderWidth: 2,
-    borderColor: COLORS.border,
-  },
-  multiImageThumb: {
-    width: "100%",
-    height: "100%",
-  },
-  multiImageRemove: {
-    position: "absolute",
-    top: 4,
-    right: 4,
-    backgroundColor: COLORS.error,
-    borderRadius: RADIUS.full,
-    width: 24,
-    height: 24,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  multiImageRemoveText: {
-    color: "#fff",
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.bold,
-  },
-  multiImageIndex: {
-    position: "absolute",
-    bottom: 4,
-    left: 4,
-    backgroundColor: "rgba(0,0,0,0.7)",
-    color: "#fff",
-    fontSize: FONTS.sizes.xs,
-    paddingHorizontal: SPACING.xs,
-    paddingVertical: 2,
-    borderRadius: RADIUS.sm,
-    fontWeight: FONTS.weights.bold,
-  },
-  multiImageProgress: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 4,
-    backgroundColor: "rgba(0,0,0,0.3)",
-  },
-  multiImageProgressFill: {
-    height: "100%",
-    backgroundColor: COLORS.primary,
-  },
-
-  // ── Group analysis styles ──
-  groupSection: {
-    marginTop: SPACING.xl,
-  },
-  aggregateCard: {
-    marginBottom: SPACING.md,
-  },
-  aggregateHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: SPACING.md,
-    paddingBottom: SPACING.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  aggregateTitle: {
-    flex: 1,
-    fontSize: FONTS.sizes.lg,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.primaryLight,
-    marginRight: SPACING.sm,
-  },
-  aggregateTime: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-  },
-  aggregateRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: SPACING.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  aggregateLabel: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textSecondary,
-    fontWeight: FONTS.weights.medium,
-  },
-  aggregateValue: {
-    fontSize: FONTS.sizes.lg,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-  },
-  diseaseStatusBadge: {
-    borderRadius: RADIUS.full,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 4,
-  },
-  diseaseStatusText: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.bold,
-  },
-  speciesDistSection: {
-    marginTop: SPACING.md,
-    paddingTop: SPACING.md,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-  },
-  speciesDistTitle: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-    marginBottom: SPACING.sm,
-  },
-  speciesDistRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: SPACING.sm,
-  },
-  speciesDistName: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textSecondary,
-    flex: 1,
-  },
-  speciesDistRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.sm,
-    flex: 1,
-  },
-  speciesDistCount: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-    minWidth: 30,
-    textAlign: "right",
-  },
-  speciesDistBar: {
-    flex: 1,
-    height: 8,
-    backgroundColor: COLORS.border,
-    borderRadius: RADIUS.full,
-    overflow: "hidden",
-  },
-  speciesDistBarFill: {
-    height: "100%",
-    backgroundColor: COLORS.primaryLight,
-    borderRadius: RADIUS.full,
-  },
-
-  // ── Image navigation styles ──
-  imageNavSection: {
-    marginBottom: SPACING.md,
-  },
-  imageNavControls: {
-    flexDirection: "row",
-    gap: SPACING.md,
-    marginTop: SPACING.sm,
-  },
-
-  // ── Current image results styles ──
-  currentImageSection: {
-    marginTop: SPACING.sm,
-  },
-  currentImageCard: {
-    marginBottom: SPACING.md,
-    overflow: "hidden",
-  },
-  currentImagePreview: {
-    width: "100%",
-    height: 280,
-  },
-  errorCard: {
-    marginBottom: SPACING.md,
-    backgroundColor: COLORS.error + "10",
-    borderWidth: 1,
-    borderColor: COLORS.error + "40",
-  },
-  errorText: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.error,
-    textAlign: "center",
-  },
-  noFishCard: {
-    marginTop: SPACING.md,
-    alignItems: "center",
-  },
-  noFishText: {
-    fontSize: FONTS.sizes.md,
-    color: COLORS.textMuted,
-    textAlign: "center",
-  },
-
-  // ── Crop card styles (for group analysis) ──
-  cropCard: {
-    marginBottom: SPACING.md,
-  },
-  cropCardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: SPACING.sm,
-  },
-  cropCardTitle: {
-    fontSize: FONTS.sizes.md,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-  },
-  cropConfBadge: {
-    borderRadius: RADIUS.full,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 2,
-  },
-  cropConfText: {
-    fontSize: FONTS.sizes.xs,
-    fontWeight: FONTS.weights.bold,
-  },
-  cropSpecies: {
-    fontSize: FONTS.sizes.lg,
-    fontWeight: FONTS.weights.extrabold,
-    color: COLORS.primaryLight,
-    marginBottom: 2,
-  },
-  cropScientific: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-    fontStyle: "italic",
-    marginBottom: SPACING.sm,
-  },
-  cropRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: SPACING.xs,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  cropLabel: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-  },
-  cropValue: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.semibold,
-    color: COLORS.textPrimary,
-  },
-  cropMetrics: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginVertical: SPACING.md,
-    paddingVertical: SPACING.sm,
-    backgroundColor: COLORS.bgDark,
-    borderRadius: RADIUS.lg,
-  },
-  cropMetricItem: {
-    alignItems: "center",
-  },
-  cropMetricVal: {
-    fontSize: FONTS.sizes.md,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-  },
-  cropMetricLabel: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    marginTop: 2,
-  },
-  cropImages: {
-    flexDirection: "row",
-    gap: SPACING.sm,
-    marginTop: SPACING.sm,
-    flexWrap: "wrap",
-  },
-  cropImgBox: {
-    flex: 1,
-    minWidth: 100,
-    alignItems: "center",
-  },
-  cropImg: {
-    width: "100%",
-    height: 100,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  cropImgLabel: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    marginTop: SPACING.xs,
-  },
-  cropYoloConf: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    marginTop: SPACING.sm,
-    textAlign: "center",
-    fontFamily: "monospace",
-  },
-
-  // Action buttons
-  actionButtonsRow: {
-    flexDirection: "row",
-    gap: SPACING.md,
-    marginTop: SPACING.md,
-    marginBottom: SPACING.md,
-  },
-  actionButton: {
-    flex: 1,
-  },
-});

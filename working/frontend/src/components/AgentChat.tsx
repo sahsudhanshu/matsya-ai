@@ -30,6 +30,7 @@ import {
     X,
     Reply,
     Wrench,
+    Square
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -1737,9 +1738,15 @@ export default function AgentChat({
                     ),
                 );
             } catch (err: any) {
-                // If aborted (user switched chats), silently clean up
+                // If aborted (user switched chats or cancelled manually), clean up
                 if (err?.name === 'AbortError') {
-                    setMessages((prev) => prev.filter((m) => m.id !== tempAiMsgId));
+                    setMessages((prev) =>
+                        prev.map((m) =>
+                            m.id === tempAiMsgId
+                                ? { ...m, content: m.content + "\n\n*You canceled this response*", status: "sent" as MessageStatus }
+                                : m
+                        )
+                    );
                     return;
                 }
                 console.error("Chat error:", err);
@@ -2102,33 +2109,46 @@ export default function AgentChat({
                                     <Mic className={cn(isCompact ? "w-4 h-4" : "w-5 h-5")} />
                                 </button>
 
-                                <button
-                                    onClick={() => handleSend()}
-                                    disabled={!input.trim() || isTyping}
-                                    className={cn(
-                                        "shrink-0 rounded-full flex items-center justify-center transition-all",
-                                        isCompact ? "w-8 h-8" : "w-10 h-10",
-                                        input.trim() && !isTyping
-                                            ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:scale-105 active:scale-95"
-                                            : "bg-muted text-muted-foreground/40",
-                                    )}
-                                >
-                                    {isTyping ? (
-                                        <Loader2
+                                {isTyping ? (
+                                    <button
+                                        onClick={() => {
+                                            if (streamAbortRef.current) {
+                                                streamAbortRef.current.abort();
+                                            }
+                                        }}
+                                        className={cn(
+                                            "shrink-0 rounded-full flex items-center justify-center transition-all bg-red-500 text-white shadow-md shadow-red-500/20 hover:scale-105 active:scale-95",
+                                            isCompact ? "w-8 h-8" : "w-10 h-10",
+                                        )}
+                                        title="Cancel response"
+                                    >
+                                        <Square
                                             className={cn(
-                                                "animate-spin",
-                                                isCompact ? "w-4 h-4" : "w-4.5 h-4.5",
+                                                isCompact ? "w-3 h-3" : "w-4 h-4",
+                                                "fill-current"
                                             )}
                                         />
-                                    ) : (
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={() => handleSend()}
+                                        disabled={!input.trim()}
+                                        className={cn(
+                                            "shrink-0 rounded-full flex items-center justify-center transition-all",
+                                            isCompact ? "w-8 h-8" : "w-10 h-10",
+                                            input.trim()
+                                                ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:scale-105 active:scale-95"
+                                                : "bg-muted text-muted-foreground/40",
+                                        )}
+                                    >
                                         <Send
                                             className={cn(
                                                 isCompact ? "w-4 h-4" : "w-4.5 h-4.5",
                                                 "ml-0.5",
                                             )}
                                         />
-                                    )}
-                                </button>
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>

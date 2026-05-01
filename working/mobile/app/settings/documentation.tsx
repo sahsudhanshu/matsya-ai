@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
-  StyleSheet,
+  
   ScrollView,
   TouchableOpacity,
   TextInput,
@@ -56,21 +56,21 @@ export default function DocumentationScreen() {
     const isExpanded = selectedSection === item.id;
 
     return (
-      <Card padding={0} style={styles.sectionCard}>
+      <Card padding={0} className="mb-4 overflow-hidden">
         <TouchableOpacity
-          style={styles.sectionHeader}
+          className="flex-row items-center justify-between p-6"
           onPress={() => handleSectionPress(item.id)}
           activeOpacity={0.7}
         >
-          <View style={styles.sectionHeaderLeft}>
-            <View style={styles.iconContainer}>
+          <View className="flex-1 flex-row items-center gap-4">
+            <View className="h-[34px] w-[34px] items-center justify-center rounded-[12px] bg-[#1e40af20]">
               <Ionicons
                 name={item.icon as any}
                 size={24}
                 color={COLORS.primary}
               />
             </View>
-            <Text style={styles.sectionTitle}>{item.title}</Text>
+            <Text className="flex-1 text-[13px] font-semibold text-[#f8fafc]">{item.title}</Text>
           </View>
           <Ionicons
             name={isExpanded ? "chevron-up" : "chevron-down"}
@@ -80,7 +80,7 @@ export default function DocumentationScreen() {
         </TouchableOpacity>
 
         {isExpanded && (
-          <View style={styles.sectionContent}>
+          <View className="border-t border-[#334155] px-6 pb-6">
             <Markdown style={markdownStyles}>{item.content}</Markdown>
           </View>
         )}
@@ -89,26 +89,26 @@ export default function DocumentationScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={["top"]}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#0f172a" }} edges={["top"]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View className="flex-row items-center justify-between border-b border-[#334155] px-6 py-4">
         <TouchableOpacity
           onPress={() => router.back()}
-          style={styles.backButton}
+          className="p-1"
           activeOpacity={0.7}
         >
           <Ionicons name="arrow-back" size={24} color={COLORS.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.title}>Documentation</Text>
-        <View style={styles.placeholder} />
+        <Text className="text-[17px] font-bold text-[#f8fafc]">Documentation</Text>
+        <View className="w-10" />
       </View>
 
       {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <View style={styles.searchBar}>
+      <View className="px-6 py-4">
+        <View className="flex-row items-center gap-2 rounded-[20px] border border-[#334155] bg-[#1e293b] px-4 py-2">
           <Ionicons name="search" size={20} color={COLORS.textMuted} />
           <TextInput
-            style={styles.searchInput}
+            className="flex-1 py-1 text-[12px] text-[#f8fafc]"
             placeholder="Search documentation..."
             placeholderTextColor={COLORS.textMuted}
             value={searchQuery}
@@ -134,127 +134,23 @@ export default function DocumentationScreen() {
         data={filteredSections}
         renderItem={renderSectionItem}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={{ padding: 24, paddingBottom: 64 }}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
-          <View style={styles.emptyState}>
+          <View className="items-center justify-center py-[48px]">
             <Ionicons
               name="document-text-outline"
               size={64}
               color={COLORS.textMuted}
             />
-            <Text style={styles.emptyText}>No documentation found</Text>
-            <Text style={styles.emptySubtext}>Try a different search term</Text>
+            <Text className="mt-4 text-[13px] font-semibold text-[#e2e8f0]">No documentation found</Text>
+            <Text className="mt-1 text-[12px] text-[#94a3b8]">Try a different search term</Text>
           </View>
         }
       />
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: COLORS.bgDark,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  backButton: {
-    padding: SPACING.xs,
-  },
-  title: {
-    fontSize: FONTS.sizes.lg,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-  },
-  placeholder: {
-    width: 40,
-  },
-  searchContainer: {
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
-  },
-  searchBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.xl,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
-    gap: SPACING.sm,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textPrimary,
-    paddingVertical: SPACING.xs,
-  },
-  listContent: {
-    padding: SPACING.lg,
-    paddingBottom: SPACING["3xl"],
-  },
-  sectionCard: {
-    marginBottom: SPACING.md,
-    overflow: "hidden",
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: SPACING.lg,
-  },
-  sectionHeaderLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.md,
-    flex: 1,
-  },
-  iconContainer: {
-    width: 34,
-    height: 34,
-    borderRadius: RADIUS.md,
-    backgroundColor: COLORS.primary + "20",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  sectionTitle: {
-    fontSize: FONTS.sizes.base,
-    fontWeight: FONTS.weights.semibold,
-    color: COLORS.textPrimary,
-    flex: 1,
-  },
-  sectionContent: {
-    paddingHorizontal: SPACING.lg,
-    paddingBottom: SPACING.lg,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-  },
-  emptyState: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: SPACING["2xl"],
-  },
-  emptyText: {
-    fontSize: FONTS.sizes.base,
-    fontWeight: FONTS.weights.semibold,
-    color: COLORS.textSecondary,
-    marginTop: SPACING.md,
-  },
-  emptySubtext: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-    marginTop: SPACING.xs,
-  },
-});
 
 // Markdown styles
 const markdownStyles = {

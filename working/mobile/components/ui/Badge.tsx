@@ -1,6 +1,6 @@
 import React from "react";
-import { View, Text, StyleSheet, ViewStyle } from "react-native";
-import { COLORS, FONTS, SPACING, RADIUS } from "../../lib/constants";
+import { View, Text, ViewStyle } from "react-native";
+import { COLORS } from "../../lib/constants";
 
 interface BadgeProps {
   label: string;
@@ -8,6 +8,7 @@ interface BadgeProps {
   size?: "sm" | "md";
   icon?: React.ReactNode;
   style?: ViewStyle;
+  className?: string;
 }
 
 const VARIANT_COLORS = {
@@ -24,48 +25,26 @@ export function Badge({
   size = "md",
   icon,
   style,
+  className,
 }: BadgeProps) {
   const color = VARIANT_COLORS[variant];
 
   return (
     <View
-      style={[
-        styles.badge,
-        { backgroundColor: `${color}22` },
-        size === "sm" && styles.badgeSm,
-        style,
-      ]}
+      style={[{ backgroundColor: `${color}22` }, style]}
+      className={`flex-row flex-wrap items-center rounded-full self-start ${
+        size === "sm" ? "px-1.5 py-0.5" : "px-3 py-1"
+      } ${className || ""}`}
     >
-      {icon && <View style={styles.icon}>{icon}</View>}
-      <Text style={[styles.text, { color }, size === "sm" && styles.textSm]}>
+      {icon && <View className="mr-1">{icon}</View>}
+      <Text
+        style={{ color }}
+        className={`font-semibold tracking-wide ${
+          size === "sm" ? "text-[10px]" : "text-xs"
+        }`}
+      >
         {label}
       </Text>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  badge: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 3,
-    borderRadius: RADIUS.full,
-    alignSelf: "flex-start",
-  },
-  badgeSm: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  icon: {
-    marginRight: SPACING.xs,
-  },
-  text: {
-    fontSize: FONTS.sizes.xs,
-    fontWeight: FONTS.weights.semibold,
-    letterSpacing: 0.2,
-  },
-  textSm: {
-    fontSize: 10,
-  },
-});

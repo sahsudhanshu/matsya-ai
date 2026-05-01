@@ -1,7 +1,7 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS, FONTS, SPACING, RADIUS } from "../../lib/constants";
+import { COLORS } from "../../lib/constants";
 
 interface GroupStatsProps {
   stats: {
@@ -15,41 +15,41 @@ interface GroupStatsProps {
 
 export function GroupStats({ stats }: GroupStatsProps) {
   return (
-    <View style={styles.container}>
-      <View style={styles.grid}>
-        <View style={styles.statCard}>
+    <View className="mb-md">
+      <View className="flex-row flex-wrap gap-sm">
+        <View className="flex-1 min-w-[47%] bg-bgCard rounded-lg p-sm items-center border border-borderDark">
           <Ionicons name="fish" size={32} color={COLORS.primary} />
-          <Text style={styles.statValue}>{stats.totalFishCount}</Text>
-          <Text style={styles.statLabel}>Total Fish</Text>
+          <Text className="text-base font-bold text-textPrimary my-xs">{stats.totalFishCount}</Text>
+          <Text className="text-xs text-textMuted text-center">Total Fish</Text>
         </View>
 
-        <View style={styles.statCard}>
+        <View className="flex-1 min-w-[47%] bg-bgCard rounded-lg p-sm items-center border border-borderDark">
           <Ionicons name="list" size={32} color={COLORS.secondary} />
-          <Text style={styles.statValue}>{stats.speciesCount}</Text>
-          <Text style={styles.statLabel}>Species</Text>
+          <Text className="text-base font-bold text-textPrimary my-xs">{stats.speciesCount}</Text>
+          <Text className="text-xs text-textMuted text-center">Species</Text>
         </View>
 
-        <View style={styles.statCard}>
+        <View className="flex-1 min-w-[47%] bg-bgCard rounded-lg p-sm items-center border border-borderDark">
           <Ionicons name="scale" size={24} color={COLORS.success} />
-          <Text style={styles.statValue}>
+          <Text className="text-base font-bold text-textPrimary my-xs">
             {stats.totalWeight.toFixed(1)} kg
           </Text>
-          <Text style={styles.statLabel}>Est. Weight</Text>
+          <Text className="text-xs text-textMuted text-center">Est. Weight</Text>
         </View>
 
-        <View style={styles.statCard}>
+        <View className="flex-1 min-w-[47%] bg-bgCard rounded-lg p-sm items-center border border-borderDark">
           <Ionicons name="cash" size={24} color={COLORS.warning} />
-          <Text style={styles.statValue}>₹{stats.totalValue.toFixed(0)}</Text>
-          <Text style={styles.statLabel}>Est. Value</Text>
+          <Text className="text-base font-bold text-textPrimary my-xs">₹{stats.totalValue.toFixed(0)}</Text>
+          <Text className="text-xs text-textMuted text-center">Est. Value</Text>
         </View>
       </View>
 
       {stats.diseaseDetected && (
-        <View style={styles.warningCard}>
+        <View className="flex-row items-center gap-md bg-error/15 rounded-lg p-md mt-sm border border-error/30">
           <Ionicons name="warning" size={24} color={COLORS.warning} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.warningTitle}>Disease Detected</Text>
-            <Text style={styles.warningText}>
+          <View className="flex-1">
+            <Text className="text-sm font-bold text-error mb-0.5">Disease Detected</Text>
+            <Text className="text-xs text-textSecondary">
               Some fish show signs of disease. Review individual detections for
               details.
             </Text>
@@ -59,57 +59,3 @@ export function GroupStats({ stats }: GroupStatsProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    marginBottom: SPACING.md,
-  },
-  grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: SPACING.sm,
-  },
-  statCard: {
-    flex: 1,
-    minWidth: "47%",
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.lg,
-    padding: SPACING.sm,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  statValue: {
-    fontSize: FONTS.sizes.base,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-    marginBottom: SPACING.xs,
-    marginTop: SPACING.xs,
-  },
-  statLabel: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    textAlign: "center",
-  },
-  warningCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.md,
-    backgroundColor: COLORS.error + "15",
-    borderRadius: RADIUS.lg,
-    padding: SPACING.md,
-    marginTop: SPACING.sm,
-    borderWidth: 1,
-    borderColor: COLORS.error + "30",
-  },
-  warningTitle: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.error,
-    marginBottom: 2,
-  },
-  warningText: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textSecondary,
-  },
-});

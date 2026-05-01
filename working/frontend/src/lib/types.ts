@@ -93,22 +93,13 @@ export function generateMockSupplement(speciesLabel: string, cropIndex: number =
     );
     const data = match || { name: speciesLabel, scientific: `${speciesLabel} sp.`, minSize: 150, pricePerKg: 300 };
 
-    const hash = speciesLabel.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) + cropIndex * 137;
-    const r1 = seededRandom(hash);
-    const r2 = seededRandom(hash + 31);
-    const r3 = seededRandom(hash + 67);
-
-    const length_mm = data.minSize + r1 * 200;
-    const weight_g = (length_mm / 1000) ** 3 * 1e6 * (0.01 + r2 * 0.005);
-    const grade = GRADES[Math.floor(r3 * 2.5)] ?? "Standard";
-
     return {
         scientificName: data.scientific,
-        qualityGrade: grade,
-        isSustainable: length_mm >= data.minSize,
-        weight_kg: Math.round(weight_g) / 1000,
-        length_mm: Math.round(length_mm),
+        qualityGrade: "Standard",
+        isSustainable: false,
+        weight_kg: 0,
+        length_mm: 0,
         marketPricePerKg: data.pricePerKg,
-        estimatedValue: Math.round((weight_g / 1000) * data.pricePerKg),
+        estimatedValue: 0,
     };
 }

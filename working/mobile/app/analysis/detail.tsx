@@ -7,7 +7,7 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  StyleSheet,
+  
   ScrollView,
   Image,
   TouchableOpacity,
@@ -32,6 +32,7 @@ import type { OfflineDetectionResult } from "../../lib/offline-inference";
 import type { MLCropResult } from "../../lib/types";
 import { WeightEstimateModal } from "../../components/WeightEstimateModal";
 import { SyncService } from "../../lib/sync-service";
+import { generateMockSupplement } from "../../lib/species-data";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const SCREEN_HEIGHT = Dimensions.get("window").height;
@@ -40,6 +41,47 @@ const YOLO_CONFIDENCE_THRESHOLD = 0.3;
 // ─── Design constants ─────────────────────────────────────────────────────────
 const CARD_PADDING = SPACING.md;
 const CARD_RADIUS = RADIUS.lg;
+
+// ─── Step Pipeline Components ────────────────────────────────────────────────
+
+function StepItem({
+  title,
+  subtitle,
+  value,
+  icon,
+  color,
+  isLast = false,
+}: {
+  title: string;
+  subtitle?: string;
+  value: string | React.ReactNode;
+  icon: React.ComponentProps<typeof Ionicons>["name"];
+  color: string;
+  isLast?: boolean;
+}) {
+  return (
+    <View className="flex-row">
+      <View className="items-center mr-3">
+        <View 
+          className="w-8 h-8 rounded-full items-center justify-center z-10"
+          style={{ backgroundColor: color + "20", borderWidth: 1, borderColor: color + "40" }}
+        >
+          <Ionicons name={icon} size={16} color={color} />
+        </View>
+        {!isLast && <View className="w-[2px] flex-1 bg-[#334155] -my-1" />}
+      </View>
+      <View className="flex-1 pb-6">
+        <View className="flex-row justify-between items-start">
+          <View>
+            <Text className="text-[10px] font-bold tracking-[1px] text-[#64748b] uppercase">{title}</Text>
+            {subtitle && <Text className="text-[12px] font-medium text-[#94a3b8] mt-0.5">{subtitle}</Text>}
+          </View>
+          <View>{typeof value === "string" ? <Text className="text-[14px] font-bold text-[#f8fafc]">{value}</Text> : value}</View>
+        </View>
+      </View>
+    </View>
+  );
+}
 
 // ─── Primitive helpers ────────────────────────────────────────────────────────
 
@@ -53,14 +95,12 @@ function ConfBadge({ value, label }: { value: number; label?: string }) {
         : COLORS.error;
   return (
     <View
-      style={[
-        s.confBadge,
-        { backgroundColor: color + "1A", borderColor: color + "55" },
-      ]}
+      className="min-w-[60px] items-center rounded-sm border px-2 py-1"
+      style={{ backgroundColor: color + "1A", borderColor: color + "55" }}
     >
-      <Text style={[s.confPct, { color }]}>{pct}%</Text>
+      <Text className="text-[12px] font-extrabold" style={{ color }}>{pct}%</Text>
       {label && (
-        <Text style={[s.confLabel, { color: color + "BB" }]}>
+        <Text className="mt-[1px] text-[9px] tracking-[0.5px]" style={{ color: color + "BB" }}>
           {label.toUpperCase()}
         </Text>
       )}
@@ -70,10 +110,10 @@ function ConfBadge({ value, label }: { value: number; label?: string }) {
 
 function SectionDivider({ title }: { title: string }) {
   return (
-    <View style={s.sectionDividerRow}>
-      <View style={s.sectionDividerLine} />
-      <Text style={s.sectionDividerText}>{title.toUpperCase()}</Text>
-      <View style={s.sectionDividerLine} />
+    <View className="mb-2 mt-4 flex-row items-center gap-2">
+      <View className="h-[1px] flex-1 bg-[#334155]" />
+      <Text className="text-[10px] font-bold tracking-[1.4px] text-[#64748b]">{title.toUpperCase()}</Text>
+      <View className="h-[1px] flex-1 bg-[#334155]" />
     </View>
   );
 }
@@ -96,22 +136,22 @@ function FullscreenImageViewer({
       onRequestClose={onClose}
     >
       <StatusBar hidden />
-      <View style={s.lightboxOverlay}>
+      <View className="flex-1 items-center justify-center bg-black">
         <Image
           source={{ uri }}
           style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}
           resizeMode="contain"
         />
         <TouchableOpacity
-          style={s.lightboxCloseBtn}
+          className="absolute right-4 top-[52px] z-10 rounded-full bg-white/15 p-2"
           onPress={onClose}
           activeOpacity={0.8}
         >
           <Ionicons name="close" size={22} color={COLORS.textPrimary} />
         </TouchableOpacity>
-        <View style={s.lightboxHint}>
+        <View className="absolute bottom-9 flex-row items-center gap-1.5 rounded-full bg-white/10 px-4 py-1.5">
           <Ionicons name="expand-outline" size={13} color={COLORS.textMuted} />
-          <Text style={s.lightboxHintText}>Tap anywhere to close</Text>
+          <Text className="text-[10px] text-[#94a3b8]">Tap anywhere to close</Text>
         </View>
       </View>
     </Modal>
@@ -128,9 +168,9 @@ function InfoRow({
   mono?: boolean;
 }) {
   return (
-    <View style={s.infoRow}>
-      <Text style={s.infoLabel}>{label}</Text>
-      <Text style={[s.infoValue, mono && s.mono]}>{value}</Text>
+    <View className="flex-row items-start justify-between border-b border-[#334155] py-1 gap-2">
+      <Text className="flex-1 text-[12px] text-[#94a3b8]">{label}</Text>
+      <Text className={`flex-2 text-right text-[12px] text-[#f8fafc] ${mono ? "font-mono text-[#e2e8f0]" : ""}`}>{value}</Text>
     </View>
   );
 }
@@ -148,15 +188,15 @@ function StatPill({
   accentColor: string;
 }) {
   return (
-    <View style={[s.statPill, { borderTopColor: accentColor }]}>
+    <View className="flex-1 items-center border-t-[3px] px-1 py-4" style={{ borderTopColor: accentColor }}>
       <Ionicons
         name={iconName}
         size={20}
         color={accentColor}
         style={{ marginBottom: 4 }}
       />
-      <Text style={[s.statPillValue, { color: accentColor }]}>{value}</Text>
-      <Text style={s.statPillLabel}>{label}</Text>
+      <Text className="text-[15px] font-extrabold" style={{ color: accentColor }}>{value}</Text>
+      <Text className="mt-0.5 text-[10px] tracking-[0.8px] text-[#94a3b8] uppercase">{label}</Text>
     </View>
   );
 }
@@ -173,7 +213,7 @@ function OnlineDetailPage() {
   const totalImages = groupAnalysis.images.length;
 
   return (
-    <ScrollView style={s.scroll} contentContainerStyle={s.content}>
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 96 }}>
       {viewerUri && (
         <FullscreenImageViewer
           uri={viewerUri}
@@ -182,8 +222,7 @@ function OnlineDetailPage() {
       )}
       {/* ── Identity & Meta ── */}
       <SectionDivider title="Report Identity" />
-      <Card style={s.card} padding={SPACING.md}>
-        <InfoRow label="Group ID" value={groupId} mono />
+      <Card className="mb-2 p-4">
         <InfoRow
           label="Processed At"
           value={new Date(groupAnalysis.processedAt).toLocaleString()}
@@ -198,44 +237,6 @@ function OnlineDetailPage() {
         <InfoRow label="Images" value={`${totalImages}`} />
       </Card>
 
-      {/* ── Aggregate Stats ── */}
-      <SectionDivider title="Aggregate Statistics" />
-      <Card style={s.card} padding={SPACING.md}>
-        <InfoRow
-          label="Total Fish Detected"
-          value={`${groupAnalysis.aggregateStats.totalFishCount}`}
-        />
-        <InfoRow
-          label="Average YOLO Confidence"
-          value={`${(groupAnalysis.aggregateStats.averageConfidence * 100).toFixed(1)}%`}
-        />
-        <InfoRow
-          label="Total Estimated Weight"
-          value={`${groupAnalysis.aggregateStats.totalEstimatedWeight.toFixed(3)} kg`}
-        />
-        <InfoRow
-          label="Total Estimated Value"
-          value={`₹${groupAnalysis.aggregateStats.totalEstimatedValue.toLocaleString("en-IN")}`}
-        />
-        <InfoRow
-          label="Disease Status"
-          value={
-            groupAnalysis.aggregateStats.diseaseDetected
-              ? "Disease Detected"
-              : "All Healthy"
-          }
-        />
-        {Object.keys(groupAnalysis.aggregateStats.speciesDistribution).length >
-          0 && (
-          <View style={s.speciesDist}>
-            <Text style={s.speciesDistTitle}>Species Distribution</Text>
-            <OnlineSpeciesDist
-              dist={groupAnalysis.aggregateStats.speciesDistribution}
-            />
-          </View>
-        )}
-      </Card>
-
       {/* ── Image-level tabs ── */}
       <SectionDivider title="Per-Image Analysis" />
 
@@ -243,15 +244,15 @@ function OnlineDetailPage() {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={s.tabsRow}
+          contentContainerStyle={{ gap: 8, paddingBottom: 8 }}
         >
           {groupAnalysis.images.map((_, idx) => (
             <TouchableOpacity
               key={idx}
-              style={[s.tab, activeTab === idx && s.tabActive]}
+              className={`rounded-full border px-4 py-1 ${activeTab === idx ? "border-[#3b82f6] bg-[#3b82f622]" : "border-[#334155] bg-[#1e293b]"}`}
               onPress={() => setActiveTab(idx)}
             >
-              <Text style={[s.tabText, activeTab === idx && s.tabTextActive]}>
+              <Text className={`text-[12px] ${activeTab === idx ? "font-semibold text-[#3b82f6]" : "text-[#94a3b8]"}`}>
                 Image {idx + 1}
               </Text>
             </TouchableOpacity>
@@ -266,31 +267,37 @@ function OnlineDetailPage() {
             ([, crop]) => crop.yolo_confidence >= YOLO_CONFIDENCE_THRESHOLD,
           );
 
+          let globalOffset = 0;
+          for (let i = 0; i < activeTab; i++) {
+            const prevImg = groupAnalysis.images[i];
+            if (prevImg && prevImg.crops) {
+              globalOffset += Object.values(prevImg.crops).filter(
+                (c) => c.yolo_confidence >= YOLO_CONFIDENCE_THRESHOLD,
+              ).length;
+            }
+          }
+
           return (
             <View>
-              <Card style={s.card} padding={SPACING.md}>
-                <InfoRow label="Image Index" value={`${img.imageIndex + 1}`} />
-                <InfoRow label="S3 Key" value={img.s3Key} mono />
-                {img.error && (
-                  <View style={s.errorBox}>
-                    <Text style={s.errorText}>{img.error}</Text>
-                  </View>
-                )}
-              </Card>
+              {img.error && (
+                <View className="mb-4 rounded-md border border-[#ef444440] bg-[#ef444415] p-2 mx-4">
+                  <Text className="text-[12px] text-[#ef4444]">{img.error}</Text>
+                </View>
+              )}
 
               {imageUris[activeTab] && (
-                <View style={s.onlineImageWrapper}>
-                  <Text style={s.onlineImageLabel}>SOURCE IMAGE</Text>
+                <View className="mb-4">
+                  <Text className="mb-1 text-[10px] font-bold tracking-[1.2px] text-[#64748b]">SOURCE IMAGE</Text>
                   <TouchableOpacity
                     onPress={() => setViewerUri(imageUris[activeTab])}
                     activeOpacity={0.9}
                   >
                     <Image
                       source={{ uri: imageUris[activeTab] }}
-                      style={s.sourceImg}
+                      className="h-[210px] w-full bg-[#1e293b]"
                       resizeMode="contain"
                     />
-                    <View style={s.imageExpandBadge}>
+                    <View className="absolute right-1 top-1 rounded-sm bg-black/55 p-1">
                       <Ionicons
                         name="expand-outline"
                         size={14}
@@ -302,18 +309,18 @@ function OnlineDetailPage() {
               )}
 
               {img.yolo_image_url && (
-                <View style={s.onlineImageWrapper}>
-                  <Text style={s.onlineImageLabel}>YOLO DETECTION OUTPUT</Text>
+                <View className="mb-4">
+                  <Text className="mb-1 text-[10px] font-bold tracking-[1.2px] text-[#64748b]">YOLO DETECTION OUTPUT</Text>
                   <TouchableOpacity
                     onPress={() => setViewerUri(img.yolo_image_url as string)}
                     activeOpacity={0.9}
                   >
                     <Image
                       source={{ uri: img.yolo_image_url }}
-                      style={s.yoloImg}
+                      className="h-[200px] w-full rounded-[16px] bg-[#1e293b]"
                       resizeMode="contain"
                     />
-                    <View style={s.imageExpandBadge}>
+                    <View className="absolute right-1 top-1 rounded-sm bg-black/55 p-1">
                       <Ionicons
                         name="expand-outline"
                         size={14}
@@ -325,8 +332,8 @@ function OnlineDetailPage() {
               )}
 
               {crops.length === 0 ? (
-                <Card style={s.card} padding={SPACING.xl}>
-                  <Text style={s.emptyText}>
+                <Card className="mb-2 p-8">
+                  <Text className="text-center text-[12px] text-[#94a3b8]">
                     No fish met the 30% confidence threshold.
                   </Text>
                 </Card>
@@ -337,6 +344,9 @@ function OnlineDetailPage() {
                     cropKey={cropKey}
                     crop={crop}
                     index={ci}
+                    globalIndex={globalOffset + ci}
+                    imageUri={imageUris[activeTab]}
+                    groupId={groupId}
                   />
                 ))
               )}
@@ -354,11 +364,11 @@ function OnlineSpeciesDist({ dist }: { dist: Record<string, number> }) {
       {Object.entries(dist)
         .sort(([, a], [, b]) => b - a)
         .map(([species, count]) => (
-          <View key={species} style={s.speciesRow}>
-            <Text style={s.speciesRowName}>
+          <View key={species} className="flex-row justify-between py-1">
+            <Text className="flex-1 text-[12px] text-[#e2e8f0]">
               {translateFishName(species, locale)}
             </Text>
-            <Text style={s.speciesRowCount}>{count}</Text>
+            <Text className="text-[12px] font-bold text-[#f8fafc]">{count}</Text>
           </View>
         ))}
     </>
@@ -369,11 +379,44 @@ function OnlineCropDetail({
   cropKey,
   crop,
   index,
+  globalIndex,
+  imageUri,
+  groupId,
 }: {
   cropKey: string;
   crop: MLCropResult;
   index: number;
+  globalIndex: number;
+  imageUri: string;
+  groupId?: string;
 }) {
+  const [weightModalVisible, setWeightModalVisible] = useState(false);
+  const [estimatedWeightG, setEstimatedWeightG] = useState<number | null>(null);
+
+  // Use globalIndex for the storage key to avoid collisions if multiple images have same URI
+  // (though imageUris usually differ, it's safer).
+  const storageKey = `weight_estimate::${groupId || imageUri}::${globalIndex}`;
+
+  useEffect(() => {
+    AsyncStorage.getItem(storageKey).then((val) => {
+      if (val !== null) setEstimatedWeightG(parseFloat(val));
+    });
+  }, [storageKey]);
+
+  const handleConfirmWeight = async (wg: number) => {
+    setEstimatedWeightG(wg);
+    setWeightModalVisible(false);
+    await AsyncStorage.setItem(storageKey, String(wg));
+    await SyncService.queueChange("weight_estimate", {
+      groupId,
+      imageUri,
+      fishIndex: globalIndex,
+      species: crop.species.label,
+      weightG: wg,
+      timestamp: new Date().toISOString(),
+    });
+  };
+
   const { locale } = useLanguage();
   const diseaseColor =
     crop.disease.label === "Healthy Fish" ? COLORS.success : COLORS.warning;
@@ -381,7 +424,14 @@ function OnlineCropDetail({
   const [viewerUri, setViewerUri] = useState<string | null>(null);
 
   return (
-    <View style={[s.fishCard, { borderLeftColor: accentColor }]}>
+    <View className="mb-4 overflow-hidden rounded-[20px] border border-[#334155] bg-[#1e293b]">
+      <WeightEstimateModal
+        visible={weightModalVisible}
+        onClose={() => setWeightModalVisible(false)}
+        onConfirm={handleConfirmWeight}
+        species={crop.species.label}
+        fishIndex={globalIndex}
+      />
       {viewerUri && (
         <FullscreenImageViewer
           uri={viewerUri}
@@ -389,112 +439,110 @@ function OnlineCropDetail({
         />
       )}
       {/* Header */}
-      <View
-        style={[s.fishCardHeader, { borderBottomColor: accentColor + "30" }]}
-      >
-        <View
-          style={[
-            s.fishNumberPill,
-            {
-              backgroundColor: accentColor + "20",
-              borderColor: accentColor + "50",
-            },
-          ]}
-        >
-          <Text style={[s.fishNumberText, { color: accentColor }]}>
-            FISH #{index + 1}
-          </Text>
+      <View className="flex-row items-center justify-between border-b bg-[#0f172a] px-4 py-3" style={{ borderBottomColor: "#334155" }}>
+        <View className="flex-row items-center gap-2">
+          <View
+            className="rounded-full px-3 py-1"
+            style={{ backgroundColor: accentColor + "20" }}
+          >
+            <Text className="text-[12px] font-extrabold tracking-[1px]" style={{ color: accentColor }}>
+              FISH #{index + 1}
+            </Text>
+          </View>
         </View>
-        <ConfBadge value={crop.yolo_confidence} label="YOLO" />
+        <View className="flex-row items-center gap-2">
+          <Ionicons name="cloud-done-outline" size={16} color="#64748b" />
+          <Text className="text-[10px] font-bold text-[#64748b]">CLOUD ANALYSIS</Text>
+        </View>
       </View>
 
-      {/* Species */}
-      <View style={s.speciesSection}>
-        <Text style={s.speciesMainName}>
-          {translateFishName(crop.species.label, locale)}
-        </Text>
-        <Text style={s.speciesScientific}>{crop.species.label}</Text>
-      </View>
-
-      {/* Health Banner */}
-      <View
-        style={[
-          s.healthBanner,
-          {
-            backgroundColor: diseaseColor + "15",
-            borderColor: diseaseColor + "35",
-          },
-        ]}
-      >
-        <Ionicons
-          name={
-            crop.disease.label === "Healthy Fish"
-              ? "checkmark-circle-outline"
-              : "warning-outline"
-          }
-          size={20}
-          color={diseaseColor}
+      {/* Step Pipeline */}
+      <View className="px-5 pt-6">
+        <StepItem
+          title="Detection"
+          subtitle="YOLOv8 Vision Model"
+          icon="scan-outline"
+          color={COLORS.primaryLight}
+          value={<ConfBadge value={crop.yolo_confidence} />}
         />
-        <View style={s.healthBannerBody}>
-          <Text style={s.healthBannerLabel}>HEALTH STATUS</Text>
-          <Text style={[s.healthBannerValue, { color: diseaseColor }]}>
-            {translateDiseaseName(crop.disease.label, locale)}
-          </Text>
-        </View>
-        <ConfBadge value={crop.disease.confidence} label="Conf" />
-      </View>
 
-      {/* Species confidence */}
-      <View style={s.inlineConfRow}>
-        <Text style={s.inlineConfLabel}>Species Confidence</Text>
-        <ConfBadge value={crop.species.confidence} label="Species" />
+        <StepItem
+          title="Species Identification"
+          subtitle={crop.species.label}
+          icon="fish-outline"
+          color={COLORS.secondaryLight}
+          value={
+            <View className="items-end">
+              <Text className="text-[16px] font-bold text-[#f8fafc]">{translateFishName(crop.species.label, locale)}</Text>
+              <ConfBadge value={crop.species.confidence} />
+            </View>
+          }
+        />
+
+        <StepItem
+          title="Health Assessment"
+          subtitle={translateDiseaseName(crop.disease.label, locale)}
+          icon={crop.disease.label === "Healthy Fish" ? "checkmark-circle-outline" : "warning-outline"}
+          color={diseaseColor}
+          value={<ConfBadge value={crop.disease.confidence} />}
+        />
+
+        <StepItem
+          title="Weight Estimation"
+          subtitle={estimatedWeightG !== null ? "AI Calculated" : "Awaiting Input"}
+          icon="scale-outline"
+          color={COLORS.accentLight}
+          isLast
+          value={
+            estimatedWeightG !== null ? (
+              <TouchableOpacity onPress={() => setWeightModalVisible(true)} className="items-end">
+                <Text className="text-[16px] font-bold text-[#10b981]">{estimatedWeightG.toFixed(1)} g</Text>
+                <Text className="text-[10px] text-[#94a3b8]">≈ {(estimatedWeightG / 1000).toFixed(2)} kg</Text>
+              </TouchableOpacity>
+            ) : (
+              <Button
+                label="Estimate"
+                onPress={() => setWeightModalVisible(true)}
+                variant="primary"
+                size="sm"
+                className="py-1 px-2"
+              />
+            )
+          }
+        />
       </View>
 
       {/* Images */}
       {(crop.crop_url ||
         crop.species.gradcam_url ||
         crop.disease.gradcam_url) && (
-        <View style={s.visualSection}>
-          <Text style={s.visualSectionTitle}>VISUAL ANALYSIS</Text>
-          <View style={s.imagesGrid}>
+        <View className="mx-4 mb-4 mt-2">
+          <SectionDivider title="Visual Evidence" />
+          <View className="flex-row gap-2 mt-2">
             {crop.crop_url && (
               <CropImageBox
                 uri={crop.crop_url}
-                label="Detection Crop"
+                label="Detection"
                 onPress={() => setViewerUri(crop.crop_url!)}
               />
             )}
             {crop.species.gradcam_url && (
               <CropImageBox
                 uri={crop.species.gradcam_url}
-                label="Species GradCAM"
+                label="Species"
                 onPress={() => setViewerUri(crop.species.gradcam_url!)}
               />
             )}
             {crop.disease.gradcam_url && (
               <CropImageBox
                 uri={crop.disease.gradcam_url}
-                label="Disease GradCAM"
+                label="Health"
                 onPress={() => setViewerUri(crop.disease.gradcam_url!)}
               />
             )}
           </View>
         </View>
       )}
-
-      {/* Bounding box + Crop ID */}
-      <View style={s.metaChipsRow}>
-        <View style={s.metaChip}>
-          <Text style={s.metaChipKey}>BBOX</Text>
-          <Text style={s.metaChipVal}>[{crop.bbox.join(", ")}]</Text>
-        </View>
-        <View style={s.metaChip}>
-          <Text style={s.metaChipKey}>CROP ID</Text>
-          <Text style={s.metaChipVal} numberOfLines={1}>
-            {cropKey}
-          </Text>
-        </View>
-      </View>
     </View>
   );
 }
@@ -504,28 +552,28 @@ function OnlineCropDetail({
 function OfflineDetailPage() {
   const data = getAnalysisData();
   if (!data || data.mode !== "offline") return null;
-  const { offlineResults, processingTime, imageUri, location } = data;
+  const { offlineResults, processingTime, imageUri, location, localRecordId } = data;
 
   const processSecs = (processingTime / 1000).toFixed(1);
 
   return (
-    <ScrollView style={s.scroll} contentContainerStyle={s.content}>
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 96 }}>
       {/* ── Report Summary Strip ── */}
-      <View style={s.statsStrip}>
+      <View className="mb-2 mt-1 flex-row overflow-hidden rounded-[16px] border border-[#334155] bg-[#1e293b]">
         <StatPill
           iconName="hardware-chip-outline"
           value="On-Device"
           label="Mode"
           accentColor={COLORS.primaryLight}
         />
-        <View style={s.statsStripDivider} />
+        <View className="my-2 w-[1px] bg-[#334155]" />
         <StatPill
           iconName="timer-outline"
           value={`${processSecs}s`}
           label="Processing"
           accentColor={COLORS.accentLight}
         />
-        <View style={s.statsStripDivider} />
+        <View className="my-2 w-[1px] bg-[#334155]" />
         <StatPill
           iconName="fish-outline"
           value={`${offlineResults.length}`}
@@ -536,13 +584,13 @@ function OfflineDetailPage() {
 
       {/* ── Location chip ── */}
       {location && (
-        <View style={s.locationChip}>
+        <View className="mb-1 flex-row items-center gap-1.5 self-center rounded-full border border-[#334155] bg-[#1e293b] px-4 py-1.5">
           <Ionicons
             name="location-outline"
             size={12}
             color={COLORS.textMuted}
           />
-          <Text style={s.locationChipText}>
+          <Text className="text-[10px] tracking-[0.4px] text-[#94a3b8]">
             {location.lat.toFixed(4)}°N, {location.lng.toFixed(4)}°E
           </Text>
         </View>
@@ -552,19 +600,19 @@ function OfflineDetailPage() {
       {imageUri && (
         <>
           <SectionDivider title="Source Image" />
-          <View style={s.sourceImageCard}>
+          <View className="mb-1 overflow-hidden rounded-[16px] border border-[#334155] bg-[#1e293b]">
             <Image
               source={{ uri: imageUri }}
-              style={s.sourceImg}
+              className="h-[210px] w-full bg-[#1e293b]"
               resizeMode="cover"
             />
-            <View style={s.sourceImageFooter}>
+            <View className="flex-row items-center gap-1.5 bg-[#0f172ae5] px-4 py-1">
               <Ionicons
                 name="camera-outline"
                 size={12}
                 color={COLORS.textMuted}
               />
-              <Text style={s.sourceImageFooterText}>Analysis Source</Text>
+              <Text className="text-[10px] tracking-[0.5px] text-[#94a3b8]">Analysis Source</Text>
             </View>
           </View>
         </>
@@ -579,6 +627,7 @@ function OfflineDetailPage() {
           det={det}
           index={idx}
           imageUri={imageUri}
+          localRecordId={localRecordId}
         />
       ))}
     </ScrollView>
@@ -589,10 +638,12 @@ function OfflineFishDetail({
   det,
   index,
   imageUri,
+  localRecordId,
 }: {
   det: OfflineDetectionResult;
   index: number;
   imageUri: string;
+  localRecordId?: string;
 }) {
   const [weightModalVisible, setWeightModalVisible] = useState(false);
   const [estimatedWeightG, setEstimatedWeightG] = useState<number | null>(null);
@@ -609,13 +660,19 @@ function OfflineFishDetail({
     setEstimatedWeightG(wg);
     setWeightModalVisible(false);
     await AsyncStorage.setItem(storageKey, String(wg));
-    await SyncService.queueChange("weight_estimate", {
-      imageUri,
-      fishIndex: index,
-      species: det.species,
-      weightG: wg,
-      timestamp: new Date().toISOString(),
-    });
+    
+    if (localRecordId) {
+      const { updateLocalDetectionWeight } = await import("../../lib/local-history");
+      await updateLocalDetectionWeight(localRecordId, index, wg);
+    } else {
+      await SyncService.queueChange("weight_estimate", {
+        imageUri,
+        fishIndex: index,
+        species: det.species,
+        weightG: wg,
+        timestamp: new Date().toISOString(),
+      });
+    }
   };
 
   const { locale } = useLanguage();
@@ -632,7 +689,7 @@ function OfflineFishDetail({
     det.disease === "Healthy Fish" ? COLORS.success : COLORS.warning;
 
   return (
-    <View style={[s.fishCard, { borderLeftColor: qualColor }]}>
+    <View className="mb-4 overflow-hidden rounded-[20px] border border-[#334155] bg-[#1e293b]">
       <WeightEstimateModal
         visible={weightModalVisible}
         onClose={() => setWeightModalVisible(false)}
@@ -648,134 +705,99 @@ function OfflineFishDetail({
       )}
 
       {/* ── Card Header ── */}
-      <View style={[s.fishCardHeader, { borderBottomColor: qualColor + "30" }]}>
-        <View
-          style={[
-            s.fishNumberPill,
-            {
-              backgroundColor: qualColor + "20",
-              borderColor: qualColor + "55",
-            },
-          ]}
-        >
-          <Text style={[s.fishNumberText, { color: qualColor }]}>
-            FISH #{index + 1}
-          </Text>
+      <View className="flex-row items-center justify-between border-b bg-[#0f172a] px-4 py-3" style={{ borderBottomColor: "#334155" }}>
+        <View className="flex-row items-center gap-2">
+          <View
+            className="rounded-full px-3 py-1"
+            style={{ backgroundColor: COLORS.secondaryLight + "20" }}
+          >
+            <Text className="text-[12px] font-extrabold tracking-[1px]" style={{ color: COLORS.secondaryLight }}>
+              FISH #{index + 1}
+            </Text>
+          </View>
         </View>
-        <ConfBadge value={det.speciesConfidence} label="Species" />
+        <View className="flex-row items-center gap-2">
+          <Ionicons name="phone-portrait-outline" size={16} color="#64748b" />
+          <Text className="text-[10px] font-bold text-[#64748b]">OFFLINE SCAN</Text>
+        </View>
       </View>
 
-      {/* ── Species Name ── */}
-      <View style={s.speciesSection}>
-        <Text style={s.speciesMainName}>
-          {translateFishName(det.species, locale)}
-        </Text>
-        <Text style={s.speciesScientific}>{det.species}</Text>
-      </View>
-
-      {/* ── Health & Disease Banner ── */}
-      <View
-        style={[
-          s.healthBanner,
-          {
-            backgroundColor: healthColor + "14",
-            borderColor: healthColor + "35",
-          },
-        ]}
-      >
-        <Ionicons
-          name={
-            det.disease === "Healthy Fish"
-              ? "checkmark-circle-outline"
-              : "warning-outline"
-          }
-          size={20}
-          color={healthColor}
+      {/* Step Pipeline */}
+      <View className="px-5 pt-6">
+        <StepItem
+          title="Detection"
+          subtitle="On-Device YOLO"
+          icon="scan-outline"
+          color={COLORS.primaryLight}
+          value={<ConfBadge value={det.speciesConfidence} />}
         />
-        <View style={s.healthBannerBody}>
-          <Text style={s.healthBannerLabel}>HEALTH STATUS</Text>
-          <Text style={[s.healthBannerValue, { color: healthColor }]}>
-            {translateDiseaseName(det.disease, locale)}
-          </Text>
-        </View>
-        <ConfBadge value={det.diseaseConfidence} label="Conf" />
-      </View>
 
-      {/* ── Weight Estimation ── */}
-      {estimatedWeightG !== null ? (
-        <View
-          style={[
-            s.weightResultCard,
-            { borderColor: COLORS.secondaryLight + "45" },
-          ]}
-        >
-          <View style={s.weightResultCardHeader}>
-            <View style={s.weightResultTitleRow}>
-              <Ionicons
-                name="scale-outline"
-                size={13}
-                color={COLORS.textMuted}
+        <StepItem
+          title="Species Identification"
+          subtitle={det.species}
+          icon="fish-outline"
+          color={COLORS.secondaryLight}
+          value={
+            <View className="items-end">
+              <Text className="text-[16px] font-bold text-[#f8fafc]">{translateFishName(det.species, locale)}</Text>
+              <ConfBadge value={det.speciesConfidence} />
+            </View>
+          }
+        />
+
+        <StepItem
+          title="Health Assessment"
+          subtitle={translateDiseaseName(det.disease, locale)}
+          icon={det.disease === "Healthy Fish" ? "checkmark-circle-outline" : "warning-outline"}
+          color={healthColor}
+          value={<ConfBadge value={det.diseaseConfidence} />}
+        />
+
+        <StepItem
+          title="Weight Estimation"
+          subtitle={estimatedWeightG !== null ? "Manual Entry" : (det.weightG > 0 ? "AI Calculated" : "Awaiting Input")}
+          icon="scale-outline"
+          color={COLORS.accentLight}
+          isLast
+          value={
+            estimatedWeightG !== null || det.weightG > 0 ? (
+              <TouchableOpacity onPress={() => setWeightModalVisible(true)} className="items-end">
+                <Text className="text-[16px] font-bold text-[#10b981]">
+                  {estimatedWeightG !== null ? estimatedWeightG.toFixed(1) : det.weightG.toFixed(1)} g
+                </Text>
+                <Text className="text-[10px] text-[#94a3b8]">
+                  ≈ {((estimatedWeightG !== null ? estimatedWeightG : det.weightG) / 1000).toFixed(2)} kg
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <Button
+                label="Enter Weight"
+                onPress={() => setWeightModalVisible(true)}
+                variant="primary"
+                size="sm"
+                className="py-1 px-2"
               />
-              <Text style={s.weightResultCardTitle}>Estimated Weight</Text>
-            </View>
-            <TouchableOpacity
-              onPress={() => setWeightModalVisible(true)}
-              activeOpacity={0.7}
-            >
-              <Text style={s.weightRecalcBtn}>Recalculate</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={s.weightResultCardBody}>
-            <Text style={s.weightGrams}>
-              {estimatedWeightG.toFixed(1)}
-              <Text style={s.weightUnit}> g</Text>
-            </Text>
-            <Text style={s.weightKg}>
-              ≈ {(estimatedWeightG / 1000).toFixed(3)} kg
-            </Text>
-          </View>
-        </View>
-      ) : (
-        <TouchableOpacity
-          style={s.weightCta}
-          onPress={() => setWeightModalVisible(true)}
-          activeOpacity={0.8}
-        >
-          <View style={s.weightCtaLeft}>
-            <Ionicons
-              name="scale-outline"
-              size={22}
-              color={COLORS.primaryLight}
-            />
-            <View>
-              <Text style={s.weightCtaTitle}>Estimate Weight</Text>
-              <Text style={s.weightCtaSub}>On-Device AI Model</Text>
-            </View>
-          </View>
-          <Ionicons
-            name="chevron-forward"
-            size={18}
-            color={COLORS.primaryLight}
-          />
-        </TouchableOpacity>
-      )}
+            )
+          }
+        />
+      </View>
 
       {/* ── Visual Analysis ── */}
       {(det.cropUri || det.gradcamUri) && (
-        <View style={s.visualSection}>
-          <Text style={s.visualSectionTitle}>VISUAL ANALYSIS</Text>
-          <View style={s.imagesGrid}>
+        <View className="mx-4 mb-4 mt-2">
+          <SectionDivider title="Visual Evidence" />
+          <View className="flex-row gap-2 mt-2">
             {det.cropUri && (
               <CropImageBox
                 uri={det.cropUri}
-                label="Detection Crop"
+                label="Detection"
                 onPress={() => setViewerUri(det.cropUri!)}
               />
             )}
             {det.gradcamUri && (
               <CropImageBox
                 uri={det.gradcamUri}
-                label="GradCAM Heatmap"
+                label="GradCAM"
                 onPress={() => setViewerUri(det.gradcamUri!)}
               />
             )}
@@ -783,18 +805,10 @@ function OfflineFishDetail({
         </View>
       )}
 
-      {/* ── Bounding Box ── */}
-      <View style={s.metaChipsRow}>
-        <View style={s.metaChip}>
-          <Text style={s.metaChipKey}>BOUNDING BOX (px)</Text>
-          <Text style={s.metaChipVal}>[{det.bbox.join(", ")}]</Text>
-        </View>
-      </View>
-
       {/* ── Error ── */}
       {det.error && (
-        <View style={s.errorBox}>
-          <Text style={s.errorText}>{det.error}</Text>
+        <View className="mb-2 mx-4 rounded-md border border-[#ef444440] bg-[#ef444415] p-2">
+          <Text className="text-[12px] text-[#ef4444]">{det.error}</Text>
         </View>
       )}
     </View>
@@ -813,13 +827,13 @@ function CropImageBox({
   onPress: () => void;
 }) {
   return (
-    <TouchableOpacity style={s.imgBox} onPress={onPress} activeOpacity={0.85}>
-      <Image source={{ uri }} style={s.imgBoxImg} resizeMode="cover" />
-      <View style={s.lightboxIconOverlay}>
+    <TouchableOpacity className="flex-1 overflow-hidden rounded-[12px] border border-[#334155] bg-[#0f172a]" onPress={onPress} activeOpacity={0.85}>
+      <Image source={{ uri }} className="w-full aspect-square" resizeMode="cover" />
+      <View className="absolute right-1.5 top-1.5 rounded-sm bg-black/50 p-[3px]">
         <Ionicons name="expand-outline" size={13} color={COLORS.textPrimary} />
       </View>
-      <View style={s.imgBoxFooter}>
-        <Text style={s.imgBoxLabel}>{label}</Text>
+      <View className="bg-[#0f172af0] px-1 py-1">
+        <Text className="text-center text-[10px] text-[#94a3b8]">{label}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -831,7 +845,7 @@ export default function DetailedAnalysisScreen() {
   const data = getAnalysisData();
 
   return (
-    <SafeAreaView style={s.safe}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#0f172a" }}>
       <Stack.Screen
         options={{
           title: "Detailed Analysis Report",
@@ -843,8 +857,8 @@ export default function DetailedAnalysisScreen() {
       />
 
       {!data ? (
-        <View style={s.emptyPage}>
-          <Text style={s.emptyPageText}>No analysis data available.</Text>
+        <View className="flex-1 items-center justify-center p-[48px]">
+          <Text className="text-center text-[12px] text-[#94a3b8]">No analysis data available.</Text>
           <Button
             label="Go Back"
             onPress={() => router.back()}
@@ -860,562 +874,3 @@ export default function DetailedAnalysisScreen() {
     </SafeAreaView>
   );
 }
-
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
-const s = StyleSheet.create({
-  // ── Shell ──
-  safe: { flex: 1, backgroundColor: COLORS.bgDark },
-  scroll: { flex: 1 },
-  content: {
-    paddingHorizontal: SPACING.md,
-    paddingTop: SPACING.sm,
-    paddingBottom: 96,
-  },
-
-  emptyPage: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: SPACING["2xl"],
-  },
-  emptyPageText: {
-    color: COLORS.textMuted,
-    fontSize: FONTS.sizes.sm,
-    textAlign: "center",
-  },
-  emptyText: {
-    color: COLORS.textMuted,
-    fontSize: FONTS.sizes.sm,
-    textAlign: "center",
-  },
-
-  // ── Section divider ──
-  sectionDividerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: SPACING.md,
-    marginBottom: SPACING.sm,
-    gap: SPACING.sm,
-  },
-  sectionDividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: COLORS.border,
-  },
-  sectionDividerText: {
-    fontSize: FONTS.sizes.xs,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textSubtle,
-    letterSpacing: 1.4,
-  },
-
-  // ── Stats strip ──
-  statsStrip: {
-    flexDirection: "row",
-    backgroundColor: COLORS.bgCard,
-    borderRadius: CARD_RADIUS,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    overflow: "hidden",
-    marginTop: SPACING.xs,
-    marginBottom: SPACING.sm,
-  },
-  statPill: {
-    flex: 1,
-    alignItems: "center",
-    paddingVertical: SPACING.md,
-    paddingHorizontal: SPACING.xs,
-    borderTopWidth: 3,
-  },
-  statPillValue: {
-    fontSize: FONTS.sizes.md,
-    fontWeight: FONTS.weights.extrabold,
-  },
-  statPillLabel: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    marginTop: 2,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  statsStripDivider: {
-    width: 1,
-    backgroundColor: COLORS.border,
-    marginVertical: SPACING.sm,
-  },
-
-  // ── Location chip ──
-  locationChip: {
-    alignSelf: "center",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.full,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    paddingVertical: 5,
-    paddingHorizontal: SPACING.md,
-    marginBottom: SPACING.xs,
-  },
-  locationChipText: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    letterSpacing: 0.4,
-  },
-
-  // ── Source image card ──
-  sourceImageCard: {
-    borderRadius: CARD_RADIUS,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    marginBottom: SPACING.xs,
-    backgroundColor: COLORS.bgCard,
-  },
-  sourceImg: {
-    width: "100%",
-    height: 210,
-    backgroundColor: COLORS.bgCard,
-  },
-  sourceImageFooter: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: COLORS.bgDark + "E5",
-    paddingVertical: SPACING.xs,
-    paddingHorizontal: SPACING.md,
-  },
-  sourceImageFooterText: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    letterSpacing: 0.5,
-  },
-
-  // ── Fish card ──
-  fishCard: {
-    backgroundColor: COLORS.bgCard,
-    borderRadius: CARD_RADIUS,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderLeftWidth: 4,
-    marginBottom: SPACING.md,
-    overflow: "hidden",
-  },
-  fishCardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: CARD_PADDING,
-    paddingVertical: SPACING.sm,
-    backgroundColor: COLORS.bgDark,
-    borderBottomWidth: 1,
-  },
-  fishNumberPill: {
-    borderRadius: RADIUS.sm,
-    borderWidth: 1,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 4,
-  },
-  fishNumberText: {
-    fontSize: FONTS.sizes.xs,
-    fontWeight: FONTS.weights.extrabold,
-    letterSpacing: 1.2,
-  },
-
-  // ── Species ──
-  speciesSection: {
-    paddingHorizontal: CARD_PADDING,
-    paddingTop: SPACING.md,
-    paddingBottom: SPACING.sm,
-  },
-  speciesMainName: {
-    fontSize: FONTS.sizes["2xl"],
-    fontWeight: FONTS.weights.extrabold,
-    color: COLORS.textPrimary,
-    lineHeight: 32,
-  },
-  speciesScientific: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textSubtle,
-    fontStyle: "italic",
-    marginTop: 2,
-  },
-
-  // ── Health banner ──
-  healthBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginHorizontal: CARD_PADDING,
-    marginBottom: SPACING.sm,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    paddingVertical: SPACING.sm,
-    paddingHorizontal: SPACING.md,
-    gap: SPACING.sm,
-  },
-  healthBannerBody: { flex: 1 },
-  healthBannerLabel: {
-    fontSize: 10,
-    color: COLORS.textSubtle,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  healthBannerValue: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.bold,
-    marginTop: 1,
-  },
-
-  // ── Weight CTA ──
-  weightCta: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginHorizontal: CARD_PADDING,
-    marginBottom: SPACING.sm,
-    backgroundColor: COLORS.primary + "28",
-    borderRadius: RADIUS.md,
-    borderWidth: 1.5,
-    borderColor: COLORS.primaryLight + "45",
-    paddingVertical: SPACING.sm,
-    paddingHorizontal: SPACING.md,
-  },
-  weightCtaLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.sm,
-  },
-  weightCtaTitle: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.primaryLight,
-  },
-  weightCtaSub: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    marginTop: 1,
-  },
-  // ── Weight result card ──
-  weightResultCard: {
-    marginHorizontal: CARD_PADDING,
-    marginBottom: SPACING.sm,
-    backgroundColor: COLORS.secondary + "1E",
-    borderRadius: RADIUS.md,
-    borderWidth: 1.5,
-    overflow: "hidden",
-  },
-  weightResultCardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.secondary + "28",
-  },
-  weightResultTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-  },
-  weightResultCardTitle: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    fontWeight: FONTS.weights.semibold,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  weightRecalcBtn: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.secondaryLight,
-    fontWeight: FONTS.weights.medium,
-  },
-  weightResultCardBody: {
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.md,
-    alignItems: "center",
-  },
-  weightGrams: {
-    fontSize: FONTS.sizes["2xl"],
-    fontWeight: FONTS.weights.extrabold,
-    color: COLORS.secondaryLight,
-  },
-  weightUnit: {
-    fontSize: FONTS.sizes.lg,
-    fontWeight: FONTS.weights.semibold,
-    color: COLORS.secondaryLight,
-  },
-  weightKg: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-    marginTop: 2,
-  },
-
-  // ── Visual analysis section ──
-  visualSection: {
-    marginHorizontal: CARD_PADDING,
-    marginBottom: SPACING.sm,
-  },
-  visualSectionTitle: {
-    fontSize: 10,
-    color: COLORS.textSubtle,
-    fontWeight: FONTS.weights.bold,
-    letterSpacing: 1.2,
-    marginBottom: SPACING.xs,
-    textTransform: "uppercase",
-  },
-  imagesGrid: {
-    flexDirection: "row",
-    gap: SPACING.sm,
-  },
-  imgBox: {
-    flex: 1,
-    borderRadius: RADIUS.md,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.bgDark,
-  },
-  imgBoxImg: {
-    width: "100%",
-    aspectRatio: 1,
-  },
-  imgBoxFooter: {
-    backgroundColor: COLORS.bgDark + "F0",
-    paddingVertical: 4,
-    paddingHorizontal: SPACING.xs,
-  },
-  imgBoxLabel: {
-    fontSize: 10,
-    color: COLORS.textMuted,
-    textAlign: "center",
-  },
-
-  // ── Meta chips ──
-  metaChipsRow: {
-    marginHorizontal: CARD_PADDING,
-    marginBottom: SPACING.sm,
-    gap: SPACING.xs,
-  },
-  metaChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.sm,
-    backgroundColor: COLORS.bgDark,
-    borderRadius: RADIUS.sm,
-    paddingVertical: SPACING.xs,
-    paddingHorizontal: SPACING.sm,
-    flexWrap: "wrap",
-  },
-  metaChipKey: {
-    fontSize: 10,
-    color: COLORS.textSubtle,
-    fontWeight: FONTS.weights.bold,
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-  },
-  metaChipVal: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textSecondary,
-    fontFamily: "monospace",
-    flex: 1,
-  },
-
-  // ── Inline conf row ──
-  inlineConfRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginHorizontal: CARD_PADDING,
-    marginBottom: SPACING.sm,
-  },
-  inlineConfLabel: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-  },
-
-  // ── Conf badge ──
-  confBadge: {
-    borderRadius: RADIUS.sm,
-    borderWidth: 1,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 4,
-    alignItems: "center",
-    minWidth: 60,
-  },
-  confPct: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.extrabold,
-  },
-  confLabel: {
-    fontSize: 9,
-    marginTop: 1,
-    letterSpacing: 0.5,
-  },
-
-  // ── Error ──
-  errorBox: {
-    backgroundColor: COLORS.error + "15",
-    borderWidth: 1,
-    borderColor: COLORS.error + "40",
-    borderRadius: RADIUS.md,
-    padding: SPACING.sm,
-    marginHorizontal: CARD_PADDING,
-    marginBottom: SPACING.sm,
-  },
-  errorText: {
-    color: COLORS.error,
-    fontSize: FONTS.sizes.sm,
-  },
-
-  // ── Online view helpers ──
-  card: { marginBottom: SPACING.sm },
-  infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    paddingVertical: SPACING.xs,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-    gap: SPACING.sm,
-  },
-  infoLabel: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-    flex: 1,
-  },
-  infoValue: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textPrimary,
-    flex: 2,
-    textAlign: "right",
-  },
-  mono: {
-    fontFamily: "monospace",
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textSecondary,
-  },
-
-  speciesDist: {
-    marginTop: SPACING.md,
-    paddingTop: SPACING.sm,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-  },
-  speciesDistTitle: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.semibold,
-    color: COLORS.textSecondary,
-    marginBottom: SPACING.sm,
-  },
-  speciesRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: SPACING.xs,
-  },
-  speciesRowName: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textSecondary,
-    flex: 1,
-  },
-  speciesRowCount: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-  },
-
-  onlineImageWrapper: {
-    marginBottom: SPACING.md,
-  },
-  onlineImageLabel: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textSubtle,
-    fontWeight: FONTS.weights.bold,
-    letterSpacing: 1.2,
-    marginBottom: SPACING.xs,
-  },
-  yoloImg: {
-    width: "100%",
-    height: 200,
-    borderRadius: CARD_RADIUS,
-    backgroundColor: COLORS.bgCard,
-  },
-
-  // ── Tabs ──
-  tabsRow: {
-    gap: SPACING.sm,
-    paddingBottom: SPACING.sm,
-  },
-  tab: {
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs,
-    borderRadius: RADIUS.full,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.bgCard,
-  },
-  tabActive: {
-    borderColor: COLORS.primaryLight,
-    backgroundColor: COLORS.primaryLight + "22",
-  },
-  tabText: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-  },
-  tabTextActive: {
-    color: COLORS.primaryLight,
-    fontWeight: FONTS.weights.semibold,
-  },
-
-  // ── Lightbox ──
-  lightboxOverlay: {
-    flex: 1,
-    backgroundColor: "#000",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  lightboxCloseBtn: {
-    position: "absolute",
-    top: 52,
-    right: 16,
-    backgroundColor: "rgba(255,255,255,0.15)",
-    borderRadius: RADIUS.full,
-    padding: SPACING.sm,
-    zIndex: 10,
-  },
-  lightboxHint: {
-    position: "absolute",
-    bottom: 36,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: "rgba(255,255,255,0.08)",
-    borderRadius: RADIUS.full,
-    paddingVertical: 6,
-    paddingHorizontal: SPACING.md,
-  },
-  lightboxHintText: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-  },
-
-  // ── Expand badge on tappable images ──
-  imageExpandBadge: {
-    position: "absolute",
-    top: SPACING.xs,
-    right: SPACING.xs,
-    backgroundColor: "rgba(0,0,0,0.55)",
-    borderRadius: RADIUS.sm,
-    padding: 5,
-  },
-  lightboxIconOverlay: {
-    position: "absolute",
-    top: 6,
-    right: 6,
-    backgroundColor: "rgba(0,0,0,0.50)",
-    borderRadius: RADIUS.xs,
-    padding: 3,
-  },
-});

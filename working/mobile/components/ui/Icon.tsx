@@ -9,17 +9,18 @@ interface IconProps {
   size?: number;
   color?: string;
   library?: IconLibrary;
+  className?: string;
 }
 
-export function Icon({ name, size = 24, color = COLORS.textPrimary, library = 'ionicons' }: IconProps) {
+export function Icon({ name, size = 24, color = COLORS.textPrimary, library = 'ionicons', className }: IconProps) {
   switch (library) {
     case 'material':
-      return <MaterialIcons name={name as any} size={size} color={color} />;
+      return <MaterialIcons name={name as any} size={size} color={color} className={className} />;
     case 'material-community':
-      return <MaterialCommunityIcons name={name as any} size={size} color={color} />;
+      return <MaterialCommunityIcons name={name as any} size={size} color={color} className={className} />;
     case 'ionicons':
     default:
-      return <Ionicons name={name as any} size={size} color={color} />;
+      return <Ionicons name={name as any} size={size} color={color} className={className} />;
   }
 }
 

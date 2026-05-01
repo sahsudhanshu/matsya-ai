@@ -6,7 +6,7 @@ import React, { useRef, useState } from "react";
 import {
   View,
   Text,
-  StyleSheet,
+  
   TouchableOpacity,
   Animated,
   Dimensions,
@@ -116,12 +116,11 @@ export function ToolsOrbit({ onChatPress, isChatActive }: Props) {
       {/* Vertical list overlay */}
       {isOpen && (
         <Modal visible transparent animationType="none" statusBarTranslucent>
-          <Pressable style={styles.overlay} onPress={close}>
+          <Pressable className="flex-1 bg-transparent justify-end items-end pr-4 pb-[96px]" onPress={close}>
             {/* Vertical list anchored above Tools button */}
-            <Animated.View
-              style={[
-                styles.listContainer,
-                {
+              <Animated.View
+                className="items-end bg-bgCard py-3 px-2 rounded-[24px] border border-borderDark shadow-xl shadow-black/15 gap-0.5"
+                style={{
                   opacity: listAnim,
                   transform: [
                     {
@@ -137,10 +136,9 @@ export function ToolsOrbit({ onChatPress, isChatActive }: Props) {
                       }),
                     },
                   ],
-                },
-              ]}
-              pointerEvents="box-none"
-            >
+                }}
+                pointerEvents="box-none"
+              >
               {TOOLS.map((tool, i) => {
                 const itemTranslateY = listAnim.interpolate({
                   inputRange: [0, 1],
@@ -162,15 +160,13 @@ export function ToolsOrbit({ onChatPress, isChatActive }: Props) {
                     }}
                   >
                     <TouchableOpacity
-                      style={styles.listItem}
+                      className="flex-row-reverse items-center gap-[14px] py-2.5 px-3 min-w-[140px]"
                       onPress={() => handleToolPress(tool.route)}
                       activeOpacity={0.8}
                     >
                       <View
-                        style={[
-                          styles.listIcon,
-                          { backgroundColor: tool.color + "22" },
-                        ]}
+                        className="w-9 h-9 rounded-full items-center justify-center"
+                        style={{ backgroundColor: tool.color + "22" }}
                       >
                         <Ionicons
                           name={tool.icon}
@@ -178,7 +174,7 @@ export function ToolsOrbit({ onChatPress, isChatActive }: Props) {
                           color={tool.color}
                         />
                       </View>
-                      <Text style={styles.listLabel}>{tool.label}</Text>
+                      <Text className="text-[14px] font-semibold text-textPrimary">{tool.label}</Text>
                     </TouchableOpacity>
                   </Animated.View>
                 );
@@ -189,10 +185,10 @@ export function ToolsOrbit({ onChatPress, isChatActive }: Props) {
       )}
 
       {/* Main FAB bar */}
-      <View style={styles.fabBar}>
+      <View className="flex-row items-center justify-around bg-bgCard border-t border-borderDark pb-6 pt-1.5 px-6">
         {/* Chat button */}
         <TouchableOpacity
-          style={styles.toolsBtn}
+          className="items-center justify-center gap-1 py-1 px-4 min-w-[60px]"
           onPress={onChatPress}
           activeOpacity={0.8}
         >
@@ -202,19 +198,16 @@ export function ToolsOrbit({ onChatPress, isChatActive }: Props) {
             color={isChatActive ? COLORS.primary : COLORS.textSecondary}
           />
           <Text
-            style={[
-              styles.toolsBtnText,
-              isChatActive && { color: COLORS.primary },
-            ]}
+            className={`text-[10px] font-medium ${isChatActive ? 'text-primary' : 'text-textSubtle'}`}
           >
             Chat
           </Text>
         </TouchableOpacity>
 
         {/* Home FAB - center */}
-        <Animated.View style={styles.agentFabOuter}>
+        <Animated.View className="-mt-7 items-center justify-center">
           <TouchableOpacity
-            style={styles.agentFab}
+            className="w-[62px] h-[62px] rounded-full bg-primary border-[3px] border-bgDark items-center justify-center shadow-lg shadow-primaryLight/40"
             onPress={() => router.push("/")}
             activeOpacity={0.85}
           >
@@ -224,118 +217,19 @@ export function ToolsOrbit({ onChatPress, isChatActive }: Props) {
 
         {/* Tools button */}
         <TouchableOpacity
-          style={styles.toolsBtn}
+          className="items-center justify-center gap-1 py-1 px-4 min-w-[60px]"
           onPress={toggle}
           activeOpacity={0.8}
         >
           <Animated.View
-            style={[styles.toolsIconWrapper, { transform: [{ rotate: spin }] }]}
+            className="w-9 h-9 rounded-full items-center justify-center bg-[#33415540]"
+            style={{ transform: [{ rotate: spin }] }}
           >
             <Ionicons name="apps" size={20} color={COLORS.textPrimary} />
           </Animated.View>
-          <Text style={styles.toolsBtnText}>Tools</Text>
+          <Text className="text-[10px] text-textSubtle font-medium">Tools</Text>
         </TouchableOpacity>
       </View>
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "transparent",
-    justifyContent: "flex-end",
-    alignItems: "flex-end",
-    paddingRight: 16,
-    paddingBottom: 96, // above the fab bar
-  },
-  listContainer: {
-    gap: 2,
-    alignItems: "flex-end",
-    backgroundColor: COLORS.bgCard,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  listItem: {
-    flexDirection: "row-reverse",
-    alignItems: "center",
-    gap: 14,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    minWidth: 140,
-  },
-  listIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  listLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: COLORS.textPrimary,
-  },
-
-  // FAB bar
-  fabBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-around",
-    backgroundColor: COLORS.bgCard,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-    paddingBottom: 24,
-    paddingTop: 6,
-    paddingHorizontal: 24,
-  },
-  toolsBtn: {
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 4,
-    paddingVertical: 4,
-    paddingHorizontal: 16,
-    minWidth: 60,
-  },
-  toolsIconWrapper: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: COLORS.border + "40", // light subtle background
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  toolsBtnText: {
-    fontSize: 10,
-    color: COLORS.textSubtle,
-    fontWeight: "500",
-  },
-  agentFabOuter: {
-    marginTop: -28,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  agentFab: {
-    width: 62,
-    height: 62,
-    borderRadius: 31,
-    backgroundColor: COLORS.primary,
-    borderWidth: 3,
-    borderColor: COLORS.bgDark,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: COLORS.primaryLight,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 10,
-  },
-});

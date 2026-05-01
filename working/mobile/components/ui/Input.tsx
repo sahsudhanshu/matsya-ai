@@ -3,13 +3,12 @@ import {
   View,
   TextInput,
   Text,
-  StyleSheet,
   TextInputProps,
   ViewStyle,
   TouchableOpacity,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS, FONTS, SPACING, RADIUS } from "../../lib/constants";
+import { COLORS } from "../../lib/constants";
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -18,6 +17,7 @@ interface InputProps extends TextInputProps {
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   showPasswordToggle?: boolean;
+  className?: string;
 }
 
 export function Input({
@@ -29,30 +29,28 @@ export function Input({
   style,
   showPasswordToggle,
   secureTextEntry,
+  className = "",
   ...rest
 }: InputProps) {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const isPassword = showPasswordToggle || secureTextEntry;
 
   return (
-    <View style={[styles.container, containerStyle]}>
-      {label && <Text style={styles.label}>{label}</Text>}
-      <View style={[styles.inputRow, error ? styles.inputError : null]}>
-        {leftIcon && <View style={styles.leftIcon}>{leftIcon}</View>}
+    <View style={containerStyle} className={`gap-2 ${className}`}>
+      {label && <Text className="text-[12px] font-medium text-slate-200 tracking-[0.2px]">{label}</Text>}
+      <View className={`flex-row items-center bg-slate-700 rounded-xl border min-h-[44px] ${error ? 'border-red-500' : 'border-slate-700'}`}>
+        {leftIcon && <View className="pl-4">{leftIcon}</View>}
         <TextInput
           placeholderTextColor={COLORS.textSubtle}
-          style={[
-            styles.input,
-            leftIcon ? styles.inputWithLeftIcon : null,
-            style,
-          ]}
+          className={`flex-1 px-4 py-[10px] text-slate-50 text-[13px] ${leftIcon ? 'pl-2' : ''}`}
+          style={style}
           secureTextEntry={isPassword && !isPasswordVisible}
           {...rest}
         />
         {isPassword && (
           <TouchableOpacity
             onPress={() => setIsPasswordVisible(!isPasswordVisible)}
-            style={styles.rightIcon}
+            className="pr-4"
           >
             <Ionicons
               name={isPasswordVisible ? "eye-off-outline" : "eye-outline"}
@@ -62,44 +60,10 @@ export function Input({
           </TouchableOpacity>
         )}
         {!isPassword && rightIcon && (
-          <View style={styles.rightIcon}>{rightIcon}</View>
+          <View className="pr-4">{rightIcon}</View>
         )}
       </View>
-      {error && <Text style={styles.error}>{error}</Text>}
+      {error && <Text className="text-[12px] text-red-500">{error}</Text>}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { gap: SPACING.sm },
-  label: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.medium,
-    color: COLORS.textSecondary,
-    letterSpacing: 0.2,
-  },
-  inputRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: COLORS.bgSurface,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    minHeight: 44,
-  },
-  inputError: { borderColor: COLORS.error },
-  input: {
-    flex: 1,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: 10,
-    color: COLORS.textPrimary,
-    fontSize: FONTS.sizes.base,
-  },
-  inputWithLeftIcon: { paddingLeft: SPACING.sm },
-  leftIcon: { paddingLeft: SPACING.md },
-  rightIcon: { paddingRight: SPACING.md },
-  error: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.error,
-  },
-});

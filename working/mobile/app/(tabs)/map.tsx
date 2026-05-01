@@ -19,7 +19,6 @@ import React, {
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
@@ -350,6 +349,14 @@ export default function MapScreen() {
   // ── Deep Scan – start ─────────────────────────────────────────────────────
   const startDeepScan = useCallback(() => {
     if (!userLocation) return;
+
+    // If results already exist, just show them
+    if (fishingSpots.length > 0 && scanState === "idle") {
+      setScanState("done");
+      setSpotsVisible(true);
+      return;
+    }
+
     setScanState("scanning");
     setScanProgress(null);
     setScanMessages([]);
@@ -407,7 +414,13 @@ export default function MapScreen() {
 
       onError: (msg) => {
         setScanState("error");
-        setScanError(msg);
+        if (msg.includes("No water bodies found")) {
+          setScanError(
+            "Deep Scan was unable to find any significant water bodies or fishing spots in this area. Try moving the map to a coastal region or increasing your search radius.",
+          );
+        } else {
+          setScanError(msg);
+        }
       },
 
       onCancelled: () => {
@@ -432,15 +445,16 @@ export default function MapScreen() {
 
   // ── Tap-anywhere: weather + floating card ────────────────────────────────
   const handleMapPress = useCallback(
-    async (e: {
-      nativeEvent: { coordinate: { latitude: number; longitude: number } };
-    }) => {
+    async (e: any) => {
       if (layersPopupVisible) {
         setLayersPopupVisible(false);
         return;
       }
       if (!OWM_KEY) return;
-      const { latitude: lat, longitude: lng } = e.nativeEvent.coordinate;
+
+      const { latitude: lat, longitude: lng } = e.nativeEvent?.coordinate || {};
+      if (lat === undefined || lng === undefined) return;
+
       setSelectedMarker(null);
       setSelectedSpot(null);
 
@@ -530,9 +544,11 @@ export default function MapScreen() {
   // ── Offline guard ─────────────────────────────────────────────────────────
   if (!isOnline) {
     return (
-      <SafeAreaView style={styles.safe}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>{t("nav.oceanMap")}</Text>
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#0f172a" }}>
+        <View className="flex-row items-center px-4 py-3 gap-3 border-b border-border bg-bgDark">
+          <Text className="text-lg font-bold text-textPrimary">
+            {t("nav.oceanMap")}
+          </Text>
           <ProfileMenu size={34} />
         </View>
         <OfflineFeatureMessage featureName="Ocean Map" />
@@ -549,19 +565,21 @@ export default function MapScreen() {
 
   // ─────────────────────────────────────────────────────────────────────────
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#0f172a" }}>
       {/* ── HEADER ─────────────────────────────────────────────────────── */}
-      <View style={styles.header}>
-        <View style={styles.headerText}>
-          <Text style={styles.headerTitle}>{t("nav.oceanMap")}</Text>
-          <Text style={styles.headerSub}>
+      <View className="flex-row items-center px-4 py-3 gap-3 border-b border-border bg-bgDark">
+        <View className="flex-1">
+          <Text className="text-lg font-bold text-textPrimary">
+            {t("nav.oceanMap")}
+          </Text>
+          <Text className="text-xs text-textMuted mt-0.5">
             {validMarkers.length} catches
             {alerts.length > 0 ? `  ·  ${alerts.length} alerts` : ""}
           </Text>
         </View>
 
         <TouchableOpacity
-          style={styles.iconBtn}
+          className="w-[34px] h-[34px] rounded-lg border border-border bg-bgCard items-center justify-center"
           onPress={loadMarkers}
           disabled={loadingMarkers}
           activeOpacity={0.7}
@@ -575,7 +593,7 @@ export default function MapScreen() {
 
         {/* Alerts chip */}
         <TouchableOpacity
-          style={[styles.pillBtn, alertsVisible && styles.pillBtnAlert]}
+          className={`flex-row items-center gap-1 rounded-lg border border-border bg-bgCard px-4 py-1.5 ${alertsVisible ? "border-[#f8717155] bg-[#f8717114]" : ""}`}
           onPress={() => setAlertsVisible((v) => !v)}
           activeOpacity={0.7}
         >
@@ -585,7 +603,8 @@ export default function MapScreen() {
             color={alertsVisible ? "#f87171" : COLORS.textSecondary}
           />
           <Text
-            style={[styles.pillBtnText, alertsVisible && { color: "#f87171" }]}
+            className="text-xs font-semibold text-textSecondary"
+            style={alertsVisible ? { color: "#f87171" } : undefined}
           >
             Alerts{alerts.length > 0 ? ` (${alerts.length})` : ""}
           </Text>
@@ -596,33 +615,30 @@ export default function MapScreen() {
 
       {/* ── SUNRISE / SUNSET STRIP ────────────────────────────────────── */}
       {sunTimes && (
-        <View style={styles.sunStrip}>
+        <View className="flex-row items-center gap-[5px] px-4 py-[6px] bg-bgCard border-b border-border">
           <Ionicons name="sunny-outline" size={13} color={COLORS.accentLight} />
-          <Text style={styles.sunText}>Rise {sunTimes.sunrise}</Text>
-          <View style={styles.sunDivider} />
+          <Text className="text-xs text-textSecondary">
+            Rise {sunTimes.sunrise}
+          </Text>
+          <View className="w-[1px] h-3 bg-border mx-1" />
           <Ionicons name="moon-outline" size={13} color={COLORS.accentLight} />
-          <Text style={styles.sunText}>Set {sunTimes.sunset}</Text>
+          <Text className="text-xs text-textSecondary">
+            Set {sunTimes.sunset}
+          </Text>
           {safetyStatus && (
             <>
-              <View style={styles.sunDivider} />
+              <View className="w-[1px] h-3 bg-border mx-1" />
               <View
-                style={[
-                  styles.safetyBadge,
-                  safetyStatus === "SAFE"
-                    ? styles.safeBadge
-                    : styles.unsafeBadge,
-                ]}
+                className={`px-2 py-[2px] rounded-full ${safetyStatus === "SAFE" ? "bg-secondaryLight/20" : "bg-[#f8717120]"}`}
               >
                 <Text
-                  style={[
-                    styles.safetyText,
-                    {
-                      color:
-                        safetyStatus === "SAFE"
-                          ? COLORS.secondaryLight
-                          : "#f87171",
-                    },
-                  ]}
+                  className="text-xs font-bold tracking-[0.3px]"
+                  style={{
+                    color:
+                      safetyStatus === "SAFE"
+                        ? COLORS.secondaryLight
+                        : "#f87171",
+                  }}
                 >
                   {safetyStatus}
                 </Text>
@@ -634,21 +650,22 @@ export default function MapScreen() {
 
       {/* ── ACTIVE LAYER LEGEND ───────────────────────────────────────── */}
       {activeLayer && currentScale && (
-        <View style={styles.legendBox}>
-          <Text style={styles.legendLabel}>
+        <View className="mx-4 mb-2 bg-bgCard rounded-md border border-border p-3">
+          <Text className="text-xs font-bold text-textMuted mb-1 uppercase tracking-wide">
             {currentScale.label} ({currentScale.unit})
           </Text>
-          <View style={styles.legendBar}>
+          <View className="flex-row h-[10px] rounded-sm overflow-hidden">
             {currentScale.stops.map((s, i) => (
               <View
                 key={i}
-                style={[styles.legendSegment, { backgroundColor: s.color }]}
+                className="flex-1"
+                style={{ backgroundColor: s.color }}
               />
             ))}
           </View>
-          <View style={styles.legendValues}>
+          <View className="flex-row justify-between mt-[3px]">
             {currentScale.stops.map((s, i) => (
-              <Text key={i} style={styles.legendValue}>
+              <Text key={i} className="text-[9px] text-textSubtle font-bold">
                 {s.value}
               </Text>
             ))}
@@ -657,10 +674,10 @@ export default function MapScreen() {
       )}
 
       {/* ── MAP ───────────────────────────────────────────────────────── */}
-      <View style={styles.mapContainer}>
+      <View className="flex-1 relative">
         <MapView
           ref={mapRef}
-          style={styles.map}
+          style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0 }}
           provider={PROVIDER_DEFAULT}
           initialRegion={{
             latitude: userLocation?.lat ?? 16.0,
@@ -671,10 +688,8 @@ export default function MapScreen() {
           onPress={handleMapPress}
           showsUserLocation={locationPermission}
           showsMyLocationButton={false}
-          mapType={Platform.OS === "android" ? "none" : "standard"}
+          mapType="hybrid"
         >
-          <UrlTile urlTemplate={SATELLITE_TILE} maximumZ={20} tileSize={256} />
-
           {owmTileUrl && (
             <UrlTile
               urlTemplate={owmTileUrl}
@@ -696,13 +711,11 @@ export default function MapScreen() {
               tracksViewChanges={false}
             >
               <View
-                style={[
-                  styles.dot,
-                  {
-                    backgroundColor:
-                      GRADE_COLOR[m.qualityGrade ?? ""] ?? GRADE_COLOR.Low,
-                  },
-                ]}
+                className="w-[28px] h-[28px] rounded-full items-center justify-center border-2 border-[rgba(255,255,255,0.2)]"
+                style={{
+                  backgroundColor:
+                    GRADE_COLOR[m.qualityGrade ?? ""] ?? GRADE_COLOR.Low,
+                }}
               >
                 <Ionicons name="fish-outline" size={13} color="#fff" />
               </View>
@@ -763,10 +776,10 @@ export default function MapScreen() {
         </MapView>
 
         {/* ── Map FABs (right column) ──────────────────────────────────── */}
-        <View style={styles.fabRight}>
+        <View className="absolute right-3 bottom-20 gap-2 items-center z-50">
           {/* Recenter */}
           <TouchableOpacity
-            style={styles.fabSmall}
+            className="w-[42px] h-[42px] rounded-full bg-bgCard border border-border items-center justify-center shadow-md elevation-5"
             onPress={handleRecenter}
             activeOpacity={0.8}
           >
@@ -775,7 +788,7 @@ export default function MapScreen() {
 
           {/* Layers */}
           <TouchableOpacity
-            style={[styles.fabSmall, activeLayer && styles.fabSmallActive]}
+            className={`w-[42px] h-[42px] rounded-full bg-bgCard border border-border items-center justify-center shadow-md elevation-5 ${activeLayer ? "border-[rgba(34,211,238,0.33)] bg-[rgba(34,211,238,0.09)]" : ""}`}
             onPress={() => setLayersPopupVisible((v) => !v)}
             activeOpacity={0.8}
           >
@@ -789,15 +802,14 @@ export default function MapScreen() {
 
         {/* ── Layers popup (Google-Maps style) ─────────────────────────── */}
         {layersPopupVisible && (
-          <View style={styles.layersPopup}>
-            <Text style={styles.layersPopupTitle}>Map Layer</Text>
+          <View className="absolute right-[62px] bottom-[80px] bg-bgCard rounded-xl border border-border p-3 w-[210px] z-50 shadow-lg elevation-10">
+            <Text className="text-xs font-bold text-textMuted uppercase tracking-wide px-3 py-1 mb-0.5">
+              Map Layer
+            </Text>
             {LAYERS.map((layer) => (
               <TouchableOpacity
                 key={layer.id}
-                style={[
-                  styles.layerRow,
-                  activeLayer === layer.id && styles.layerRowActive,
-                ]}
+                className={`flex-row items-center gap-3 p-3 rounded-md ${activeLayer === layer.id ? "bg-[rgba(34,211,238,0.07)]" : ""}`}
                 onPress={() => {
                   setActiveLayer(activeLayer === layer.id ? null : layer.id);
                   setLayersPopupVisible(false);
@@ -805,10 +817,7 @@ export default function MapScreen() {
                 activeOpacity={0.8}
               >
                 <View
-                  style={[
-                    styles.layerIconBox,
-                    activeLayer === layer.id && styles.layerIconBoxActive,
-                  ]}
+                  className={`w-[34px] h-[34px] rounded-sm bg-bgSurface items-center justify-center ${activeLayer === layer.id ? "bg-[rgba(34,211,238,0.13)]" : ""}`}
                 >
                   <Ionicons
                     name={layer.icon as any}
@@ -822,14 +831,13 @@ export default function MapScreen() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text
-                    style={[
-                      styles.layerLabel,
-                      activeLayer === layer.id && styles.layerLabelActive,
-                    ]}
+                    className={`text-sm font-semibold text-textSecondary ${activeLayer === layer.id ? "text-primaryLight" : ""}`}
                   >
                     {layer.label}
                   </Text>
-                  <Text style={styles.layerDesc}>{layer.desc}</Text>
+                  <Text className="text-xs text-textMuted mt-[1px]">
+                    {layer.desc}
+                  </Text>
                 </View>
                 {activeLayer === layer.id && (
                   <Ionicons
@@ -842,14 +850,16 @@ export default function MapScreen() {
             ))}
             {activeLayer && (
               <TouchableOpacity
-                style={styles.layerClearBtn}
+                className="mt-1 py-2 items-center border-t border-border"
                 onPress={() => {
                   setActiveLayer(null);
                   setLayersPopupVisible(false);
                 }}
                 activeOpacity={0.8}
               >
-                <Text style={styles.layerClearText}>Clear layer</Text>
+                <Text className="text-xs text-[#f87171] font-semibold">
+                  Clear layer
+                </Text>
               </TouchableOpacity>
             )}
           </View>
@@ -857,15 +867,17 @@ export default function MapScreen() {
 
         {/* ── DEEP SCAN FAB (hidden while overlay is open) ──────────── */}
         {!scanOverlayVisible && (
-          <View style={styles.fabScanWrapper}>
+          <View className="absolute left-4 bottom-5 z-50">
             <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
               <TouchableOpacity
-                style={styles.fabScan}
+                className="flex-row items-center gap-2 bg-[#1d4ed8] rounded-full py-[13px] px-5 shadow-lg elevation-8 shadow-[#1d4ed8]/55"
                 onPress={startDeepScan}
                 activeOpacity={0.85}
               >
                 <Ionicons name="scan-outline" size={20} color="#fff" />
-                <Text style={styles.fabScanLabel}>{scanFabLabel}</Text>
+                <Text className="text-sm font-bold text-white tracking-[0.3px]">
+                  {scanFabLabel}
+                </Text>
               </TouchableOpacity>
             </Animated.View>
           </View>
@@ -873,20 +885,22 @@ export default function MapScreen() {
 
         {/* Small loading spinner */}
         {loadingMarkers && (
-          <View style={styles.mapSpinner}>
+          <View className="absolute top-3 self-center bg-bgCard/90 rounded-full p-2 border border-border z-10">
             <ActivityIndicator size="small" color={COLORS.primaryLight} />
           </View>
         )}
 
         {/* ── GLASSMORPHIC ALERTS OVERLAY ───────────────────────────── */}
         {alertsVisible && (
-          <View style={styles.alertsOverlay}>
-            <View style={styles.alertsOverlayHeader}>
+          <View className="absolute top-2 left-2 right-2 z-40 bg-[rgba(10,15,30,0.90)] rounded-xl border border-[rgba(255,255,255,0.10)] p-3 shadow-lg elevation-12">
+            <View className="flex-row justify-between items-center mb-2">
               <View
                 style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
               >
                 <Ionicons name="warning-outline" size={14} color="#f87171" />
-                <Text style={styles.alertsOverlayTitle}>Active Alerts</Text>
+                <Text className="text-sm font-bold text-textPrimary">
+                  Active Alerts
+                </Text>
               </View>
               <TouchableOpacity
                 onPress={() => setAlertsVisible(false)}
@@ -896,13 +910,13 @@ export default function MapScreen() {
               </TouchableOpacity>
             </View>
             {alerts.length === 0 ? (
-              <View style={styles.alertEmpty}>
+              <View className="flex-row items-center gap-2 py-1.5">
                 <Ionicons
                   name="checkmark-circle-outline"
                   size={16}
                   color={COLORS.secondaryLight}
                 />
-                <Text style={styles.alertEmptyText}>
+                <Text className="text-sm text-textMuted">
                   No active alerts in your area
                 </Text>
               </View>
@@ -912,7 +926,10 @@ export default function MapScreen() {
                 showsVerticalScrollIndicator={false}
               >
                 {alerts.map((a) => (
-                  <View key={a.id} style={styles.alertRow}>
+                  <View
+                    key={a.id}
+                    className="flex-row items-center py-1.5 border-b border-[rgba(255,255,255,0.06)]"
+                  >
                     <Ionicons
                       name={getAlertIcon(a.type) as any}
                       size={13}
@@ -920,15 +937,16 @@ export default function MapScreen() {
                     />
                     <View style={{ flex: 1, marginLeft: 8 }}>
                       <Text
-                        style={[
-                          styles.alertTitle,
-                          { color: getSeverityColor(a.severity) },
-                        ]}
+                        className="text-sm font-semibold"
+                        style={{ color: getSeverityColor(a.severity) }}
                         numberOfLines={1}
                       >
                         {a.title}
                       </Text>
-                      <Text style={styles.alertDesc} numberOfLines={1}>
+                      <Text
+                        className="text-xs text-textMuted mt-[1px]"
+                        numberOfLines={1}
+                      >
                         {a.description}
                       </Text>
                     </View>
@@ -942,27 +960,32 @@ export default function MapScreen() {
         {/* ── HOVERING TAP LOCATION CARD ────────────────────────────── */}
         {tapCard && (
           <View
-            style={[
-              styles.tapCard,
+            className="absolute w-[220px] z-30 bg-[rgba(10,15,30,0.92)] rounded-xl border border-[rgba(255,255,255,0.12)] p-3 shadow-lg elevation-10"
+            style={
               tapCard.cardX !== undefined && tapCard.cardY !== undefined
                 ? { left: tapCard.cardX, top: tapCard.cardY }
-                : { left: 12, top: 60 },
-            ]}
+                : { left: 12, top: 60 }
+            }
           >
             {tapCard.loading ? (
-              <View style={styles.tapCardRow}>
+              <View className="flex-row items-center gap-2 py-1">
                 <ActivityIndicator size="small" color={COLORS.primaryLight} />
-                <Text style={styles.tapCardLoadText}>Fetching weather…</Text>
+                <Text className="text-xs text-textMuted">
+                  Fetching weather…
+                </Text>
               </View>
             ) : (
               <>
-                <View style={styles.tapCardHeader}>
+                <View className="flex-row items-start justify-between mb-1.5">
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.tapCardCoords}>
+                    <Text className="text-xs font-bold text-textPrimary tracking-[0.2px]">
                       {tapCard.lat.toFixed(4)}°N {tapCard.lng.toFixed(4)}°E
                     </Text>
                     {tapCard.description && (
-                      <Text style={styles.tapCardDesc} numberOfLines={1}>
+                      <Text
+                        className="text-[10px] text-textMuted mt-0.5 capitalize"
+                        numberOfLines={1}
+                      >
                         {tapCard.description}
                       </Text>
                     )}
@@ -974,46 +997,46 @@ export default function MapScreen() {
                     <Ionicons name="close" size={14} color={COLORS.textMuted} />
                   </TouchableOpacity>
                 </View>
-                <View style={styles.tapCardStats}>
+                <View className="flex-row gap-3 mb-3 flex-wrap">
                   {tapCard.temp !== undefined && (
-                    <View style={styles.tapCardStat}>
+                    <View className="flex-row items-center gap-[3px]">
                       <Ionicons
                         name="thermometer-outline"
                         size={11}
                         color={COLORS.textMuted}
                       />
-                      <Text style={styles.tapCardStatVal}>
+                      <Text className="text-xs text-textSecondary">
                         {tapCard.temp.toFixed(1)}°C
                       </Text>
                     </View>
                   )}
                   {tapCard.wind !== undefined && (
-                    <View style={styles.tapCardStat}>
+                    <View className="flex-row items-center gap-[3px]">
                       <Ionicons
                         name="flag-outline"
                         size={11}
                         color={COLORS.textMuted}
                       />
-                      <Text style={styles.tapCardStatVal}>
+                      <Text className="text-xs text-textSecondary">
                         {tapCard.wind} m/s
                       </Text>
                     </View>
                   )}
                   {tapCard.humidity !== undefined && (
-                    <View style={styles.tapCardStat}>
+                    <View className="flex-row items-center gap-[3px]">
                       <Ionicons
                         name="water-outline"
                         size={11}
                         color={COLORS.textMuted}
                       />
-                      <Text style={styles.tapCardStatVal}>
+                      <Text className="text-xs text-textSecondary">
                         {tapCard.humidity}%
                       </Text>
                     </View>
                   )}
                 </View>
                 <TouchableOpacity
-                  style={styles.sendToAIBtn}
+                  className="flex-row items-center justify-center gap-[5px] bg-primaryLight rounded-full py-[7px] px-3.5"
                   onPress={sendLocationToAI}
                   activeOpacity={0.85}
                 >
@@ -1022,7 +1045,9 @@ export default function MapScreen() {
                     size={12}
                     color="#fff"
                   />
-                  <Text style={styles.sendToAIText}>Send to AI</Text>
+                  <Text className="text-xs font-semibold text-white">
+                    Send to AI
+                  </Text>
                 </TouchableOpacity>
               </>
             )}
@@ -1031,10 +1056,10 @@ export default function MapScreen() {
 
         {/* ── GLASSMORPHIC DEEP SCAN OVERLAY ────────────────────────── */}
         {scanOverlayVisible && (
-          <View style={styles.scanOverlay}>
-            <View style={styles.scanHandle} />
+          <View className="absolute bottom-0 left-0 right-0 h-[52%] z-20 bg-[rgba(8,12,26,0.94)] rounded-t-[24px] border-t border-l border-r border-[rgba(255,255,255,0.10)] pt-3 px-4 pb-6 shadow-xl elevation-16">
+            <View className="self-center w-[36px] h-1 rounded-full bg-[rgba(255,255,255,0.18)] mb-3" />
 
-            <View style={styles.scanOverlayHeader}>
+            <View className="flex-row items-start mb-3">
               <View
                 style={{
                   flexDirection: "row",
@@ -1064,17 +1089,17 @@ export default function MapScreen() {
                   }
                 />
                 <View>
-                  <Text style={styles.scanOverlayTitle}>
+                  <Text className="text-lg font-bold text-textPrimary">
                     {scanState === "done"
                       ? "Scan Complete"
                       : scanState === "cancelled"
                         ? "Scan Cancelled"
                         : scanState === "error"
-                          ? "Scan Failed"
+                          ? "Deep Scan Failed"
                           : "Deep Scan"}
                   </Text>
                   {scanState === "scanning" && scanProgress && (
-                    <Text style={styles.scanOverlayStage}>
+                    <Text className="text-xs text-primaryLight mt-0.5 tracking-[0.3px]">
                       {SCAN_STAGE_LABELS[scanProgress.stage] ??
                         scanProgress.stage}
                     </Text>
@@ -1083,12 +1108,14 @@ export default function MapScreen() {
               </View>
               {scanState === "scanning" ? (
                 <TouchableOpacity
-                  style={styles.scanCancelBtn}
+                  className="flex-row items-center gap-1 py-1.5 px-3 rounded-full border border-[#f8717155] bg-[#f8717112]"
                   onPress={cancelDeepScan}
                   activeOpacity={0.8}
                 >
                   <Ionicons name="close-circle" size={14} color="#f87171" />
-                  <Text style={styles.scanCancelText}>Cancel</Text>
+                  <Text className="text-xs font-semibold text-[#f87171]">
+                    Cancel
+                  </Text>
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity
@@ -1102,27 +1129,27 @@ export default function MapScreen() {
 
             {/* Progress bar */}
             {scanState === "scanning" && scanProgress && (
-              <View style={styles.scanProgressBg}>
+              <View className="h-[3px] bg-[rgba(255,255,255,0.08)] rounded-sm overflow-hidden mb-3">
                 <View
-                  style={[
-                    styles.scanProgressFill,
-                    { width: `${scanProgress.pct}%` as any },
-                  ]}
+                  className="h-[3px] bg-primaryLight rounded-sm"
+                  style={{ width: `${scanProgress.pct}%` as any }}
                 />
               </View>
             )}
 
             {/* Done */}
             {scanState === "done" && (
-              <View style={styles.scanResultBox}>
+              <View className="items-center py-4 gap-3">
                 <Ionicons
                   name="checkmark-circle"
                   size={28}
                   color={COLORS.secondaryLight}
                 />
-                <Text style={styles.scanResultText}>{scanSummary}</Text>
+                <Text className="text-sm text-textSecondary text-center leading-5 px-4">
+                  {scanSummary}
+                </Text>
                 <TouchableOpacity
-                  style={styles.scanActionBtn}
+                  className="flex-row items-center gap-1.5 mt-2 py-2.5 px-6 rounded-full bg-primaryLight"
                   onPress={() => {
                     setSpotsVisible(true);
                     dismissScan();
@@ -1145,49 +1172,58 @@ export default function MapScreen() {
                   }}
                 >
                   <Ionicons name="map-outline" size={13} color="#fff" />
-                  <Text style={styles.scanActionBtnText}>View on Map</Text>
+                  <Text className="text-sm font-bold text-white">
+                    View on Map
+                  </Text>
                 </TouchableOpacity>
               </View>
             )}
 
             {/* Error */}
             {scanState === "error" && (
-              <View style={styles.scanResultBox}>
+              <View className="items-center py-4 gap-3">
                 <Ionicons name="alert-circle" size={28} color="#f87171" />
-                <Text style={[styles.scanResultText, { color: "#f87171" }]}>
+                <Text
+                  className="text-sm text-textSecondary text-center leading-5 px-4"
+                  style={{ color: "#f87171" }}
+                >
                   {scanError}
                 </Text>
                 <TouchableOpacity
-                  style={styles.scanActionBtn}
+                  className="flex-row items-center gap-1.5 mt-2 py-2.5 px-6 rounded-full bg-primaryLight"
                   onPress={() => {
                     dismissScan();
                     setTimeout(startDeepScan, 100);
                   }}
                 >
                   <Ionicons name="refresh-outline" size={13} color="#fff" />
-                  <Text style={styles.scanActionBtnText}>Retry</Text>
+                  <Text className="text-sm font-bold text-white">Retry</Text>
                 </TouchableOpacity>
               </View>
             )}
 
             {/* Cancelled */}
             {scanState === "cancelled" && (
-              <View style={styles.scanResultBox}>
+              <View className="items-center py-4 gap-3">
                 <Ionicons
                   name="stop-circle-outline"
                   size={28}
                   color={COLORS.textMuted}
                 />
-                <Text style={styles.scanResultText}>Scan was cancelled.</Text>
+                <Text className="text-sm text-textSecondary text-center leading-5 px-4">
+                  Scan was cancelled.
+                </Text>
                 <TouchableOpacity
-                  style={styles.scanActionBtn}
+                  className="flex-row items-center gap-1.5 mt-2 py-2.5 px-6 rounded-full bg-primaryLight"
                   onPress={() => {
                     dismissScan();
                     setTimeout(startDeepScan, 100);
                   }}
                 >
                   <Ionicons name="search-outline" size={13} color="#fff" />
-                  <Text style={styles.scanActionBtnText}>Start New Scan</Text>
+                  <Text className="text-sm font-bold text-white">
+                    Start New Scan
+                  </Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -1195,7 +1231,7 @@ export default function MapScreen() {
             {/* SSE live feed */}
             {scanState === "scanning" && (
               <ScrollView
-                style={styles.scanFeed}
+                className="flex-1 mb-2"
                 ref={(ref) => {
                   if (ref)
                     setTimeout(() => ref.scrollToEnd({ animated: true }), 50);
@@ -1203,20 +1239,15 @@ export default function MapScreen() {
                 showsVerticalScrollIndicator={false}
               >
                 {scanMessages.map((msg, i) => (
-                  <View key={i} style={styles.scanFeedRow}>
+                  <View
+                    key={i}
+                    className="flex-row items-start gap-2 py-[5px] border-b border-[rgba(255,255,255,0.05)]"
+                  >
                     <View
-                      style={[
-                        styles.scanFeedDot,
-                        i === scanMessages.length - 1 &&
-                          styles.scanFeedDotActive,
-                      ]}
+                      className={`w-1.5 h-1.5 rounded-full bg-textSubtle mt-[5px] ${i === scanMessages.length - 1 ? "bg-primaryLight w-2 h-2 rounded-full" : ""}`}
                     />
                     <Text
-                      style={[
-                        styles.scanFeedText,
-                        i === scanMessages.length - 1 &&
-                          styles.scanFeedTextActive,
-                      ]}
+                      className={`flex-1 text-xs text-textMuted leading-[17px] ${i === scanMessages.length - 1 ? "text-textPrimary font-semibold" : ""}`}
                     >
                       {msg}
                     </Text>
@@ -1226,7 +1257,7 @@ export default function MapScreen() {
             )}
 
             {scanState === "scanning" && (
-              <Text style={styles.scanHint}>
+              <Text className="text-[10px] text-textSubtle text-center leading-[15px]">
                 You can leave this page - you will be notified when the scan
                 completes
               </Text>
@@ -1237,55 +1268,51 @@ export default function MapScreen() {
 
       {/* ── CATCH MARKER CARD (below map) ─────────────────────────────── */}
       {selectedMarker && (
-        <View style={styles.infoCard}>
-          <View style={styles.infoCardHeader}>
-            <Text style={styles.infoTitle}>
+        <View className="mx-4 mt-2 mb-3 bg-bgCard rounded-lg border border-border p-4 shadow-md elevation-4">
+          <View className="flex-row justify-between items-start">
+            <Text className="text-base font-bold text-textPrimary">
               {selectedMarker.species ?? "Unknown Species"}
             </Text>
             <TouchableOpacity onPress={() => setSelectedMarker(null)}>
               <Ionicons name="close" size={18} color={COLORS.textMuted} />
             </TouchableOpacity>
           </View>
-          <View style={styles.infoStats}>
+          <View className="flex-row items-center gap-3 mt-3 flex-wrap">
             {(selectedMarker.weight_g ?? 0) > 0 && (
-              <View style={styles.infoStat}>
+              <View className="flex-row items-center gap-1">
                 <Ionicons
                   name="scale-outline"
                   size={13}
                   color={COLORS.textMuted}
                 />
-                <Text style={styles.infoStatText}>
+                <Text className="text-sm text-textSecondary">
                   {((selectedMarker.weight_g as number) / 1000).toFixed(2)} kg
                 </Text>
               </View>
             )}
             {selectedMarker.qualityGrade && (
               <View
-                style={[
-                  styles.gradeBadge,
-                  {
-                    backgroundColor:
-                      (GRADE_COLOR[selectedMarker.qualityGrade] ??
-                        GRADE_COLOR.Low) + "22",
-                  },
-                ]}
+                className="px-2 py-[3px] rounded-full"
+                style={{
+                  backgroundColor:
+                    (GRADE_COLOR[selectedMarker.qualityGrade] ??
+                      GRADE_COLOR.Low) + "22",
+                }}
               >
                 <Text
-                  style={[
-                    styles.gradeText,
-                    {
-                      color:
-                        GRADE_COLOR[selectedMarker.qualityGrade] ??
-                        GRADE_COLOR.Low,
-                    },
-                  ]}
+                  className="text-xs font-bold"
+                  style={{
+                    color:
+                      GRADE_COLOR[selectedMarker.qualityGrade] ??
+                      GRADE_COLOR.Low,
+                  }}
                 >
                   {selectedMarker.qualityGrade}
                 </Text>
               </View>
             )}
           </View>
-          <Text style={styles.infoMeta}>
+          <Text className="text-xs text-textSubtle mt-1">
             {new Date(selectedMarker.createdAt).toLocaleDateString("en-IN", {
               day: "numeric",
               month: "short",
@@ -1297,15 +1324,20 @@ export default function MapScreen() {
 
       {/* ── FISHING SPOT CARD (below map) ─────────────────────────────── */}
       {selectedSpot && (
-        <View style={styles.infoCard}>
-          <View style={styles.infoCardHeader}>
+        <View className="mx-4 mt-2 mb-3 bg-bgCard rounded-lg border border-border p-4 shadow-md elevation-4">
+          <View className="flex-row justify-between items-start">
             <View style={{ flex: 1 }}>
-              <Text style={styles.infoTitle}>{selectedSpot.name}</Text>
-              <Text style={styles.infoSubtitle}>
+              <Text className="text-base font-bold text-textPrimary">
+                {selectedSpot.name}
+              </Text>
+              <Text className="text-xs text-textMuted mt-0.5 capitalize">
                 {selectedSpot.type} · {selectedSpot.distance_km} km away
               </Text>
               {selectedSpot.parent_water_body ? (
-                <Text style={[styles.infoSubtitle, { marginTop: 2 }]}>
+                <Text
+                  className="text-xs text-textMuted mt-0.5 capitalize"
+                  style={{ marginTop: 2 }}
+                >
                   {selectedSpot.parent_water_body}
                 </Text>
               ) : null}
@@ -1314,7 +1346,7 @@ export default function MapScreen() {
               <Ionicons name="close" size={18} color={COLORS.textMuted} />
             </TouchableOpacity>
           </View>
-          <View style={styles.confidenceBox}>
+          <View className="mt-3 mb-2">
             <View
               style={{
                 flexDirection: "row",
@@ -1322,703 +1354,115 @@ export default function MapScreen() {
                 alignItems: "flex-end",
               }}
             >
-              <Text style={styles.confidenceLabel}>Confidence</Text>
+              <Text className="text-xs text-textMuted uppercase tracking-wide">
+                Confidence
+              </Text>
               <Text
-                style={[styles.confidenceScore, { color: selectedSpot.color }]}
+                className="text-lg font-bold"
+                style={{ color: selectedSpot.color }}
               >
                 {selectedSpot.confidence}
-                <Text style={styles.confidenceMax}> / 100</Text>
+                <Text className="text-xs text-textMuted font-normal">
+                  {" "}
+                  / 100
+                </Text>
               </Text>
             </View>
-            <View style={styles.barBg}>
+            <View className="h-1.5 rounded-[3px] bg-bgSurface mt-1 overflow-hidden">
               <View
-                style={[
-                  styles.barFill,
-                  {
-                    width: `${selectedSpot.confidence}%` as any,
-                    backgroundColor: selectedSpot.color,
-                  },
-                ]}
+                className="h-1.5 rounded-[3px]"
+                style={{
+                  width: `${selectedSpot.confidence}%` as any,
+                  backgroundColor: selectedSpot.color,
+                }}
               />
             </View>
           </View>
-          <View style={styles.infoStats}>
-            <View style={styles.scoreTile}>
+          <View className="flex-row items-center gap-3 mt-3 flex-wrap">
+            <View className="flex-1 items-center p-3 rounded-sm bg-bgSurface gap-[3px]">
               <Ionicons
                 name="fish-outline"
                 size={12}
                 color={COLORS.textMuted}
               />
-              <Text style={styles.scoreTileLabel}>Fish Density</Text>
-              <Text style={styles.scoreTileValue}>
+              <Text className="text-[10px] text-textMuted text-center">
+                Fish Density
+              </Text>
+              <Text className="text-sm font-bold text-textPrimary">
                 {selectedSpot.fish_density_score}/100
               </Text>
             </View>
-            <View style={styles.scoreTile}>
+            <View className="flex-1 items-center p-3 rounded-sm bg-bgSurface gap-[3px]">
               <Ionicons
                 name="partly-sunny-outline"
                 size={12}
                 color={COLORS.textMuted}
               />
-              <Text style={styles.scoreTileLabel}>Weather</Text>
-              <Text style={styles.scoreTileValue}>
+              <Text className="text-[10px] text-textMuted text-center">
+                Weather
+              </Text>
+              <Text className="text-sm font-bold text-textPrimary">
                 {selectedSpot.weather_score}/100
               </Text>
             </View>
-            <View style={styles.scoreTile}>
+            <View className="flex-1 items-center p-3 rounded-sm bg-bgSurface gap-[3px]">
               <Ionicons
                 name="navigate-outline"
                 size={12}
                 color={COLORS.textMuted}
               />
-              <Text style={styles.scoreTileLabel}>Access</Text>
-              <Text style={styles.scoreTileValue}>
+              <Text className="text-[10px] text-textMuted text-center">
+                Access
+              </Text>
+              <Text className="text-sm font-bold text-textPrimary">
                 {selectedSpot.transport_score}/100
               </Text>
             </View>
           </View>
           {selectedSpot.gemini_web_score != null && (
-            <View style={styles.infoStats}>
-              <View style={styles.scoreTile}>
+            <View className="flex-row items-center gap-3 mt-3 flex-wrap">
+              <View className="flex-1 items-center p-3 rounded-sm bg-bgSurface gap-[3px]">
                 <Ionicons
                   name="globe-outline"
                   size={12}
                   color={COLORS.textMuted}
                 />
-                <Text style={styles.scoreTileLabel}>Web Score</Text>
-                <Text style={styles.scoreTileValue}>
+                <Text className="text-[10px] text-textMuted text-center">
+                  Web Score
+                </Text>
+                <Text className="text-sm font-bold text-textPrimary">
                   {selectedSpot.gemini_web_score}/100
                 </Text>
               </View>
             </View>
           )}
           {selectedSpot.chlorophyll_available && (
-            <View style={styles.chloTag}>
+            <View className="flex-row items-center gap-[5px] mt-1.5 mb-1.5">
               <Ionicons name="water-outline" size={12} color="#22d3ee" />
-              <Text style={styles.chloTagText}>Chlorophyll data included</Text>
+              <Text className="text-xs text-[#22d3ee]">
+                Chlorophyll data included
+              </Text>
             </View>
           )}
+          <TouchableOpacity
+            className="flex-row items-center justify-center gap-2 mt-3 bg-primary rounded-md py-2.5"
+            onPress={() => {
+              router.push({
+                pathname: "/(tabs)/chat",
+                params: {
+                  zoneName: selectedSpot.name,
+                  zoneCoordinates: `${selectedSpot.latitude.toFixed(5)}, ${selectedSpot.longitude.toFixed(5)}`,
+                },
+              });
+            }}
+          >
+            <Ionicons name="chatbubbles-outline" size={16} color="#fff" />
+            <Text className="text-sm font-bold text-white">
+              Ask AI about this spot
+            </Text>
+          </TouchableOpacity>
         </View>
       )}
     </SafeAreaView>
   );
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: COLORS.bgDark },
-
-  // Header
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
-    gap: SPACING.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-    backgroundColor: COLORS.bgDark,
-  },
-  headerText: { flex: 1 },
-  headerTitle: {
-    fontSize: FONTS.sizes.md,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-  },
-  headerSub: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    marginTop: 1,
-  },
-  iconBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: RADIUS.lg,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.bgCard,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  pillBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    borderRadius: RADIUS.lg,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.bgCard,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs,
-  },
-  pillBtnAlert: { borderColor: "#f8717155", backgroundColor: "#f8717114" },
-  pillBtnText: {
-    fontSize: FONTS.sizes.xs,
-    fontWeight: FONTS.weights.semibold,
-    color: COLORS.textSecondary,
-  },
-
-  // Sun strip
-  sunStrip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: 6,
-    backgroundColor: COLORS.bgCard,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  sunText: { fontSize: FONTS.sizes.xs, color: COLORS.textSecondary },
-  sunDivider: {
-    width: 1,
-    height: 12,
-    backgroundColor: COLORS.border,
-    marginHorizontal: 4,
-  },
-  safetyBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: RADIUS.full,
-  },
-  safeBadge: { backgroundColor: COLORS.secondaryLight + "20" },
-  unsafeBadge: { backgroundColor: "#f8717120" },
-  safetyText: {
-    fontSize: FONTS.sizes.xs,
-    fontWeight: FONTS.weights.bold,
-    letterSpacing: 0.3,
-  },
-
-  // Alerts (glassmorphic overlay inside mapContainer)
-  alertsOverlay: {
-    position: "absolute",
-    top: 8,
-    left: 8,
-    right: 8,
-    zIndex: 40,
-    backgroundColor: "rgba(10,15,30,0.90)",
-    borderRadius: RADIUS.xl,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.10)",
-    padding: SPACING.sm,
-    shadowColor: "#000",
-    shadowOpacity: 0.5,
-    shadowRadius: 12,
-    elevation: 12,
-  },
-  alertsOverlayHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  alertsOverlayTitle: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-  },
-  alertEmpty: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingVertical: 6,
-  },
-  alertEmptyText: { fontSize: FONTS.sizes.sm, color: COLORS.textMuted },
-  alertRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.06)",
-  },
-  alertTitle: { fontSize: FONTS.sizes.sm, fontWeight: FONTS.weights.semibold },
-  alertDesc: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    marginTop: 1,
-  },
-
-  // Legend
-  legendBox: {
-    marginHorizontal: SPACING.md,
-    marginBottom: SPACING.xs,
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: SPACING.sm,
-  },
-  legendLabel: {
-    fontSize: FONTS.sizes.xs,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textMuted,
-    marginBottom: 4,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  legendBar: {
-    flexDirection: "row",
-    height: 10,
-    borderRadius: RADIUS.sm,
-    overflow: "hidden",
-  },
-  legendSegment: { flex: 1 },
-  legendValues: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 3,
-  },
-  legendValue: {
-    fontSize: 9,
-    color: COLORS.textSubtle,
-    fontWeight: FONTS.weights.bold,
-  },
-
-  // Map
-  mapContainer: { flex: 1, position: "relative" },
-  map: { ...StyleSheet.absoluteFillObject },
-  dot: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 2,
-    borderColor: "rgba(255,255,255,0.2)",
-  },
-  mapSpinner: {
-    position: "absolute",
-    top: 12,
-    alignSelf: "center",
-    backgroundColor: COLORS.bgCard + "dd",
-    borderRadius: RADIUS.full,
-    padding: 8,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    zIndex: 5,
-  },
-
-  // Right FAB column
-  fabRight: {
-    position: "absolute",
-    right: 12,
-    bottom: 80,
-    gap: 8,
-    alignItems: "center",
-    zIndex: 50,
-  },
-  fabSmall: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: COLORS.bgCard,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.35,
-    shadowRadius: 6,
-    elevation: 5,
-  },
-  fabSmallActive: {
-    borderColor: COLORS.primaryLight + "55",
-    backgroundColor: COLORS.primaryLight + "18",
-  },
-
-  // Layers popup
-  layersPopup: {
-    position: "absolute",
-    right: 62,
-    bottom: 56,
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.xl,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: SPACING.sm,
-    width: 210,
-    zIndex: 60,
-    shadowColor: "#000",
-    shadowOpacity: 0.45,
-    shadowRadius: 12,
-    elevation: 10,
-  },
-  layersPopupTitle: {
-    fontSize: FONTS.sizes.xs,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textMuted,
-    textTransform: "uppercase",
-    letterSpacing: 0.6,
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 4,
-    marginBottom: 2,
-  },
-  layerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.sm,
-    padding: SPACING.sm,
-    borderRadius: RADIUS.md,
-  },
-  layerRowActive: { backgroundColor: COLORS.primaryLight + "12" },
-  layerIconBox: {
-    width: 34,
-    height: 34,
-    borderRadius: RADIUS.sm,
-    backgroundColor: COLORS.bgSurface,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  layerIconBoxActive: { backgroundColor: COLORS.primaryLight + "22" },
-  layerLabel: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.semibold,
-    color: COLORS.textSecondary,
-  },
-  layerLabelActive: { color: COLORS.primaryLight },
-  layerDesc: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    marginTop: 1,
-  },
-  layerClearBtn: {
-    marginTop: 4,
-    paddingVertical: 8,
-    alignItems: "center",
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-  },
-  layerClearText: {
-    fontSize: FONTS.sizes.xs,
-    color: "#f87171",
-    fontWeight: FONTS.weights.semibold,
-  },
-
-  // Deep Scan FAB
-  fabScanWrapper: { position: "absolute", left: 16, bottom: 20, zIndex: 50 },
-  fabScan: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    backgroundColor: "#1d4ed8",
-    borderRadius: 28,
-    paddingVertical: 13,
-    paddingHorizontal: 20,
-    shadowColor: "#1d4ed8",
-    shadowOpacity: 0.55,
-    shadowRadius: 14,
-    elevation: 8,
-  },
-  fabScanLabel: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.bold,
-    color: "#fff",
-    letterSpacing: 0.3,
-  },
-
-  // Hovering tap location card (absolute inside mapContainer)
-  tapCard: {
-    position: "absolute",
-    width: 220,
-    zIndex: 30,
-    backgroundColor: "rgba(10,15,30,0.92)",
-    borderRadius: RADIUS.xl,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.12)",
-    padding: SPACING.sm,
-    shadowColor: "#000",
-    shadowOpacity: 0.6,
-    shadowRadius: 10,
-    elevation: 10,
-  },
-  tapCardRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingVertical: 4,
-  },
-  tapCardLoadText: { fontSize: FONTS.sizes.xs, color: COLORS.textMuted },
-  tapCardHeader: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    marginBottom: 6,
-  },
-  tapCardCoords: {
-    fontSize: FONTS.sizes.xs,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-    letterSpacing: 0.2,
-  },
-  tapCardDesc: {
-    fontSize: 10,
-    color: COLORS.textMuted,
-    marginTop: 2,
-    textTransform: "capitalize",
-  },
-  tapCardStats: {
-    flexDirection: "row",
-    gap: SPACING.sm,
-    marginBottom: SPACING.sm,
-    flexWrap: "wrap",
-  },
-  tapCardStat: { flexDirection: "row", alignItems: "center", gap: 3 },
-  tapCardStatVal: { fontSize: FONTS.sizes.xs, color: COLORS.textSecondary },
-  sendToAIBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 5,
-    backgroundColor: COLORS.primaryLight,
-    borderRadius: RADIUS.full,
-    paddingVertical: 7,
-    paddingHorizontal: 14,
-  },
-  sendToAIText: {
-    fontSize: FONTS.sizes.xs,
-    fontWeight: FONTS.weights.semibold,
-    color: "#fff",
-  },
-
-  // Deep Scan glassmorphic overlay (bottom 52% of mapContainer)
-  scanOverlay: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: "52%",
-    zIndex: 20,
-    backgroundColor: "rgba(8,12,26,0.94)",
-    borderTopLeftRadius: RADIUS["2xl"],
-    borderTopRightRadius: RADIUS["2xl"],
-    borderTopWidth: 1,
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderColor: "rgba(255,255,255,0.10)",
-    paddingTop: SPACING.sm,
-    paddingHorizontal: SPACING.md,
-    paddingBottom: 24,
-    shadowColor: "#000",
-    shadowOpacity: 0.6,
-    shadowRadius: 20,
-    elevation: 16,
-  },
-  scanHandle: {
-    alignSelf: "center",
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: "rgba(255,255,255,0.18)",
-    marginBottom: SPACING.sm,
-  },
-  scanOverlayHeader: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    marginBottom: SPACING.sm,
-  },
-  scanOverlayTitle: {
-    fontSize: FONTS.sizes.md,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-  },
-  scanOverlayStage: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.primaryLight,
-    marginTop: 2,
-    letterSpacing: 0.3,
-  },
-  scanCancelBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: RADIUS.full,
-    borderWidth: 1,
-    borderColor: "#f8717155",
-    backgroundColor: "#f8717112",
-  },
-  scanCancelText: {
-    fontSize: FONTS.sizes.xs,
-    fontWeight: FONTS.weights.semibold,
-    color: "#f87171",
-  },
-
-  // Progress bar
-  scanProgressBg: {
-    height: 3,
-    backgroundColor: "rgba(255,255,255,0.08)",
-    borderRadius: 2,
-    overflow: "hidden",
-    marginBottom: SPACING.sm,
-  },
-  scanProgressFill: {
-    height: 3,
-    backgroundColor: COLORS.primaryLight,
-    borderRadius: 2,
-  },
-
-  // Scan result states
-  scanResultBox: {
-    alignItems: "center",
-    paddingVertical: SPACING.md,
-    gap: SPACING.sm,
-  },
-  scanResultText: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textSecondary,
-    textAlign: "center",
-    lineHeight: 20,
-    paddingHorizontal: SPACING.md,
-  },
-  scanActionBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginTop: SPACING.xs,
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    borderRadius: RADIUS.full,
-    backgroundColor: COLORS.primaryLight,
-  },
-  scanActionBtnText: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.bold,
-    color: "#fff",
-  },
-
-  // SSE message feed
-  scanFeed: { flex: 1, marginBottom: SPACING.xs },
-  scanFeedRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 8,
-    paddingVertical: 5,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.05)",
-  },
-  scanFeedDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: COLORS.textSubtle,
-    marginTop: 5,
-  },
-  scanFeedDotActive: {
-    backgroundColor: COLORS.primaryLight,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  scanFeedText: {
-    flex: 1,
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    lineHeight: 17,
-  },
-  scanFeedTextActive: {
-    color: COLORS.textPrimary,
-    fontWeight: FONTS.weights.semibold,
-  },
-  scanHint: {
-    fontSize: 10,
-    color: COLORS.textSubtle,
-    textAlign: "center",
-    lineHeight: 15,
-  },
-
-  // Info cards (below map)
-  infoCard: {
-    marginHorizontal: SPACING.md,
-    marginTop: SPACING.xs,
-    marginBottom: SPACING.sm,
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.lg,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: SPACING.md,
-    shadowColor: "#000",
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  infoCardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-  },
-  infoTitle: {
-    fontSize: FONTS.sizes.base,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-  },
-  infoSubtitle: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    marginTop: 2,
-    textTransform: "capitalize",
-  },
-  infoStats: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.sm,
-    marginTop: SPACING.sm,
-    flexWrap: "wrap",
-  },
-  infoStat: { flexDirection: "row", alignItems: "center", gap: 4 },
-  infoStatText: { fontSize: FONTS.sizes.sm, color: COLORS.textSecondary },
-  infoMeta: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textSubtle,
-    marginTop: 4,
-  },
-  gradeBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: RADIUS.full,
-  },
-  gradeText: { fontSize: FONTS.sizes.xs, fontWeight: FONTS.weights.bold },
-
-  // Spot detail
-  confidenceBox: { marginTop: SPACING.sm, marginBottom: SPACING.xs },
-  confidenceLabel: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  confidenceScore: { fontSize: FONTS.sizes.lg, fontWeight: FONTS.weights.bold },
-  confidenceMax: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    fontWeight: "400",
-  },
-  barBg: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: COLORS.bgSurface,
-    marginTop: 4,
-    overflow: "hidden",
-  },
-  barFill: { height: 6, borderRadius: 3 },
-  scoreTile: {
-    flex: 1,
-    alignItems: "center",
-    padding: SPACING.sm,
-    borderRadius: RADIUS.sm,
-    backgroundColor: COLORS.bgSurface,
-    gap: 3,
-  },
-  scoreTileLabel: {
-    fontSize: 10,
-    color: COLORS.textMuted,
-    textAlign: "center",
-  },
-  scoreTileValue: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-  },
-  chloTag: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 6 },
-  chloTagText: { fontSize: FONTS.sizes.xs, color: "#22d3ee" },
-});

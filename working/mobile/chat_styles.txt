@@ -1,0 +1,647 @@
+const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+    backgroundColor: COLORS.bgDark,
+  },
+  flex: { flex: 1 },
+
+  /* ── Header ───────────────────────────────────────────── */
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    height: 52,
+    paddingHorizontal: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: COLORS.border,
+    backgroundColor: COLORS.bgDark,
+  },
+  headerBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  headerCenter: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  headerLogo: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: COLORS.primaryDark,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  headerTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: COLORS.textPrimary,
+    maxWidth: SCREEN_WIDTH * 0.45,
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2,
+  },
+
+  /* ── Message List ─────────────────────────────────────── */
+  messageList: {
+    paddingTop: 8,
+    paddingBottom: 12,
+  },
+  messageListEmpty: {
+    flexGrow: 1,
+    justifyContent: "flex-end",
+  },
+
+  /* ── Message Row ──────────────────────────────────────── */
+  messageRow: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
+  messageRowBot: {
+    gap: 10,
+  },
+  messageRowUser: {
+    justifyContent: "flex-end",
+  },
+
+  /* Bot avatar */
+  botAvatar: {
+    width: 30,
+    height: 30,
+    borderRadius: 10,
+    backgroundColor: COLORS.primary + "25",
+    borderWidth: 1.5,
+    borderColor: COLORS.primaryLight + "40",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 2,
+    flexShrink: 0,
+  },
+
+  /* ── Message Content ──────────────────────────────────── */
+  messageContent: {
+    maxWidth: SCREEN_WIDTH * 0.78,
+    flexShrink: 1,
+  },
+  messageContentBot: {
+    flex: 1,
+  },
+  messageContentUser: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 18,
+    borderBottomRightRadius: 4,
+    paddingHorizontal: 14,
+    paddingTop: 10,
+    paddingBottom: 8,
+    shadowColor: COLORS.primaryLight,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+
+  /* ── User text ────────────────────────────────────────── */
+  userText: {
+    color: "#e0ecff",
+    fontSize: 14,
+    lineHeight: 21,
+  },
+
+  /* ── Message Footer ───────────────────────────────────── */
+  messageFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 4,
+    gap: 8,
+  },
+  messageFooterUser: {
+    justifyContent: "flex-end",
+  },
+  messageTime: {
+    fontSize: 10,
+    color: COLORS.textSubtle,
+  },
+  messageTimeUser: {
+    color: "rgba(191,219,254,0.55)",
+  },
+  ttsBtn: {
+    padding: 2,
+  },
+
+  /* ── Reply context inside message ──────────────────────── */
+  replyContext: {
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginBottom: 6,
+    borderLeftWidth: 2,
+    borderLeftColor: COLORS.primaryLight,
+  },
+  replyContextUser: {
+    backgroundColor: "rgba(255,255,255,0.12)",
+  },
+  replyContent: { flex: 1 },
+  replyAuthor: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: COLORS.primaryLight,
+    marginBottom: 1,
+  },
+  replyText: {
+    fontSize: 11,
+    color: COLORS.textMuted,
+    lineHeight: 15,
+  },
+
+  /* ── Analysis reference inside message ─────────────────── */
+  analysisReference: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginBottom: 6,
+    borderLeftWidth: 2,
+    borderLeftColor: COLORS.primaryLight,
+    gap: 8,
+  },
+  analysisThumb: {
+    width: 36,
+    height: 36,
+    borderRadius: 6,
+    backgroundColor: COLORS.bgDark,
+  },
+  analysisThumbPlaceholder: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  analysisInfo: { flex: 1 },
+  analysisLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: COLORS.primaryLight,
+    marginBottom: 1,
+  },
+  analysisSpecies: {
+    fontSize: 11,
+    color: COLORS.textMuted,
+  },
+
+  /* ── Swipe action ──────────────────────────────────────── */
+  swipeReplyAction: {
+    justifyContent: "center",
+    alignItems: "center",
+    width: 56,
+    paddingRight: 8,
+  },
+  swipeReplyCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: COLORS.bgCard,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  /* ── Typing indicator ──────────────────────────────────── */
+  typingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  typingBubble: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  typingDots: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  typingLabel: {
+    color: COLORS.textMuted,
+    fontSize: 12,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: COLORS.primaryLight,
+  },
+  stopBtn: {
+    padding: 4,
+    marginLeft: 2,
+  },
+
+  /* ── Agent Capability Hub ────────────────────────────────── */
+  capabilityHub: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 10,
+    backgroundColor: COLORS.bgDark,
+  },
+  hubHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 14,
+    gap: 12,
+  },
+  hubIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: COLORS.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  hubHeaderText: {
+    flex: 1,
+  },
+  hubGreeting: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: COLORS.textPrimary,
+    letterSpacing: 0.2,
+  },
+  hubSubtitle: {
+    fontSize: 12,
+    color: COLORS.textMuted,
+    marginTop: 1,
+  },
+  capGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 12,
+  },
+  capCard: {
+    width: "23.5%",
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    paddingVertical: 10,
+    paddingHorizontal: 6,
+    alignItems: "center",
+    gap: 4,
+  },
+  capIconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 2,
+  },
+  capLabel: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: COLORS.textPrimary,
+    textAlign: "center",
+    lineHeight: 13,
+  },
+  capDesc: {
+    fontSize: 8,
+    color: COLORS.textSubtle,
+    textAlign: "center",
+    lineHeight: 10,
+  },
+
+  /* ── Action Bar ────────────────────────────────────────── */
+  actionBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+    marginBottom: 8,
+  },
+  actionBarBtn: {
+    width: 36,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: COLORS.bgCard,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  chipRow: {
+    gap: 8,
+    paddingBottom: 2,
+  },
+  chip: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    gap: 5,
+  },
+  chipText: {
+    color: COLORS.textSecondary,
+    fontSize: 12,
+    fontWeight: "500",
+  },
+
+  /* ── Input Area ────────────────────────────────────────── */
+  inputArea: {
+    backgroundColor: COLORS.bgDark,
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    paddingBottom: 10,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: COLORS.border,
+  },
+  inputRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    paddingLeft: 6,
+    paddingRight: 5,
+    paddingVertical: 4,
+  },
+  attachBtn: {
+    width: 38,
+    height: 38,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  textInput: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    color: COLORS.textPrimary,
+    fontSize: 14,
+    maxHeight: 100,
+    minHeight: 36,
+    lineHeight: 20,
+  },
+  sendBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLORS.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sendBtnDisabled: {
+    backgroundColor: COLORS.bgSurface,
+    opacity: 0.4,
+  },
+
+  /* ── Reply / Analysis Preview ──────────────────────────── */
+  replyPreview: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 6,
+    gap: 8,
+  },
+  replyPreviewBar: {
+    width: 3,
+    height: "100%",
+    backgroundColor: COLORS.primaryLight,
+    borderRadius: 2,
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+  },
+  replyPreviewBody: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingLeft: 4,
+  },
+  replyPreviewTextCol: { flex: 1 },
+  replyPreviewAuthor: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: COLORS.primaryLight,
+    marginBottom: 1,
+  },
+  replyPreviewMessage: {
+    fontSize: 11,
+    color: COLORS.textMuted,
+  },
+
+  analysisPreview: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 6,
+    gap: 8,
+  },
+  analysisPreviewBody: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingLeft: 4,
+  },
+  analysisPreviewThumb: {
+    width: 32,
+    height: 32,
+    borderRadius: 6,
+    backgroundColor: COLORS.bgSurface,
+  },
+  analysisPreviewThumbPlaceholder: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  analysisPreviewTextCol: { flex: 1 },
+  analysisPreviewLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: COLORS.primaryLight,
+    marginBottom: 1,
+  },
+  analysisPreviewSpecies: {
+    fontSize: 11,
+    color: COLORS.textMuted,
+  },
+
+  /* ── Sidebar ───────────────────────────────────────────── */
+  sidebarOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.55)",
+  },
+  sidebar: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: SCREEN_WIDTH * 0.78,
+    backgroundColor: COLORS.bgDark,
+    borderRightWidth: StyleSheet.hairlineWidth,
+    borderRightColor: COLORS.border,
+    paddingTop: 54,
+  },
+  sidebarHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingBottom: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: COLORS.border,
+  },
+  sidebarTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: COLORS.textPrimary,
+    letterSpacing: 0.3,
+  },
+  newChatBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: COLORS.primary,
+    marginHorizontal: 16,
+    marginTop: 14,
+    marginBottom: 10,
+    paddingVertical: 10,
+    borderRadius: 10,
+    gap: 6,
+  },
+  newChatText: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  chatListScroll: {
+    flex: 1,
+    paddingHorizontal: 10,
+    paddingTop: 6,
+  },
+  chatListItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    marginBottom: 2,
+  },
+  chatListItemActive: {
+    backgroundColor: COLORS.primary + "18",
+    borderWidth: 1,
+    borderColor: COLORS.primary + "40",
+  },
+  chatListItemContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    flex: 1,
+  },
+  chatListItemText: { flex: 1 },
+  chatListText: {
+    color: COLORS.textSecondary,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  chatListTextActive: {
+    color: COLORS.primaryLight,
+    fontWeight: "600",
+  },
+  chatListTime: {
+    color: COLORS.textSubtle,
+    fontSize: 10,
+    marginTop: 2,
+  },
+  deleteBtn: {
+    padding: 6,
+  },
+  emptyChatList: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 48,
+    paddingHorizontal: 24,
+  },
+  emptyChatTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: COLORS.textPrimary,
+    marginTop: 12,
+    marginBottom: 4,
+    textAlign: "center",
+  },
+  emptyChatText: {
+    fontSize: 12,
+    color: COLORS.textMuted,
+    textAlign: "center",
+    lineHeight: 18,
+  },
+
+  /* ── Offline overlay ───────────────────────────────────── */
+  offlineOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(15,23,42,0.95)",
+    zIndex: 1000,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 32,
+  },
+  offlineCard: {
+    backgroundColor: COLORS.bgCard,
+    borderRadius: 16,
+    padding: 28,
+    alignItems: "center",
+    maxWidth: 300,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  offlineTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: COLORS.textPrimary,
+    marginTop: 12,
+    marginBottom: 6,
+  },
+  offlineText: {
+    fontSize: 13,
+    color: COLORS.textMuted,
+    textAlign: "center",
+    lineHeight: 19,
+  },
+});

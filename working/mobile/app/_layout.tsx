@@ -1,8 +1,9 @@
+import "../global.css";
 import "react-native-get-random-values";
 import React, { useEffect, useState } from "react";
 import { Stack, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { View, ActivityIndicator, StyleSheet } from "react-native";
+import { View, ActivityIndicator } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider, useAuth } from "../lib/auth-context";
@@ -41,7 +42,7 @@ function RootLayoutNav() {
 
   if (isLoading || !onboardingChecked) {
     return (
-      <View style={styles.loading}>
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: COLORS.bgDark }}>
         <ActivityIndicator size="large" color={COLORS.primary} />
       </View>
     );
@@ -131,14 +132,14 @@ export default function RootLayout() {
   // Show loading screen while diagnostics are running (dev mode only)
   if (!diagnosticsComplete) {
     return (
-      <View style={styles.loading}>
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: COLORS.bgDark }}>
         <ActivityIndicator size="large" color={COLORS.primary} />
       </View>
     );
   }
 
   return (
-    <GestureHandlerRootView style={styles.root}>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: COLORS.bgDark }}>
       <ThemeProvider value={customDarkTheme}>
         <SafeAreaProvider>
           <NetworkProvider>
@@ -158,13 +159,3 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 }
-
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: COLORS.bgDark },
-  loading: {
-    flex: 1,
-    backgroundColor: COLORS.bgDark,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});

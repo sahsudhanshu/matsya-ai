@@ -7,7 +7,6 @@ import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
   Image,
@@ -16,7 +15,7 @@ import {
   NativeSyntheticEvent,
 } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { COLORS, FONTS, SPACING, RADIUS } from '../lib/constants';
+import { COLORS, SPACING } from '../lib/constants';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
@@ -76,18 +75,18 @@ export default function ImageSlider({
 
   if (images.length === 0) {
     return (
-      <View style={[styles.container, containerStyle]}>
-        <View style={[styles.emptySlide, { height: imageHeight }]}>
-          <Text style={styles.emptyText}>No images available</Text>
+      <View className="mb-5" style={containerStyle}>
+        <View className="items-center justify-center rounded-[16px] bg-[#1e293b]" style={{ height: imageHeight }}>
+          <Text className="text-[15px] text-[#94a3b8]">No images available</Text>
         </View>
       </View>
     );
   }
 
   return (
-    <View style={[styles.container, containerStyle]}>
+    <View className="mb-5" style={containerStyle}>
       {/* Slider */}
-      <View style={styles.sliderWrapper}>
+      <View className="relative overflow-hidden rounded-[16px] bg-[#1e293b]">
         <ScrollView
           ref={scrollViewRef}
           horizontal
@@ -96,23 +95,29 @@ export default function ImageSlider({
           onScroll={handleScroll}
           scrollEnabled={images.length > 1}
           showsHorizontalScrollIndicator={false}
-          style={styles.scrollView}
+          className="overflow-hidden"
         >
           {images.map((image, index) => (
-            <View key={index} style={[styles.slide, { width: SCREEN_WIDTH }]}>
+            <View key={index} className="items-center justify-center" style={{ width: SCREEN_WIDTH }}>
               <TouchableOpacity
                 onPress={image.onPress}
                 activeOpacity={0.9}
-                style={styles.imageContainer}
+                className="w-full items-center justify-center"
               >
                 <Image
                   source={{ uri: image.uri }}
-                  style={[styles.image, { height: imageHeight }]}
+                  className="w-full"
+                  style={{ height: imageHeight }}
                   resizeMode="cover"
                 />
               </TouchableOpacity>
               {image.label && (
-                <Text style={styles.imageLabel}>{image.label}</Text>
+                <Text
+                  className="absolute bottom-4 rounded-xl px-4 py-1 text-[12px] font-semibold text-[#f8fafc]"
+                  style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+                >
+                  {image.label}
+                </Text>
               )}
             </View>
           ))}
@@ -122,11 +127,8 @@ export default function ImageSlider({
         {images.length > 1 && (
           <>
             <TouchableOpacity
-              style={[
-                styles.navButton,
-                styles.navButtonLeft,
-                currentIndex === 0 && styles.navButtonDisabled,
-              ]}
+              className="absolute left-4 top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full"
+              style={{ backgroundColor: currentIndex === 0 ? `${COLORS.textMuted}30` : `${COLORS.primaryLight}80` }}
               onPress={handlePrevious}
               disabled={currentIndex === 0}
             >
@@ -138,11 +140,8 @@ export default function ImageSlider({
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[
-                styles.navButton,
-                styles.navButtonRight,
-                currentIndex === images.length - 1 && styles.navButtonDisabled,
-              ]}
+              className="absolute right-4 top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full"
+              style={{ backgroundColor: currentIndex === images.length - 1 ? `${COLORS.textMuted}30` : `${COLORS.primaryLight}80` }}
               onPress={handleNext}
               disabled={currentIndex === images.length - 1}
             >
@@ -162,18 +161,16 @@ export default function ImageSlider({
 
       {/* Indicators */}
       {showIndicators && images.length > 1 && (
-        <View style={styles.indicatorContainer}>
+        <View className="mt-4 flex-row items-center justify-center gap-2 px-4">
           {images.map((_, index) => (
             <TouchableOpacity
               key={index}
-              style={[
-                styles.indicator,
-                index === currentIndex ? styles.indicatorActive : styles.indicatorInactive,
-              ]}
+              className="h-2 w-2 rounded-full border border-[#334155]"
+              style={index === currentIndex ? { backgroundColor: COLORS.primaryLight, width: 12 } : { backgroundColor: COLORS.bgCard }}
               onPress={() => goToSlide(index)}
             />
           ))}
-          <Text style={styles.indicatorText}>
+          <Text className="ml-4 text-[10px] font-semibold text-[#94a3b8]">
             {currentIndex + 1} / {images.length}
           </Text>
         </View>
@@ -181,100 +178,3 @@ export default function ImageSlider({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    marginBottom: SPACING.xl,
-  },
-  sliderWrapper: {
-    position: 'relative',
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.lg,
-    overflow: 'hidden',
-  },
-  scrollView: {
-    overflow: 'hidden',
-  },
-  slide: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  imageContainer: {
-    width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  image: {
-    width: '100%',
-  },
-  imageLabel: {
-    position: 'absolute',
-    bottom: SPACING.md,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    color: COLORS.textPrimary,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs,
-    borderRadius: RADIUS.md,
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.semibold,
-  },
-  emptySlide: {
-    backgroundColor: COLORS.bgCard,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: RADIUS.lg,
-  },
-  emptyText: {
-    fontSize: FONTS.sizes.md,
-    color: COLORS.textMuted,
-  },
-  navButton: {
-    position: 'absolute',
-    top: '50%',
-    marginTop: -14,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: COLORS.primaryLight + '80',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 10,
-  },
-  navButtonLeft: {
-    left: SPACING.md,
-  },
-  navButtonRight: {
-    right: SPACING.md,
-  },
-  navButtonDisabled: {
-    backgroundColor: COLORS.textMuted + '30',
-  },
-  indicatorContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: SPACING.sm,
-    marginTop: SPACING.md,
-    paddingHorizontal: SPACING.md,
-  },
-  indicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  indicatorActive: {
-    backgroundColor: COLORS.primaryLight,
-    width: 12,
-  },
-  indicatorInactive: {
-    backgroundColor: COLORS.bgCard,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  indicatorText: {
-    marginLeft: SPACING.md,
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    fontWeight: FONTS.weights.semibold,
-  },
-});

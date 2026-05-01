@@ -2,14 +2,12 @@ import React, { useState } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS, FONTS, SPACING, RADIUS } from "../../lib/constants";
+import { COLORS } from "../../lib/constants";
 import { Modal } from "../ui/Modal";
 import { deleteUserAccount } from "../../lib/api-client";
 import { toastService } from "../../lib/toast-service";
@@ -57,39 +55,39 @@ export function DeleteAccountModal({
       title="Delete Account"
       size="lg"
     >
-      <View style={styles.content}>
-        <View style={styles.warningBox}>
+      <View className="gap-lg">
+        <View className="bg-error/15 border-2 border-error/40 rounded-md p-md items-center">
           <Ionicons name="warning" size={48} color={COLORS.error} />
-          <Text style={styles.warningTitle}>
+          <Text className="text-sm text-error font-bold text-center">
             This action is permanent and irreversible
           </Text>
         </View>
 
-        <Text style={styles.description}>
+        <Text className="text-sm text-slate-300 leading-5">
           Deleting your account will permanently remove:
         </Text>
 
-        <View style={styles.list}>
-          <Text style={styles.listItem}>
+        <View className="gap-sm pl-sm">
+          <Text className="text-sm text-slate-200 leading-5">
             • Your profile and personal information
           </Text>
-          <Text style={styles.listItem}>
+          <Text className="text-sm text-slate-200 leading-5">
             • All catch history and analysis results
           </Text>
-          <Text style={styles.listItem}>
+          <Text className="text-sm text-slate-200 leading-5">
             • Chat conversations with the AI assistant
           </Text>
-          <Text style={styles.listItem}>
+          <Text className="text-sm text-slate-200 leading-5">
             • All associated data and settings
           </Text>
         </View>
 
-        <Text style={styles.confirmLabel}>
-          Type <Text style={styles.deleteText}>DELETE</Text> to confirm:
+        <Text className="text-sm text-slate-300 mt-md">
+          Type <Text className="font-bold text-error font-mono">DELETE</Text> to confirm:
         </Text>
 
         <TextInput
-          style={styles.input}
+          className="bg-slate-900 border-2 border-slate-600 rounded-md px-md py-sm text-sm text-slate-100 font-mono"
           value={confirmText}
           onChangeText={setConfirmText}
           placeholder="Type DELETE here"
@@ -98,28 +96,24 @@ export function DeleteAccountModal({
           autoCorrect={false}
         />
 
-        <View style={styles.buttons}>
+        <View className="flex-row gap-md mt-md">
           <TouchableOpacity
-            style={[styles.button, styles.cancelButton]}
+            className="flex-1 py-sm rounded-md items-center justify-center bg-slate-900 border border-slate-600"
             onPress={handleClose}
             disabled={loading}
           >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
+            <Text className="text-sm text-slate-300 font-medium">Cancel</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[
-              styles.button,
-              styles.deleteButton,
-              (!isConfirmValid || loading) && styles.buttonDisabled,
-            ]}
+            className={`flex-1 py-sm rounded-md items-center justify-center bg-error ${(!isConfirmValid || loading) ? "opacity-50" : ""}`}
             onPress={handleConfirm}
             disabled={!isConfirmValid || loading}
           >
             {loading ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
-              <Text style={styles.deleteButtonText}>Delete Account</Text>
+              <Text className="text-sm text-white font-bold">Delete Account</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -127,95 +121,3 @@ export function DeleteAccountModal({
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  content: {
-    gap: SPACING.lg,
-  },
-  warningBox: {
-    backgroundColor: COLORS.error + "15",
-    borderWidth: 2,
-    borderColor: COLORS.error + "40",
-    borderRadius: RADIUS.md,
-    padding: SPACING.md,
-    alignItems: "center",
-  },
-  warningIcon: {
-    fontSize: 24,
-    marginBottom: SPACING.xs,
-  },
-  warningTitle: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.error,
-    fontWeight: FONTS.weights.bold,
-    textAlign: "center",
-  },
-  description: {
-    fontSize: FONTS.sizes.sm,
-    color: "#cbd5e1", // Brighter text
-    lineHeight: 20,
-  },
-  list: {
-    gap: SPACING.sm,
-    paddingLeft: SPACING.sm,
-  },
-  listItem: {
-    fontSize: FONTS.sizes.sm,
-    color: "#e2e8f0", // Brighter text
-    lineHeight: 20,
-  },
-  confirmLabel: {
-    fontSize: FONTS.sizes.sm,
-    color: "#cbd5e1", // Brighter text
-    marginTop: SPACING.md,
-  },
-  deleteText: {
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.error,
-    fontFamily: "monospace",
-  },
-  input: {
-    backgroundColor: "#0f172a",
-    borderWidth: 2,
-    borderColor: "#475569",
-    borderRadius: RADIUS.md,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
-    fontSize: FONTS.sizes.sm,
-    color: "#f1f5f9",
-    fontFamily: "monospace",
-  },
-  buttons: {
-    flexDirection: "row",
-    gap: SPACING.md,
-    marginTop: SPACING.md,
-  },
-  button: {
-    flex: 1,
-    paddingVertical: SPACING.sm,
-    borderRadius: RADIUS.md,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cancelButton: {
-    backgroundColor: "#0f172a", // Darker for contrast
-    borderWidth: 1,
-    borderColor: "#475569", // Lighter border
-  },
-  cancelButtonText: {
-    fontSize: FONTS.sizes.sm,
-    color: "#cbd5e1", // Brighter text
-    fontWeight: FONTS.weights.medium,
-  },
-  deleteButton: {
-    backgroundColor: COLORS.error,
-  },
-  deleteButtonText: {
-    fontSize: FONTS.sizes.sm,
-    color: "#fff",
-    fontWeight: FONTS.weights.bold,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-});

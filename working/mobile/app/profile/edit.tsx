@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { View, Text, Alert } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Stack, router } from "expo-router";
 import { ProfileForm } from "../../components/profile/ProfileForm";
@@ -7,7 +7,7 @@ import { AvatarUploader } from "../../components/profile/AvatarUploader";
 import { ProfileService } from "../../lib/profile-service";
 import { SkeletonProfile } from "../../components/ui/Skeleton";
 import type { UserProfile } from "../../lib/types";
-import { COLORS, FONTS, SPACING } from "../../lib/constants";
+import { COLORS } from "../../lib/constants";
 
 export default function EditProfileScreen() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -84,14 +84,14 @@ export default function EditProfileScreen() {
 
   if (loading) {
     return (
-      <View style={styles.container}>
+      <View style={{ flex: 1, backgroundColor: "#0f172a" }}>
         <Stack.Screen
           options={{
             title: "Edit Profile",
             headerBackTitle: "Back",
           }}
         />
-        <KeyboardAwareScrollView style={styles.scroll}>
+        <KeyboardAwareScrollView style={{ flex: 1 }}>
           <SkeletonProfile />
         </KeyboardAwareScrollView>
       </View>
@@ -123,16 +123,21 @@ export default function EditProfileScreen() {
     };
 
     return (
-      <View style={styles.container}>
+      <View style={{ flex: 1, backgroundColor: "#0f172a" }}>
         <Stack.Screen
           options={{
             title: "Edit Profile",
             headerBackTitle: "Back",
           }}
         />
-        <View style={styles.centered}>
-          <Text style={styles.errorText}>{error || "Profile not found"}</Text>
-          <Text style={styles.retryButton} onPress={handleRetry}>
+        <View className="flex-1 items-center justify-center p-6">
+          <Text className="mb-4 text-center text-[12px] text-[#ef4444]">
+            {error || "Profile not found"}
+          </Text>
+          <Text
+            className="text-[12px] font-semibold text-[#1e40af]"
+            onPress={handleRetry}
+          >
             Retry
           </Text>
         </View>
@@ -141,7 +146,7 @@ export default function EditProfileScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={{ flex: 1, backgroundColor: "#0f172a" }}>
       <Stack.Screen
         options={{
           title: "Edit Profile",
@@ -150,12 +155,12 @@ export default function EditProfileScreen() {
       />
 
       <KeyboardAwareScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        style={{ flex: 1 }}
+        contentContainerStyle={{ flexGrow: 1 }}
         showsVerticalScrollIndicator={false}
         enableOnAndroid={true}
       >
-        <View style={styles.avatarSection}>
+        <View className="items-center border-b border-[#334155] bg-[#1e293b] px-6 py-6">
           <AvatarUploader
             currentUri={profile.avatar}
             userName={profile.name || "User"}
@@ -174,49 +179,3 @@ export default function EditProfileScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.bgDark,
-  },
-  scroll: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: SPACING.xl,
-  },
-  loadingText: {
-    marginTop: SPACING.md,
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textSecondary,
-  },
-  errorText: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.error,
-    textAlign: "center",
-    marginBottom: SPACING.md,
-  },
-  retryButton: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.primary,
-    fontWeight: FONTS.weights.semibold as any,
-  },
-  avatarSection: {
-    alignItems: "center",
-    paddingVertical: SPACING.lg,
-    paddingHorizontal: SPACING.lg,
-    backgroundColor: COLORS.bgCard,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-});

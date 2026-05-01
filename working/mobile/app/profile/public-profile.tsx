@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   ActivityIndicator,
   Alert,
@@ -22,7 +21,7 @@ import {
   generatePublicSlug,
 } from "../../lib/api-client";
 import type { PublicProfile } from "../../lib/types";
-import { COLORS, FONTS, SPACING, RADIUS } from "../../lib/constants";
+import { COLORS } from "../../lib/constants";
 
 export default function PublicProfileConfigScreen() {
   const [profile, setProfile] = useState<PublicProfile | null>(null);
@@ -133,16 +132,18 @@ export default function PublicProfileConfigScreen() {
 
   if (loading) {
     return (
-      <View style={styles.container}>
+      <View style={{ flex: 1, backgroundColor: "#0f172a" }}>
         <Stack.Screen
           options={{
             title: "Public Profile",
             headerBackTitle: "Back",
           }}
         />
-        <View style={styles.centered}>
+        <View className="flex-1 items-center justify-center gap-4 p-6">
           <ActivityIndicator size="large" color={COLORS.primary} />
-          <Text style={styles.loadingText}>Loading profile settings...</Text>
+          <Text className="mt-4 text-[12px] text-[#e2e8f0]">
+            Loading profile settings...
+          </Text>
         </View>
       </View>
     );
@@ -150,20 +151,22 @@ export default function PublicProfileConfigScreen() {
 
   if (error && !profile) {
     return (
-      <View style={styles.container}>
+      <View style={{ flex: 1, backgroundColor: "#0f172a" }}>
         <Stack.Screen
           options={{
             title: "Public Profile",
             headerBackTitle: "Back",
           }}
         />
-        <View style={styles.centered}>
+        <View className="flex-1 items-center justify-center p-6">
           <Ionicons
             name="alert-circle-outline"
             size={64}
             color={COLORS.error}
           />
-          <Text style={styles.errorText}>{error}</Text>
+          <Text className="my-4 text-center text-[12px] text-[#ef4444]">
+            {error}
+          </Text>
           <Button label="Retry" onPress={loadProfile} variant="primary" />
         </View>
       </View>
@@ -171,7 +174,7 @@ export default function PublicProfileConfigScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={{ flex: 1, backgroundColor: "#0f172a" }}>
       <Stack.Screen
         options={{
           title: "Public Profile",
@@ -180,15 +183,25 @@ export default function PublicProfileConfigScreen() {
       />
 
       <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
+        style={{ flex: 1 }}
+        contentContainerStyle={{
+          padding: 24,
+          paddingBottom: 48,
+        }}
         showsVerticalScrollIndicator={false}
       >
         {/* Info Card */}
-        <Card style={styles.infoCard}>
-          <View style={styles.infoRow}>
+        <Card
+          className="mb-4"
+          style={{
+            backgroundColor: `${COLORS.info}15`,
+            borderColor: `${COLORS.info}40`,
+            borderWidth: 1,
+          }}
+        >
+          <View className="flex-row items-start gap-2.5">
             <Ionicons name="information-circle" size={20} color={COLORS.info} />
-            <Text style={styles.infoText}>
+            <Text className="flex-1 text-[12px] leading-5 text-[#3b82f6]">
               Share your fishing achievements with others by enabling your
               public profile
             </Text>
@@ -196,11 +209,13 @@ export default function PublicProfileConfigScreen() {
         </Card>
 
         {/* Enable Public Profile */}
-        <Card style={styles.settingCard}>
-          <View style={styles.settingRow}>
-            <View style={styles.settingInfo}>
-              <Text style={styles.settingLabel}>Enable Public Profile</Text>
-              <Text style={styles.settingDescription}>
+        <Card className="mb-4">
+          <View className="flex-row items-center justify-between">
+            <View className="mr-4 flex-1">
+              <Text className="mb-1 text-[12px] font-semibold text-[#f8fafc]">
+                Enable Public Profile
+              </Text>
+              <Text className="text-[12px] leading-[18px] text-[#94a3b8]">
                 Make your profile visible to others
               </Text>
             </View>
@@ -214,11 +229,13 @@ export default function PublicProfileConfigScreen() {
         </Card>
 
         {/* Show Statistics */}
-        <Card style={styles.settingCard}>
-          <View style={styles.settingRow}>
-            <View style={styles.settingInfo}>
-              <Text style={styles.settingLabel}>Show Statistics</Text>
-              <Text style={styles.settingDescription}>
+        <Card className="mb-4">
+          <View className="flex-row items-center justify-between">
+            <View className="mr-4 flex-1">
+              <Text className="mb-1 text-[12px] font-semibold text-[#f8fafc]">
+                Show Statistics
+              </Text>
+              <Text className="text-[12px] leading-[18px] text-[#94a3b8]">
                 Display your catch stats and achievements
               </Text>
             </View>
@@ -235,16 +252,18 @@ export default function PublicProfileConfigScreen() {
         {/* Profile Link Section */}
         {isPublic && (
           <>
-            <Card style={styles.linkCard}>
-              <Text style={styles.sectionTitle}>Profile Link</Text>
+            <Card className="mb-4 p-6">
+              <Text className="mb-3 text-[13px] font-bold text-[#f8fafc]">
+                Profile Link
+              </Text>
 
               {/* Custom Slug Display */}
-              <View style={styles.slugContainer}>
+              <View className="mb-4 flex-row items-end gap-2.5">
                 <Input
                   label="Profile Slug"
                   value={customSlug}
                   editable={false}
-                  containerStyle={styles.slugInput}
+                  containerStyle={{ flex: 1 }}
                   leftIcon={
                     <Ionicons
                       name="link-outline"
@@ -259,22 +278,27 @@ export default function PublicProfileConfigScreen() {
                   loading={generatingSlug}
                   variant="outline"
                   size="sm"
-                  style={styles.generateButton}
+                  className="mb-2"
                 />
               </View>
 
               {/* Full URL Display */}
               {profileUrl && (
-                <View style={styles.urlContainer}>
-                  <Text style={styles.urlLabel}>Shareable Link:</Text>
+                <View className="mb-6">
+                  <Text className="mb-2 text-[12px] font-semibold text-[#e2e8f0]">
+                    Shareable Link:
+                  </Text>
                   <TouchableOpacity
-                    style={styles.urlBox}
+                    className="flex-row items-center justify-between gap-2 rounded-xl border border-[#334155] bg-[#334155] p-4"
                     onPress={() => {
                       // Copy to clipboard functionality could be added here
                       Alert.alert("Profile URL", profileUrl);
                     }}
                   >
-                    <Text style={styles.urlText} numberOfLines={1}>
+                    <Text
+                      className="flex-1 text-[12px] text-[#3b82f6]"
+                      numberOfLines={1}
+                    >
                       {profileUrl}
                     </Text>
                     <Ionicons
@@ -288,9 +312,11 @@ export default function PublicProfileConfigScreen() {
 
               {/* QR Code */}
               {profileUrl && (
-                <View style={styles.qrContainer}>
-                  <Text style={styles.qrLabel}>QR Code</Text>
-                  <View style={styles.qrCodeWrapper}>
+                <View className="mb-6 items-center">
+                  <Text className="mb-4 text-[12px] font-semibold text-[#e2e8f0]">
+                    QR Code
+                  </Text>
+                  <View className="mb-2 rounded-xl border-2 border-[#334155] bg-[#1e293b] p-4">
                     <QRCode
                       value={profileUrl}
                       size={200}
@@ -298,14 +324,14 @@ export default function PublicProfileConfigScreen() {
                       backgroundColor={COLORS.bgCard}
                     />
                   </View>
-                  <Text style={styles.qrDescription}>
+                  <Text className="text-center text-[10px] text-[#94a3b8]">
                     Others can scan this code to view your profile
                   </Text>
                 </View>
               )}
 
               {/* Action Buttons */}
-              <View style={styles.actionButtons}>
+              <View className="gap-4">
                 <Button
                   label="Share Profile"
                   onPress={handleShare}
@@ -337,7 +363,7 @@ export default function PublicProfileConfigScreen() {
         )}
 
         {/* Save Button */}
-        <View style={styles.saveContainer}>
+        <View className="mb-6">
           <Button
             label="Save Settings"
             onPress={handleSave}
@@ -349,9 +375,11 @@ export default function PublicProfileConfigScreen() {
         </View>
 
         {/* Privacy Notice */}
-        <Card style={styles.privacyCard}>
-          <Text style={styles.privacyTitle}>Privacy Notice</Text>
-          <Text style={styles.privacyText}>
+        <Card className="bg-[#334155]">
+          <Text className="mb-2 text-[12px] font-semibold text-[#e2e8f0]">
+            Privacy Notice
+          </Text>
+          <Text className="text-[12px] leading-5 text-[#94a3b8]">
             • Your public profile will be visible to anyone with the link{"\n"}•
             Only information you choose to share will be displayed{"\n"}• You
             can disable your public profile at any time{"\n"}• Your contact
@@ -362,168 +390,3 @@ export default function PublicProfileConfigScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.bgDark,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    padding: SPACING.lg,
-    paddingBottom: SPACING["2xl"],
-  },
-  centered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: SPACING.xl,
-    gap: SPACING.md,
-  },
-  loadingText: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textSecondary,
-    marginTop: SPACING.md,
-  },
-  errorText: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.error,
-    textAlign: "center",
-    marginVertical: SPACING.md,
-  },
-  infoCard: {
-    backgroundColor: COLORS.info + "15",
-    borderColor: COLORS.info + "40",
-    borderWidth: 1,
-    marginBottom: SPACING.md,
-  },
-  infoRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: SPACING.sm,
-  },
-  infoText: {
-    flex: 1,
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.info,
-    lineHeight: 20,
-  },
-  settingCard: {
-    marginBottom: SPACING.md,
-  },
-  settingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  settingInfo: {
-    flex: 1,
-    marginRight: SPACING.md,
-  },
-  settingLabel: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.semibold,
-    color: COLORS.textPrimary,
-    marginBottom: SPACING.xs,
-  },
-  settingDescription: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-    lineHeight: 18,
-  },
-  linkCard: {
-    marginBottom: SPACING.md,
-    padding: SPACING.lg,
-  },
-  sectionTitle: {
-    fontSize: FONTS.sizes.base,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-    marginBottom: SPACING.sm,
-  },
-  slugContainer: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    gap: SPACING.sm,
-    marginBottom: SPACING.md,
-  },
-  slugInput: {
-    flex: 1,
-  },
-  generateButton: {
-    marginBottom: SPACING.sm,
-  },
-  urlContainer: {
-    marginBottom: SPACING.lg,
-  },
-  urlLabel: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.semibold,
-    color: COLORS.textSecondary,
-    marginBottom: SPACING.sm,
-  },
-  urlBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: COLORS.bgSurface,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: SPACING.md,
-    gap: SPACING.sm,
-  },
-  urlText: {
-    flex: 1,
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.primary,
-    fontFamily: "monospace",
-  },
-  qrContainer: {
-    alignItems: "center",
-    marginBottom: SPACING.lg,
-  },
-  qrLabel: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.semibold,
-    color: COLORS.textSecondary,
-    marginBottom: SPACING.md,
-  },
-  qrCodeWrapper: {
-    padding: SPACING.md,
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.md,
-    borderWidth: 2,
-    borderColor: COLORS.border,
-    marginBottom: SPACING.sm,
-  },
-  qrDescription: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    textAlign: "center",
-  },
-  actionButtons: {
-    gap: SPACING.md,
-  },
-  saveContainer: {
-    marginBottom: SPACING.lg,
-  },
-  privacyCard: {
-    backgroundColor: COLORS.bgSurface,
-    borderColor: COLORS.border,
-    borderWidth: 1,
-  },
-  privacyTitle: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.semibold,
-    color: COLORS.textSecondary,
-    marginBottom: SPACING.sm,
-  },
-  privacyText: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-    lineHeight: 20,
-  },
-});

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   FlatList,
   TouchableOpacity,
   Image,
@@ -11,7 +10,7 @@ import {
   Modal,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { COLORS, FONTS, SPACING, RADIUS } from "../../lib/constants";
+import { COLORS } from "../../lib/constants";
 import { getImages, getGroups } from "../../lib/api-client";
 import type { ImageRecord, GroupRecord } from "../../lib/api-client";
 import { toastService } from "../../lib/toast-service";
@@ -148,32 +147,32 @@ export function AnalysisPicker({
 
   const renderItem = ({ item }: { item: AnalysisItem }) => (
     <TouchableOpacity
-      style={styles.analysisItem}
+      className="flex-row items-center bg-bgCard rounded-lg p-md mb-sm border border-borderDark gap-md"
       onPress={() => handleSelect(item)}
       activeOpacity={0.7}
     >
-      <View style={styles.imageContainer}>
+      <View className="relative">
         {item.imageUrl ? (
-          <Image source={{ uri: item.imageUrl }} style={styles.thumbnail} />
+          <Image source={{ uri: item.imageUrl }} className="w-[50px] h-[50px] rounded-md bg-bgDark" />
         ) : (
-          <View style={[styles.thumbnail, styles.placeholderImage]}>
+          <View className="w-[50px] h-[50px] rounded-md bg-bgDark justify-center items-center">
             <Ionicons name="fish" size={32} color={COLORS.textMuted} />
           </View>
         )}
         {item.type === "group" && (
-          <View style={styles.groupBadge}>
+          <View className="absolute top-[-4px] right-[-4px] bg-primary rounded-full px-[6px] py-[2px] flex-row items-center gap-[2px]">
             <Ionicons name="images" size={12} color="#fff" />
-            <Text style={styles.groupBadgeText}>{item.imageCount}</Text>
+            <Text className="text-white text-[10px] font-bold">{item.imageCount}</Text>
           </View>
         )}
       </View>
-      <View style={styles.analysisInfo}>
-        <Text style={styles.analysisTitle} numberOfLines={1}>
+      <View className="flex-1">
+        <Text className="text-[12px] font-semibold text-textPrimary mb-[2px]" numberOfLines={1}>
           {item.type === "single"
             ? item.species || "Unknown Species"
             : item.groupName}
         </Text>
-        <Text style={styles.analysisDate}>{formatDate(item.date)}</Text>
+        <Text className="text-[10px] text-textMuted">{formatDate(item.date)}</Text>
       </View>
       <Ionicons name="chevron-forward" size={20} color={COLORS.textMuted} />
     </TouchableOpacity>
@@ -186,24 +185,24 @@ export function AnalysisPicker({
       transparent={true}
       onRequestClose={onClose}
     >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
+      <View className="flex-1 bg-[rgba(0,0,0,0.5)] justify-end">
+        <View className="bg-bgDark rounded-t-2xl max-h-[80%] pb-xl">
           {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.headerLeft}>
+          <View className="flex-row justify-between items-center p-lg border-b border-borderDark">
+            <View className="flex-row items-center gap-sm">
               <Ionicons name="images" size={24} color={COLORS.primaryLight} />
-              <Text style={styles.headerTitle}>Reference a Catch</Text>
+              <Text className="text-[13px] font-bold text-textPrimary">Reference a Catch</Text>
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+            <TouchableOpacity onPress={onClose} className="p-xs">
               <Ionicons name="close" size={24} color={COLORS.textPrimary} />
             </TouchableOpacity>
           </View>
 
           {/* Search Bar */}
-          <View style={styles.searchContainer}>
+          <View className="flex-row items-center bg-bgCard rounded-xl px-md py-sm m-lg border border-borderDark gap-sm">
             <Ionicons name="search" size={20} color={COLORS.textMuted} />
             <TextInput
-              style={styles.searchInput}
+              className="flex-1 text-textPrimary text-[12px] py-xs"
               placeholder="Search by species or group..."
               placeholderTextColor={COLORS.textSubtle}
               value={searchQuery}
@@ -222,32 +221,32 @@ export function AnalysisPicker({
 
           {/* Content */}
           {isLoading ? (
-            <View style={styles.centerContainer}>
+            <View className="flex-1 justify-center items-center p-xl min-h-[300px]">
               <ActivityIndicator size="large" color={COLORS.primaryLight} />
-              <Text style={styles.loadingText}>Loading analyses...</Text>
+              <Text className="mt-md text-[12px] text-textMuted">Loading analyses...</Text>
             </View>
           ) : error ? (
-            <View style={styles.centerContainer}>
+            <View className="flex-1 justify-center items-center p-xl min-h-[300px]">
               <Ionicons name="alert-circle" size={48} color={COLORS.error} />
-              <Text style={styles.errorText}>{error}</Text>
+              <Text className="mt-md text-[12px] text-error text-center">{error}</Text>
               <TouchableOpacity
-                style={styles.retryButton}
+                className="mt-lg bg-primary px-lg py-sm rounded-lg"
                 onPress={loadAnalyses}
               >
-                <Text style={styles.retryButtonText}>Retry</Text>
+                <Text className="text-white text-[12px] font-semibold">Retry</Text>
               </TouchableOpacity>
             </View>
           ) : filteredAnalyses.length === 0 ? (
-            <View style={styles.centerContainer}>
+            <View className="flex-1 justify-center items-center p-xl min-h-[300px]">
               <Ionicons
                 name="fish-outline"
                 size={48}
                 color={COLORS.textMuted}
               />
-              <Text style={styles.emptyTitle}>
+              <Text className="mt-md text-[13px] font-bold text-textPrimary">
                 {searchQuery ? "No matches found" : "No analyses yet"}
               </Text>
-              <Text style={styles.emptyText}>
+              <Text className="mt-xs text-[12px] text-textMuted text-center leading-[20px]">
                 {searchQuery
                   ? "Try a different search term"
                   : "Upload and analyze a catch to reference it in chat"}
@@ -258,7 +257,7 @@ export function AnalysisPicker({
               data={filteredAnalyses}
               renderItem={renderItem}
               keyExtractor={(item) => `${item.type}-${item.id}`}
-              contentContainerStyle={styles.listContent}
+              contentContainerClassName="px-lg pb-lg"
               showsVerticalScrollIndicator={false}
             />
           )}
@@ -267,158 +266,3 @@ export function AnalysisPicker({
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "flex-end",
-  },
-  modalContent: {
-    backgroundColor: COLORS.bgDark,
-    borderTopLeftRadius: RADIUS["2xl"],
-    borderTopRightRadius: RADIUS["2xl"],
-    maxHeight: "80%",
-    paddingBottom: SPACING.xl,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: SPACING.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  headerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.sm,
-  },
-  headerTitle: {
-    fontSize: FONTS.sizes.base,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-  },
-  closeButton: {
-    padding: SPACING.xs,
-  },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.xl,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
-    margin: SPACING.lg,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    gap: SPACING.sm,
-  },
-  searchInput: {
-    flex: 1,
-    color: COLORS.textPrimary,
-    fontSize: FONTS.sizes.sm,
-    paddingVertical: SPACING.xs,
-  },
-  listContent: {
-    paddingHorizontal: SPACING.lg,
-    paddingBottom: SPACING.lg,
-  },
-  analysisItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.lg,
-    padding: SPACING.md,
-    marginBottom: SPACING.sm,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    gap: SPACING.md,
-  },
-  imageContainer: {
-    position: "relative",
-  },
-  thumbnail: {
-    width: 50,
-    height: 50,
-    borderRadius: RADIUS.md,
-    backgroundColor: COLORS.bgDark,
-  },
-  placeholderImage: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  groupBadge: {
-    position: "absolute",
-    top: -4,
-    right: -4,
-    backgroundColor: COLORS.primary,
-    borderRadius: RADIUS.full,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 2,
-  },
-  groupBadgeText: {
-    color: "#fff",
-    fontSize: FONTS.sizes.xs,
-    fontWeight: FONTS.weights.bold,
-  },
-  analysisInfo: {
-    flex: 1,
-  },
-  analysisTitle: {
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.semibold,
-    color: COLORS.textPrimary,
-    marginBottom: 2,
-  },
-  analysisDate: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: SPACING.xl,
-    minHeight: 300,
-  },
-  loadingText: {
-    marginTop: SPACING.md,
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-  },
-  errorText: {
-    marginTop: SPACING.md,
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.error,
-    textAlign: "center",
-  },
-  retryButton: {
-    marginTop: SPACING.lg,
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.sm,
-    borderRadius: RADIUS.lg,
-  },
-  retryButtonText: {
-    color: "#fff",
-    fontSize: FONTS.sizes.sm,
-    fontWeight: FONTS.weights.semibold,
-  },
-  emptyTitle: {
-    marginTop: SPACING.md,
-    fontSize: FONTS.sizes.base,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-  },
-  emptyText: {
-    marginTop: SPACING.xs,
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-    textAlign: "center",
-    lineHeight: 20,
-  },
-});

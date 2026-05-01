@@ -3,7 +3,7 @@
  * Shows connection quality with color-coded icon (green/yellow/red)
  */
 import React from "react";
-import { View, StyleSheet } from "react-native";
+import { View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNetwork } from "../../lib/network-context";
 
@@ -51,14 +51,8 @@ export function ConnectionQualityIcon({
   const config = getQualityConfig();
 
   return (
-    <View style={styles.container}>
+    <View className="p-1">
       <Ionicons name={config.icon} size={size} color={config.color} />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    padding: 4,
-  },
-});

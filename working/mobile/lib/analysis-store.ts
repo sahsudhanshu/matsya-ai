@@ -19,6 +19,7 @@ export interface OfflineAnalysisData {
   processingTime: number;
   imageUri: string;
   location?: { lat: number; lng: number } | null;
+  localRecordId?: string;
 }
 
 export type AnalysisData = OnlineAnalysisData | OfflineAnalysisData;

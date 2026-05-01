@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   FlatList,
   TextInput,
   TouchableOpacity,
@@ -16,6 +15,7 @@ import {
   Dimensions,
   Alert,
   Image,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -40,6 +40,7 @@ import { EmptyState } from "../../components/ui/EmptyState";
 import { AnalysisPicker } from "../../components/chat/AnalysisPicker";
 import { TelegramIntegrationModal } from "../../components/chat/TelegramIntegrationModal";
 import { WeightEstimateModal } from "../../components/WeightEstimateModal";
+import { GroupFishPickerModal } from "../../components/chat/GroupFishPickerModal";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import { DeepLinkService } from "../../lib/deep-link-service";
@@ -59,6 +60,7 @@ import { ScanResultCard } from "../../components/chat/ScanResultCard";
 import { useAgentContext } from "../../lib/agent-context";
 import { sanitiseAgentText } from "../../lib/chat-stream-client";
 import { useVoiceInput } from "../../hooks/useVoiceInput";
+import { ChatSkeleton } from "../../components/chat/ChatSkeleton";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -81,7 +83,7 @@ interface UIMessage {
     type: "single" | "group";
   };
   /** UI actions returned by the agent for this message */
-  uiActions?: AgentUIActions;
+  uiActions?: any;
   /** Tool names called during generation */
   toolsCalled?: string[];
   /** Scan result data for post-scan agent takeover */
@@ -144,14 +146,6 @@ export default function ChatScreen() {
 
   const AGENT_CAPABILITIES: AgentCapability[] = [
     {
-      icon: "sunny",
-      label: "Daily Briefing",
-      prompt:
-        "Give me my daily fishing briefing - weather conditions, best fishing zones near me, today's market prices, and any active safety alerts for my area.",
-      color: COLORS.secondary,
-      desc: "Weather, zones & alerts",
-    },
-    {
       icon: "camera",
       label: "Analyze Catch",
       action: "openCamera",
@@ -166,13 +160,14 @@ export default function ChatScreen() {
       desc: "On-device weight model",
     },
     {
-      icon: "analytics",
-      label: "My Analytics",
+      icon: "sunny",
+      label: "Daily Briefing",
       prompt:
-        "Show me my catch analytics - total earnings, top species caught, quality grade breakdown, and recent trends.",
-      color: "#7c3aed",
-      desc: "Earnings & catch stats",
+        "Give me my daily fishing briefing - weather conditions, best fishing zones near me, today's market prices, and any active safety alerts for my area.",
+      color: COLORS.secondary,
+      desc: "Weather, zones & alerts",
     },
+
     {
       icon: "navigate",
       label: "Fishing Zones",
@@ -197,14 +192,6 @@ export default function ChatScreen() {
       color: "#ef4444",
       desc: "Warnings & advisories",
     },
-    {
-      icon: "leaf",
-      label: "Sustainability",
-      prompt:
-        "How is my sustainability score? Am I within legal catch limits for my recently caught species? What are the current size regulations?",
-      color: "#10b981",
-      desc: "Eco score & regulations",
-    },
   ];
 
   const [messages, setMessages] = useState<UIMessage[]>([
@@ -222,6 +209,7 @@ export default function ChatScreen() {
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [chats, setChats] = useState<StoredConversation[]>([]);
   const [showSidebar, setShowSidebar] = useState(false);
+  const [refreshingSidebar, setRefreshingSidebar] = useState(false);
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [streamingMessageId, setStreamingMessageId] = useState<string | null>(
     null,
@@ -243,6 +231,11 @@ export default function ChatScreen() {
   // Weight estimation state
   const [weightModalVisible, setWeightModalVisible] = useState(false);
   const [weightSpecies, setWeightSpecies] = useState("Tilapia");
+  const [weightFishIndex, setWeightFishIndex] = useState(0);
+  const [groupFishPickerVisible, setGroupFishPickerVisible] = useState(false);
+
+  // Selected quick tips context
+  const [selectedTips, setSelectedTips] = useState<string[]>([]);
 
   // Tool transparency state (live tool calls during streaming)
   const [liveToolCalls, setLiveToolCalls] = useState<string[]>([]);
@@ -346,6 +339,12 @@ export default function ChatScreen() {
     }
   };
 
+  const handleRefreshSidebar = async () => {
+    setRefreshingSidebar(true);
+    await syncConversations();
+    setRefreshingSidebar(false);
+  };
+
   // Reset initial message flag when component unmounts or chat changes
   useEffect(() => {
     return () => {
@@ -374,17 +373,6 @@ export default function ChatScreen() {
   }, []);
 
   useEffect(() => {
-    // Reset to new chat when tab is focused
-    const unsubscribe = navigation.addListener("focus", () => {
-      if (!params.initialMessage) {
-        createNewChat();
-      }
-    });
-
-    return unsubscribe;
-  }, [navigation]);
-
-  useEffect(() => {
     if (params.initialMessage && !initialMessageSent.current) {
       initialMessageSent.current = true;
       setCurrentChatId(null);
@@ -411,9 +399,10 @@ export default function ChatScreen() {
         const weightG = parseFloat(params.weight as string);
         const kgStr = (weightG / 1000).toFixed(2);
         setTimeout(() => {
-          sendMessage(
-            `I just analyzed a ${params.species} and the on-device model estimated its weight at ${kgStr} kg (${weightG.toFixed(0)}g). What's the current market value for this? Any quality or storage recommendations?`,
-          );
+          setSelectedTips((prev) => [
+            ...prev,
+            `Analyzed ${params.species} - Est. weight: ${kgStr} kg`,
+          ]);
         }, 500);
       }
     }
@@ -435,27 +424,30 @@ export default function ChatScreen() {
         ? ` weighing ${params.catchWeight}kg`
         : "";
       setTimeout(() => {
-        sendMessage(
-          `I caught a ${params.species}${weightInfo} on ${catchDate}. Can you give me insights about this catch? What were the market conditions at that time?`,
-        );
+        setSelectedTips((prev) => [
+          ...prev,
+          `Caught ${params.species}${weightInfo} on ${catchDate}`,
+        ]);
       }, 500);
     }
 
     // Zone context from Map screen
     if (params.zoneName && params.zoneCoordinates) {
       setTimeout(() => {
-        sendMessage(
-          `Tell me about the fishing zone "${params.zoneName}" at coordinates ${params.zoneCoordinates}. What are the conditions, best species to target, and any regulations I should know about?`,
-        );
+        setSelectedTips((prev) => [
+          ...prev,
+          `Fishing zone: "${params.zoneName}" at ${params.zoneCoordinates}`,
+        ]);
       }, 500);
     }
 
     // Marker context from Map screen
     if (params.markerType && params.markerCoordinates) {
       setTimeout(() => {
-        sendMessage(
-          `I'm looking at a ${params.markerType} marker at coordinates ${params.markerCoordinates}. What information can you provide about this location?`,
-        );
+        setSelectedTips((prev) => [
+          ...prev,
+          `Location: ${params.markerCoordinates}`,
+        ]);
       }, 500);
     }
   }, [
@@ -474,10 +466,7 @@ export default function ChatScreen() {
 
   useEffect(() => {
     // Load conversations from AsyncStorage first, then sync with backend
-    loadStoredConversations().then((stored) => {
-      if (stored.length > 0 && !params.initialMessage) {
-        loadChat(stored[0].id);
-      }
+    loadStoredConversations().then(() => {
       // Sync with backend when online
       syncConversations();
     });
@@ -558,7 +547,7 @@ export default function ChatScreen() {
         );
         setSound(newSound);
         newSound.setOnPlaybackStatusUpdate((status: any) => {
-          if (status.isLoaded && status.didJustFinish) {
+          if (status.true && status.didJustFinish) {
             setIsSpeaking(false);
             newSound.unloadAsync();
             setSound(null);
@@ -671,13 +660,25 @@ export default function ChatScreen() {
     );
   };
 
+  const handleTipPress = (action: string) => {
+    if (!selectedTips.includes(action)) {
+      setSelectedTips((prev) => [...prev, action]);
+    }
+  };
+
+  const removeTip = (action: string) => {
+    setSelectedTips((prev) => prev.filter((tip) => tip !== action));
+  };
+
   const handleCapabilityPress = (cap: AgentCapability) => {
     if (cap.action === "openCamera") {
       router.push("/(tabs)/upload");
     } else if (cap.action === "openWeightEstimator") {
-      setWeightModalVisible(true);
+      setGroupFishPickerVisible(true);
     } else if (cap.prompt) {
-      sendMessage(cap.prompt);
+      if (!selectedTips.includes(cap.prompt)) {
+        setSelectedTips((prev) => [...prev, cap.prompt!]);
+      }
     }
   };
 
@@ -924,12 +925,19 @@ export default function ChatScreen() {
   };
 
   const sendMessage = async (text: string) => {
-    const trimmed = text.trim();
+    const parts = [...selectedTips];
+    if (text.trim()) {
+      parts.push(text.trim());
+    }
+    const finalMessage = parts.join("\n\n");
+    const trimmed = finalMessage.trim();
+
     if (!trimmed || isTyping || isStreaming) return;
 
     Speech.stop();
     setIsSpeaking(false);
     setInputText("");
+    setSelectedTips([]);
     Keyboard.dismiss();
 
     const userMsg: UIMessage = {
@@ -1037,7 +1045,7 @@ export default function ChatScreen() {
           collectedToolCalls = [...collectedToolCalls, toolName];
           setLiveToolCalls([...collectedToolCalls]);
         },
-        onComplete: (ui?: AgentUIActions) => {
+        onComplete: (ui?: any) => {
           streamSuccess = true;
           setIsStreaming(false);
           setStreamingMessageId(null);
@@ -1072,7 +1080,10 @@ export default function ChatScreen() {
       if (streamSuccess) {
         return; // Streaming completed successfully
       }
-    } catch (streamError) {
+    } catch (streamError: any) {
+      if (streamError?.name === "AbortError") {
+        return; // User cancelled, don't fall back to non-streaming
+      }
       console.warn(
         "Streaming failed, falling back to non-streaming:",
         streamError,
@@ -1164,9 +1175,10 @@ export default function ChatScreen() {
       });
       return (
         <Animated.View
-          style={[styles.swipeReplyAction, { opacity, transform: [{ scale }] }]}
+          className="justify-center items-center w-14 pr-2"
+          style={{ opacity, transform: [{ scale }] }}
         >
-          <View style={styles.swipeReplyCircle}>
+          <View className="w-[34px] h-[34px] rounded-full bg-bgCard border border-borderDark items-center justify-center">
             <Ionicons name="arrow-undo" size={17} color={COLORS.primaryLight} />
           </View>
         </Animated.View>
@@ -1189,14 +1201,11 @@ export default function ChatScreen() {
         }}
       >
         <View
-          style={[
-            styles.messageRow,
-            isUser ? styles.messageRowUser : styles.messageRowBot,
-          ]}
+          className={`px-4 py-[6px] flex-row items-start ${isUser ? "justify-end" : "gap-[10px]"}`}
         >
           {/* Bot avatar */}
           {!isUser && (
-            <View style={styles.botAvatar}>
+            <View className="w-[30px] h-[30px] rounded-[10px] bg-primary/25 border-[1.5px] border-primaryLight/40 items-center justify-center mt-0.5 shrink-0">
               <Ionicons
                 name="hardware-chip-outline"
                 size={15}
@@ -1206,21 +1215,21 @@ export default function ChatScreen() {
           )}
 
           <View
-            style={[
-              styles.messageContent,
-              isUser ? styles.messageContentUser : styles.messageContentBot,
-            ]}
+            className={`max-w-[78%] shrink ${isUser ? "bg-primary rounded-[18px] rounded-br-[4px] px-[14px] pt-2.5 pb-2 shadow-sm shadow-primaryLight/15 elevation-3" : "flex-1"}`}
           >
             {/* Reply context */}
             {item.replyTo && (
               <View
-                style={[styles.replyContext, isUser && styles.replyContextUser]}
+                className={`bg-white/5 rounded-lg px-2.5 py-1.5 mb-1.5 border-l-2 border-primaryLight ${isUser ? "bg-white/10" : ""}`}
               >
-                <View style={styles.replyContent}>
-                  <Text style={styles.replyAuthor}>
+                <View className="flex-1">
+                  <Text className="text-[11px] font-semibold text-primaryLight mb-[1px]">
                     {item.replyTo.role === "user" ? "You" : "Assistant"}
                   </Text>
-                  <Text style={styles.replyText} numberOfLines={2}>
+                  <Text
+                    className="text-[11px] text-textMuted leading-[15px]"
+                    numberOfLines={2}
+                  >
                     {item.replyTo.text}
                   </Text>
                 </View>
@@ -1229,19 +1238,14 @@ export default function ChatScreen() {
 
             {/* Analysis reference */}
             {item.referencedAnalysis && (
-              <View style={styles.analysisReference}>
+              <View className="flex-row items-center bg-white/5 rounded-lg px-2.5 py-1.5 mb-1.5 border-l-2 border-primaryLight gap-2">
                 {item.referencedAnalysis.imageUrl ? (
                   <Image
                     source={{ uri: item.referencedAnalysis.imageUrl }}
-                    style={styles.analysisThumb}
+                    className="w-9 h-9 rounded-md bg-bgDark"
                   />
                 ) : (
-                  <View
-                    style={[
-                      styles.analysisThumb,
-                      styles.analysisThumbPlaceholder,
-                    ]}
-                  >
+                  <View className="w-9 h-9 rounded-md bg-bgDark justify-center items-center">
                     <Ionicons
                       name="images"
                       size={18}
@@ -1249,9 +1253,14 @@ export default function ChatScreen() {
                     />
                   </View>
                 )}
-                <View style={styles.analysisInfo}>
-                  <Text style={styles.analysisLabel}>Referenced Analysis</Text>
-                  <Text style={styles.analysisSpecies} numberOfLines={1}>
+                <View className="flex-1">
+                  <Text className="text-[11px] font-semibold text-primaryLight mb-[1px]">
+                    Referenced Analysis
+                  </Text>
+                  <Text
+                    className="text-[11px] text-textMuted"
+                    numberOfLines={1}
+                  >
                     {item.referencedAnalysis.species || "Unknown"}
                   </Text>
                 </View>
@@ -1260,7 +1269,9 @@ export default function ChatScreen() {
 
             {/* Message text */}
             {isUser ? (
-              <Text style={styles.userText}>{item.text}</Text>
+              <Text className="text-[#e0ecff] text-[14px] leading-[21px]">
+                {item.text}
+              </Text>
             ) : (
               <StreamingText
                 text={item.text}
@@ -1278,20 +1289,22 @@ export default function ChatScreen() {
                 <InlineMapWidget
                   latitude={item.uiActions.mapLat}
                   longitude={item.uiActions.mapLon}
-                  onSendLocation={(lat, lon) =>
-                    sendMessage(
-                      `Tell me about the fishing conditions at ${lat.toFixed(4)}°N, ${lon.toFixed(4)}°E`,
-                    )
-                  }
+                  onSendLocation={(lat, lon) => {
+                    setSelectedTips((prev) => [
+                      ...prev,
+                      `Fishing conditions at ${lat.toFixed(4)}°N, ${lon.toFixed(4)}°E`,
+                    ]);
+                  }}
                 />
               )}
             {!isUser && item.uiActions?.history && (
               <InlineCatchCarousel
-                onAskAboutCatch={(groupId, species) =>
-                  sendMessage(
-                    `Tell me about my ${species} catch (group ${groupId}). How does it compare to market rates?`,
-                  )
-                }
+                onAskAboutCatch={(groupId, species) => {
+                  setSelectedTips((prev) => [
+                    ...prev,
+                    `My ${species} catch (group ${groupId})`,
+                  ]);
+                }}
               />
             )}
             {!isUser && item.uiActions?.upload && <InlineUploadCard />}
@@ -1304,15 +1317,20 @@ export default function ChatScreen() {
                 totalValue={item.scanResult.totalValue}
                 onAction={(action) => {
                   if (action === "ask") {
-                    sendMessage(
-                      `Tell me more about my latest scan with ${item.scanResult!.fishCount} fish. Any storage or selling recommendations?`,
-                    );
+                    setSelectedTips((prev) => [
+                      ...prev,
+                      `Latest scan with ${item.scanResult!.fishCount} fish`,
+                    ]);
                   } else if (action === "buyers") {
-                    sendMessage(`Help me find buyers for this catch`);
+                    setSelectedTips((prev) => [
+                      ...prev,
+                      `Find buyers for this catch`,
+                    ]);
                   } else if (action === "compare") {
-                    sendMessage(
-                      `Compare selling prices at different ports for this catch`,
-                    );
+                    setSelectedTips((prev) => [
+                      ...prev,
+                      `Compare selling prices for this catch`,
+                    ]);
                   }
                 }}
               />
@@ -1328,13 +1346,13 @@ export default function ChatScreen() {
 
             {/* Footer */}
             <View
-              style={[styles.messageFooter, isUser && styles.messageFooterUser]}
+              className={`flex-row items-center mt-1 gap-2 ${isUser ? "justify-end" : ""}`}
             >
               {!isUser && (
                 <TouchableOpacity
                   onPress={() => speakMessage(item.text)}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  style={styles.ttsBtn}
+                  className="p-0.5"
                 >
                   <Ionicons
                     name={isSpeaking ? "volume-mute" : "volume-high"}
@@ -1344,7 +1362,7 @@ export default function ChatScreen() {
                 </TouchableOpacity>
               )}
               <Text
-                style={[styles.messageTime, isUser && styles.messageTimeUser]}
+                className={`text-[10px] text-textSubtle ${isUser ? "text-[#bfdbfe]/55" : ""}`}
               >
                 {item.timestamp.toLocaleTimeString("en-IN", {
                   hour: "2-digit",
@@ -1358,33 +1376,27 @@ export default function ChatScreen() {
     );
   };
 
-  if (!isLoaded) return null;
+  if (!true) return null;
 
   const isEmptyChat = messages.length <= 1;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaView style={styles.safe}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#0f172a" }}>
         {/* Offline overlay */}
         {effectiveMode === "offline" && (
-          <View style={styles.offlineOverlay}>
-            <View style={styles.offlineCard}>
+          <View className="absolute top-0 left-0 right-0 bottom-0 bg-[#0f172a]/95 z-[1000] justify-center items-center p-8">
+            <View className="bg-bgCard rounded-2xl p-7 items-center max-w-[300px] border border-borderDark">
               <Ionicons
-                name={
-                  connectionQuality === "poor"
-                    ? "speedometer-outline"
-                    : "cloud-offline"
-                }
+                name={false ? "speedometer-outline" : "cloud-offline"}
                 size={44}
                 color={COLORS.warning}
               />
-              <Text style={styles.offlineTitle}>
-                {connectionQuality === "poor"
-                  ? "Slow Connection"
-                  : "No Internet Connection"}
+              <Text className="text-[15px] font-semibold text-textPrimary mt-3 mb-1.5">
+                {false ? "Slow Connection" : "No Internet Connection"}
               </Text>
-              <Text style={styles.offlineText}>
-                {connectionQuality === "poor"
+              <Text className="text-[13px] text-textMuted text-center leading-[19px]">
+                {false
                   ? "AI Assistant requires a stable internet connection."
                   : "AI Assistant requires an active internet connection to function."}
               </Text>
@@ -1400,19 +1412,19 @@ export default function ChatScreen() {
           onRequestClose={() => setShowSidebar(false)}
         >
           <TouchableOpacity
-            style={styles.sidebarOverlay}
+            className="flex-1 bg-black/55"
             activeOpacity={1}
             onPress={() => setShowSidebar(false)}
           >
             <Animated.View
-              style={[
-                styles.sidebar,
-                { transform: [{ translateX: sidebarAnim }] },
-              ]}
+              className="absolute left-0 top-0 bottom-0 w-[78%] bg-bgDark border-r-[0.5px] border-borderDark pt-[54px]"
+              style={{ transform: [{ translateX: sidebarAnim }] }}
               onStartShouldSetResponder={() => true}
             >
-              <View style={styles.sidebarHeader}>
-                <Text style={styles.sidebarTitle}>Conversations</Text>
+              <View className="flex-row justify-between items-center px-4 pb-3.5 border-b-[0.5px] border-borderDark">
+                <Text className="text-[14px] font-bold text-textPrimary tracking-[0.3px]">
+                  Conversations
+                </Text>
                 <TouchableOpacity
                   onPress={() => setShowSidebar(false)}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -1422,29 +1434,39 @@ export default function ChatScreen() {
               </View>
 
               <TouchableOpacity
-                style={styles.newChatBtn}
+                className="flex-row items-center justify-center bg-primary mx-4 mt-3.5 mb-2.5 py-2.5 rounded-lg gap-1.5"
                 onPress={createNewChat}
                 activeOpacity={0.8}
               >
                 <Ionicons name="add" size={18} color="#fff" />
-                <Text style={styles.newChatText}>New Chat</Text>
+                <Text className="text-white text-[13px] font-semibold">
+                  New Chat
+                </Text>
               </TouchableOpacity>
 
               <ScrollView
-                style={styles.chatListScroll}
+                className="flex-1 px-2.5 pt-1.5"
                 showsVerticalScrollIndicator={false}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={refreshingSidebar}
+                    onRefresh={handleRefreshSidebar}
+                    tintColor={COLORS.primary}
+                    colors={[COLORS.primary]}
+                  />
+                }
               >
                 {chats.length === 0 ? (
-                  <View style={styles.emptyChatList}>
+                  <View className="items-center justify-center py-12 px-6">
                     <Ionicons
                       name="chatbubbles-outline"
                       size={40}
                       color={COLORS.textSubtle}
                     />
-                    <Text style={styles.emptyChatTitle}>
+                    <Text className="text-[14px] font-semibold text-textPrimary mt-3 mb-1 text-center">
                       No Conversations Yet
                     </Text>
-                    <Text style={styles.emptyChatText}>
+                    <Text className="text-[12px] text-textMuted text-center leading-[18px]">
                       Start chatting for fishing advice, market insights, and
                       catch analysis.
                     </Text>
@@ -1453,13 +1475,10 @@ export default function ChatScreen() {
                   chats.map((chat) => (
                     <View
                       key={chat.id}
-                      style={[
-                        styles.chatListItem,
-                        currentChatId === chat.id && styles.chatListItemActive,
-                      ]}
+                      className={`flex-row items-center justify-between py-2.5 px-2.5 rounded-lg mb-0.5 ${currentChatId === chat.id ? "bg-primary/10 border border-primary/40" : ""}`}
                     >
                       <TouchableOpacity
-                        style={styles.chatListItemContent}
+                        className="flex-row items-center gap-2.5 flex-1"
                         onPress={() => loadChat(chat.id)}
                       >
                         <Ionicons
@@ -1471,24 +1490,20 @@ export default function ChatScreen() {
                               : COLORS.textSubtle
                           }
                         />
-                        <View style={styles.chatListItemText}>
+                        <View className="flex-1">
                           <Text
-                            style={[
-                              styles.chatListText,
-                              currentChatId === chat.id &&
-                                styles.chatListTextActive,
-                            ]}
+                            className={`text-textSecondary text-[13px] leading-[18px] ${currentChatId === chat.id ? "text-primaryLight font-semibold" : ""}`}
                             numberOfLines={1}
                           >
                             {chat.title}
                           </Text>
-                          <Text style={styles.chatListTime}>
+                          <Text className="text-textSubtle text-[10px] mt-0.5">
                             {formatTimestamp(chat.lastMessageTime)}
                           </Text>
                         </View>
                       </TouchableOpacity>
                       <TouchableOpacity
-                        style={styles.deleteBtn}
+                        className="p-1.5"
                         onPress={() => deleteChat(chat.id)}
                         hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
                       >
@@ -1521,20 +1536,32 @@ export default function ChatScreen() {
           onOpenTelegram={openTelegramApp}
         />
 
+        {/* Weight Estimation Selection Picker */}
+        <GroupFishPickerModal
+          visible={groupFishPickerVisible}
+          onClose={() => setGroupFishPickerVisible(false)}
+          onSelectFish={(params) => {
+            setGroupFishPickerVisible(false);
+            setWeightSpecies(params.species);
+            setWeightFishIndex(params.fishIndex);
+            setWeightModalVisible(true);
+          }}
+        />
+
         {/* Weight Estimation Modal */}
         <WeightEstimateModal
           visible={weightModalVisible}
           onClose={() => setWeightModalVisible(false)}
           onConfirm={handleWeightResult}
           species={weightSpecies}
-          fishIndex={0}
+          fishIndex={weightFishIndex}
         />
 
         {/* ─── Header ─────────────────────────────────────── */}
-        <View style={styles.header}>
+        <View className="flex-row items-center h-[52px] px-3 border-b-[0.5px] border-borderDark bg-bgDark">
           <TouchableOpacity
             onPress={() => setShowSidebar(true)}
-            style={styles.headerBtn}
+            className="w-[38px] h-[38px] rounded-[10px] items-center justify-center"
             hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
           >
             <Ionicons
@@ -1544,15 +1571,15 @@ export default function ChatScreen() {
             />
           </TouchableOpacity>
 
-          <View style={styles.headerCenter}>
-            <View style={styles.headerLogo}>
+          <View className="flex-1 flex-row items-center justify-center gap-2">
+            <View className="w-7 h-7 rounded-lg bg-primaryDark items-center justify-center">
               <Ionicons
                 name="hardware-chip-outline"
                 size={14}
                 color={COLORS.primaryLight}
               />
             </View>
-            <Text style={styles.headerTitle}>
+            <Text className="text-[15px] font-semibold text-textPrimary max-w-[45%]">
               {currentChatId
                 ? chats.find((c) => c.id === currentChatId)?.title ||
                   "AI Assistant"
@@ -1560,10 +1587,10 @@ export default function ChatScreen() {
             </Text>
           </View>
 
-          <View style={styles.headerActions}>
+          <View className="flex-row items-center gap-0.5">
             <TouchableOpacity
               onPress={handleOpenTelegram}
-              style={styles.headerBtn}
+              className="w-[38px] h-[38px] rounded-[10px] items-center justify-center"
               hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
             >
               <Ionicons
@@ -1574,7 +1601,7 @@ export default function ChatScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               onPress={exportConversation}
-              style={styles.headerBtn}
+              className="w-[38px] h-[38px] rounded-[10px] items-center justify-center"
               disabled={messages.length === 0}
               hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
             >
@@ -1594,94 +1621,79 @@ export default function ChatScreen() {
 
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.flex}
+          className="flex-1"
           keyboardVerticalOffset={0}
         >
           {/* ─── Message List ─────────────────────────────── */}
+          {isTyping && messages.length === 0 ? (
+            <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+              <ChatSkeleton />
+            </ScrollView>
+          ) : (
           <FlatList
             ref={flatListRef}
             data={messages}
             renderItem={renderMessage}
             keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.messageList}
+            contentContainerClassName="pt-2 pb-3"
             showsVerticalScrollIndicator={false}
             onContentSizeChange={() =>
               flatListRef.current?.scrollToEnd({ animated: true })
             }
             ListHeaderComponent={
               isEmptyChat ? (
-                <View style={styles.capabilityHub}>
+                <View className="px-4 pt-4 pb-2.5 bg-bgDark">
                   {/* Hero greeting */}
-                  <View style={styles.hubHeader}>
-                    <View style={styles.hubIconWrap}>
+                  <View className="flex-row items-center mb-[14px] gap-3">
+                    <View className="w-10 h-10 rounded-xl bg-primary items-center justify-center">
                       <Ionicons name="hardware-chip" size={20} color="#fff" />
                     </View>
-                    <View style={styles.hubHeaderText}>
-                      <Text style={styles.hubGreeting}>
+                    <View className="flex-1">
+                      <Text className="text-[16px] font-bold text-textPrimary tracking-[0.2px]">
                         {greeting}, {user?.name ?? "Captain"}
                       </Text>
-                      <Text style={styles.hubSubtitle}>
+                      <Text className="text-[12px] text-textMuted mt-[1px]">
                         What can I help you with?
                       </Text>
                     </View>
                   </View>
 
                   {/* Capability grid */}
-                  <View style={styles.capGrid}>
+                  <View className="flex-row flex-wrap justify-between mb-2">
                     {AGENT_CAPABILITIES.map((cap) => (
                       <TouchableOpacity
                         key={cap.label}
-                        style={styles.capCard}
+                        className="bg-bgCard rounded-[20px] border border-borderDark p-4 items-start mb-3"
+                        style={{ width: "48%", minHeight: 125 }}
                         onPress={() => handleCapabilityPress(cap)}
                         activeOpacity={0.7}
                         disabled={isTyping || isStreaming}
                       >
                         <View
-                          style={[
-                            styles.capIconWrap,
-                            { backgroundColor: cap.color + "18" },
-                          ]}
+                          className="w-[30px] h-[30px] rounded-2xl items-center justify-center mb-3"
+                          style={{ backgroundColor: cap.color + "18" }}
                         >
                           <Ionicons
                             name={cap.icon}
-                            size={18}
+                            size={22}
                             color={cap.color}
                           />
                         </View>
-                        <Text style={styles.capLabel} numberOfLines={1}>
+                        <Text
+                          className="text-[14px] font-bold text-textPrimary mb-1"
+                          numberOfLines={1}
+                        >
                           {cap.label}
                         </Text>
-                        <Text style={styles.capDesc} numberOfLines={1}>
+                        <Text
+                          className="text-[11.5px] text-[#8c8c8c] leading-[16px]"
+                          numberOfLines={2}
+                        >
                           {cap.desc}
                         </Text>
                       </TouchableOpacity>
                     ))}
                   </View>
-
-                  {/* Quick suggestion pills */}
-                  <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.chipRow}
-                    keyboardShouldPersistTaps="always"
-                  >
-                    {QUICK_ACTIONS.map((action) => (
-                      <TouchableOpacity
-                        key={action}
-                        style={styles.chip}
-                        onPress={() => sendMessage(action)}
-                        activeOpacity={0.7}
-                        disabled={isTyping || isStreaming}
-                      >
-                        <Ionicons
-                          name="sparkles"
-                          size={13}
-                          color={COLORS.primaryLight}
-                        />
-                        <Text style={styles.chipText}>{action}</Text>
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
                 </View>
               ) : null
             }
@@ -1708,8 +1720,8 @@ export default function ChatScreen() {
                     // progress - only show the stop button, not the typing dots.
                     const showDots = isTyping || !hasContent;
                     return (
-                      <View style={styles.typingRow}>
-                        <View style={styles.botAvatar}>
+                      <View className="flex-row items-center gap-2.5 px-4 py-2">
+                        <View className="w-[30px] h-[30px] rounded-[10px] bg-primary/25 border-[1.5px] border-primaryLight/40 items-center justify-center mt-0.5 shrink-0">
                           <Ionicons
                             name="hardware-chip-outline"
                             size={15}
@@ -1717,38 +1729,53 @@ export default function ChatScreen() {
                           />
                         </View>
                         {showDots && (
-                          <View style={styles.typingBubble}>
-                            <View style={styles.typingDots}>
+                          <View className="flex-row items-center gap-2 bg-bgCard rounded-[14px] px-[14px] py-2.5 border border-borderDark">
+                            <View className="flex-row items-center gap-1">
                               <Animated.View
-                                style={[
-                                  styles.dot,
-                                  { transform: [{ translateY: dot1Anim }] },
-                                ]}
+                                className="w-1.5 h-1.5 rounded-full bg-primaryLight"
+                                style={{
+                                  transform: [{ translateY: dot1Anim }],
+                                }}
                               />
                               <Animated.View
-                                style={[
-                                  styles.dot,
-                                  { transform: [{ translateY: dot2Anim }] },
-                                ]}
+                                className="w-1.5 h-1.5 rounded-full bg-primaryLight"
+                                style={{
+                                  transform: [{ translateY: dot2Anim }],
+                                }}
                               />
                               <Animated.View
-                                style={[
-                                  styles.dot,
-                                  { transform: [{ translateY: dot3Anim }] },
-                                ]}
+                                className="w-1.5 h-1.5 rounded-full bg-primaryLight"
+                                style={{
+                                  transform: [{ translateY: dot3Anim }],
+                                }}
                               />
                             </View>
-                            <Text style={styles.typingLabel}>
+                            <Text className="text-textMuted text-[12px]">
                               {isStreaming ? "Generating..." : t("chat.typing")}
                             </Text>
                           </View>
                         )}
                         {isStreaming && (
                           <TouchableOpacity
-                            style={styles.stopBtn}
+                            className="p-1 ml-0.5"
                             onPress={() => {
                               chatStreamClient.stopStreaming();
                               setIsStreaming(false);
+                              if (streamingMessageId) {
+                                setMessages((prev) =>
+                                  prev.map((msg) =>
+                                    msg.id === streamingMessageId
+                                      ? {
+                                          ...msg,
+                                          text:
+                                            msg.text +
+                                            (msg.text ? "\n\n" : "") +
+                                            "*You stopped this response*",
+                                        }
+                                      : msg,
+                                  ),
+                                );
+                              }
                               setStreamingMessageId(null);
                             }}
                           >
@@ -1776,25 +1803,105 @@ export default function ChatScreen() {
               </>
             }
           />
+          )}
 
           {/* ─── Input Bar ────────────────────────────────── */}
-          <View style={styles.inputArea}>
+          {isEmptyChat && (
+            <View className="bg-bgDark">
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                className="mb-2 max-h-[38px] px-3"
+                contentContainerClassName="gap-2 pr-6"
+                keyboardShouldPersistTaps="always"
+              >
+                {QUICK_ACTIONS.map((action) => (
+                  <TouchableOpacity
+                    key={action}
+                    className="flex-row items-center bg-bgCard rounded-full border border-borderDark px-3 py-1.5 gap-[5px]"
+                    onPress={() => handleTipPress(action)}
+                    activeOpacity={0.7}
+                    disabled={
+                      isTyping || isStreaming || selectedTips.includes(action)
+                    }
+                  >
+                    <Ionicons
+                      name="sparkles"
+                      size={14}
+                      color={
+                        selectedTips.includes(action)
+                          ? COLORS.textSubtle
+                          : COLORS.primaryLight
+                      }
+                    />
+                    <Text
+                      className={`text-[13px] font-medium ${selectedTips.includes(action) ? "text-textSubtle" : "text-textSecondary"}`}
+                    >
+                      {action}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+
+          <View className="bg-bgDark px-3 pt-2 pb-2.5 border-t-[0.5px] border-borderDark">
+            {/* Context Box for Tips */}
+            {selectedTips.length > 0 && (
+              <View className="flex-row items-center bg-bgCard rounded-lg px-3 py-2 mb-1.5 gap-2 flex-wrap">
+                <View className="w-[3px] h-full bg-primaryLight rounded-sm absolute left-0 top-0 bottom-0" />
+                <View className="flex-1 flex-row flex-wrap gap-1.5 pl-1">
+                  {selectedTips.map((tip, idx) => (
+                    <View
+                      key={idx}
+                      className="bg-primary/20 rounded-full px-2.5 py-1.5 flex-row items-center gap-1.5 border border-primary/30"
+                    >
+                      <Ionicons
+                        name="sparkles"
+                        size={12}
+                        color={COLORS.primaryLight}
+                      />
+                      <Text
+                        className="text-[12px] text-primaryLight font-medium"
+                        numberOfLines={1}
+                      >
+                        {tip.length > 35 ? tip.substring(0, 35) + "..." : tip}
+                      </Text>
+                      <TouchableOpacity
+                        onPress={() => removeTip(tip)}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      >
+                        <Ionicons
+                          name="close-circle"
+                          size={16}
+                          color={COLORS.primaryLight}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+
             {/* Reply preview */}
             {replyingTo && (
-              <View style={styles.replyPreview}>
-                <View style={styles.replyPreviewBar} />
-                <View style={styles.replyPreviewBody}>
+              <View className="flex-row items-center bg-bgCard rounded-lg px-3 py-2 mb-1.5 gap-2">
+                <View className="w-[3px] h-full bg-primaryLight rounded-sm absolute left-0 top-0 bottom-0" />
+                <View className="flex-1 flex-row items-center gap-2 pl-1">
                   <Ionicons
                     name="arrow-undo"
                     size={14}
                     color={COLORS.primaryLight}
                   />
-                  <View style={styles.replyPreviewTextCol}>
-                    <Text style={styles.replyPreviewAuthor}>
+                  <View className="flex-1">
+                    <Text className="text-[11px] font-semibold text-primaryLight mb-[1px]">
                       Replying to{" "}
                       {replyingTo.role === "user" ? "yourself" : "Assistant"}
                     </Text>
-                    <Text style={styles.replyPreviewMessage} numberOfLines={1}>
+                    <Text
+                      className="text-[11px] text-textMuted"
+                      numberOfLines={1}
+                    >
                       {replyingTo.text}
                     </Text>
                   </View>
@@ -1810,21 +1917,16 @@ export default function ChatScreen() {
 
             {/* Analysis reference preview */}
             {referencedAnalysis && (
-              <View style={styles.analysisPreview}>
-                <View style={styles.replyPreviewBar} />
-                <View style={styles.analysisPreviewBody}>
+              <View className="flex-row items-center bg-bgCard rounded-lg px-3 py-2 mb-1.5 gap-2">
+                <View className="w-[3px] h-full bg-primaryLight rounded-sm absolute left-0 top-0 bottom-0" />
+                <View className="flex-1 flex-row items-center gap-2 pl-1">
                   {referencedAnalysis.imageUrl ? (
                     <Image
                       source={{ uri: referencedAnalysis.imageUrl }}
-                      style={styles.analysisPreviewThumb}
+                      className="w-8 h-8 rounded-md bg-bgSurface"
                     />
                   ) : (
-                    <View
-                      style={[
-                        styles.analysisPreviewThumb,
-                        styles.analysisPreviewThumbPlaceholder,
-                      ]}
-                    >
+                    <View className="w-8 h-8 rounded-md bg-bgSurface justify-center items-center">
                       <Ionicons
                         name="fish"
                         size={14}
@@ -1832,12 +1934,12 @@ export default function ChatScreen() {
                       />
                     </View>
                   )}
-                  <View style={styles.analysisPreviewTextCol}>
-                    <Text style={styles.analysisPreviewLabel}>
+                  <View className="flex-1">
+                    <Text className="text-[11px] font-semibold text-primaryLight mb-[1px]">
                       Referencing Analysis
                     </Text>
                     <Text
-                      style={styles.analysisPreviewSpecies}
+                      className="text-[11px] text-textMuted"
                       numberOfLines={1}
                     >
                       {referencedAnalysis.species || "Unknown"}
@@ -1855,9 +1957,9 @@ export default function ChatScreen() {
 
             {/* Action bar - quick context tools */}
             {!isEmptyChat && (
-              <View style={styles.actionBar}>
+              <View className="flex-row items-center justify-center gap-1 mb-2">
                 <TouchableOpacity
-                  style={styles.actionBarBtn}
+                  className="w-9 h-8 rounded-lg bg-bgCard border border-borderDark items-center justify-center"
                   onPress={() => setShowAnalysisPicker(true)}
                   disabled={isTyping || isStreaming}
                 >
@@ -1868,7 +1970,7 @@ export default function ChatScreen() {
                   />
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.actionBarBtn}
+                  className="w-9 h-8 rounded-lg bg-bgCard border border-borderDark items-center justify-center"
                   onPress={() => router.push("/(tabs)/upload")}
                 >
                   <Ionicons
@@ -1878,8 +1980,8 @@ export default function ChatScreen() {
                   />
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.actionBarBtn}
-                  onPress={() => setWeightModalVisible(true)}
+                  className="w-9 h-8 rounded-lg bg-bgCard border border-borderDark items-center justify-center"
+                  onPress={() => setGroupFishPickerVisible(true)}
                 >
                   <Ionicons
                     name="scale-outline"
@@ -1888,28 +1990,7 @@ export default function ChatScreen() {
                   />
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.actionBarBtn}
-                  onPress={() => {
-                    if (userLocation) {
-                      sendMessage(
-                        `Show me the current fishing conditions and safety status at my location (${userLocation.latitude.toFixed(2)}°N, ${userLocation.longitude.toFixed(2)}°E).`,
-                      );
-                    } else {
-                      sendMessage(
-                        "What are the current fishing conditions near me?",
-                      );
-                    }
-                  }}
-                  disabled={isTyping || isStreaming}
-                >
-                  <Ionicons
-                    name="location-outline"
-                    size={18}
-                    color={COLORS.primaryLight}
-                  />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.actionBarBtn}
+                  className="w-9 h-8 rounded-lg bg-bgCard border border-borderDark items-center justify-center"
                   onPress={() =>
                     sendMessage(
                       "Show me my recent catch analytics and earnings summary.",
@@ -1927,46 +2008,53 @@ export default function ChatScreen() {
             )}
 
             {/* Input row */}
-            <View style={styles.inputRow}>
-              <TouchableOpacity
-                style={styles.attachBtn}
-                onPress={isListening ? stopListening : startListening}
-                disabled={isTyping || isStreaming}
-              >
-                <Ionicons
-                  name={isListening ? "mic" : "mic-outline"}
-                  size={22}
-                  color={isListening ? COLORS.error : COLORS.textSubtle}
+            <View className="flex-row items-end gap-2">
+              <View className="flex-1 flex-row items-end bg-bgCard rounded-3xl border border-borderDark pl-2 pr-2 py-1 min-h-[44px]">
+                <TouchableOpacity
+                  className="w-[36px] h-[36px] items-center justify-center mb-[1px]"
+                  onPress={isListening ? stopListening : startListening}
+                  disabled={isTyping || isStreaming}
+                >
+                  <Ionicons
+                    name={isListening ? "mic" : "mic-outline"}
+                    size={22}
+                    color={isListening ? COLORS.error : COLORS.textSubtle}
+                  />
+                </TouchableOpacity>
+
+                <TextInput
+                  className="flex-1 py-2 px-1 text-textPrimary text-[15px] max-h-[100px] leading-5"
+                  value={inputText}
+                  onChangeText={setInputText}
+                  placeholder={
+                    isListening ? "Listening..." : t("chat.placeholder")
+                  }
+                  placeholderTextColor={
+                    isListening ? COLORS.primary : COLORS.textSubtle
+                  }
+                  multiline
+                  maxLength={1000}
+                  returnKeyType="send"
+                  onSubmitEditing={() => sendMessage(inputText)}
                 />
-              </TouchableOpacity>
-
-              <TextInput
-                style={styles.textInput}
-                value={inputText}
-                onChangeText={setInputText}
-                placeholder={
-                  isListening ? "Listening..." : t("chat.placeholder")
-                }
-                placeholderTextColor={
-                  isListening ? COLORS.primary : COLORS.textSubtle
-                }
-                multiline
-                maxLength={1000}
-                returnKeyType="send"
-                onSubmitEditing={() => sendMessage(inputText)}
-              />
+              </View>
 
               <TouchableOpacity
-                style={[
-                  styles.sendBtn,
-                  (!inputText.trim() || isTyping || isStreaming) &&
-                    styles.sendBtnDisabled,
-                ]}
+                className={`w-[44px] h-[44px] rounded-full bg-primary items-center justify-center ${(!inputText.trim() && selectedTips.length === 0) || isTyping || isStreaming ? "opacity-50" : ""}`}
                 onPress={() => sendMessage(inputText)}
-                disabled={!inputText.trim() || isTyping || isStreaming}
+                disabled={
+                  (!inputText.trim() && selectedTips.length === 0) ||
+                  isTyping ||
+                  isStreaming
+                }
                 activeOpacity={0.75}
               >
-                <Ionicons name="arrow-up" size={20} color="#fff" />
+                <Ionicons
+                  name="send"
+                  size={20}
+                  color="#fff"
+                  style={{ marginLeft: 3 }}
+                />
               </TouchableOpacity>
             </View>
           </View>
@@ -1979,7 +2067,7 @@ export default function ChatScreen() {
 /* ═══════════════════════════════════════════════════════════
    Markdown Styles
    ═══════════════════════════════════════════════════════════ */
-const markdownStyles = StyleSheet.create({
+const markdownStyles = {
   body: {
     color: COLORS.textSecondary,
     fontSize: 14,
@@ -1988,21 +2076,21 @@ const markdownStyles = StyleSheet.create({
   heading1: {
     color: COLORS.textPrimary,
     fontSize: 20,
-    fontWeight: "700",
+    fontWeight: "700" as const,
     marginTop: 12,
     marginBottom: 6,
   },
   heading2: {
     color: COLORS.textPrimary,
     fontSize: 17,
-    fontWeight: "700",
+    fontWeight: "700" as const,
     marginTop: 10,
     marginBottom: 4,
   },
   heading3: {
     color: COLORS.textPrimary,
     fontSize: 15,
-    fontWeight: "600",
+    fontWeight: "600" as const,
     marginTop: 8,
     marginBottom: 4,
   },
@@ -2011,7 +2099,7 @@ const markdownStyles = StyleSheet.create({
     marginBottom: 8,
   },
   strong: {
-    fontWeight: "700",
+    fontWeight: "700" as const,
     color: COLORS.textPrimary,
   },
   em: {
@@ -2077,7 +2165,7 @@ const markdownStyles = StyleSheet.create({
     padding: 6,
     borderWidth: 1,
     borderColor: COLORS.border,
-    fontWeight: "700",
+    fontWeight: "700" as const,
   },
   td: {
     padding: 6,
@@ -2089,655 +2177,4 @@ const markdownStyles = StyleSheet.create({
     height: 1,
     marginVertical: 12,
   },
-});
-
-/* ═══════════════════════════════════════════════════════════
-   Styles - ChatGPT-inspired clean layout
-   ═══════════════════════════════════════════════════════════ */
-const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: COLORS.bgDark,
-  },
-  flex: { flex: 1 },
-
-  /* ── Header ───────────────────────────────────────────── */
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    height: 52,
-    paddingHorizontal: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.border,
-    backgroundColor: COLORS.bgDark,
-  },
-  headerBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  headerCenter: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  headerLogo: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    backgroundColor: COLORS.primaryDark,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  headerTitle: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: COLORS.textPrimary,
-    maxWidth: SCREEN_WIDTH * 0.45,
-  },
-  headerActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 2,
-  },
-
-  /* ── Message List ─────────────────────────────────────── */
-  messageList: {
-    paddingTop: 8,
-    paddingBottom: 12,
-  },
-  messageListEmpty: {
-    flexGrow: 1,
-    justifyContent: "flex-end",
-  },
-
-  /* ── Message Row ──────────────────────────────────────── */
-  messageRow: {
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    flexDirection: "row",
-    alignItems: "flex-start",
-  },
-  messageRowBot: {
-    gap: 10,
-  },
-  messageRowUser: {
-    justifyContent: "flex-end",
-  },
-
-  /* Bot avatar */
-  botAvatar: {
-    width: 30,
-    height: 30,
-    borderRadius: 10,
-    backgroundColor: COLORS.primary + "25",
-    borderWidth: 1.5,
-    borderColor: COLORS.primaryLight + "40",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 2,
-    flexShrink: 0,
-  },
-
-  /* ── Message Content ──────────────────────────────────── */
-  messageContent: {
-    maxWidth: SCREEN_WIDTH * 0.78,
-    flexShrink: 1,
-  },
-  messageContentBot: {
-    flex: 1,
-  },
-  messageContentUser: {
-    backgroundColor: COLORS.primary,
-    borderRadius: 18,
-    borderBottomRightRadius: 4,
-    paddingHorizontal: 14,
-    paddingTop: 10,
-    paddingBottom: 8,
-    shadowColor: COLORS.primaryLight,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-
-  /* ── User text ────────────────────────────────────────── */
-  userText: {
-    color: "#e0ecff",
-    fontSize: 14,
-    lineHeight: 21,
-  },
-
-  /* ── Message Footer ───────────────────────────────────── */
-  messageFooter: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 4,
-    gap: 8,
-  },
-  messageFooterUser: {
-    justifyContent: "flex-end",
-  },
-  messageTime: {
-    fontSize: 10,
-    color: COLORS.textSubtle,
-  },
-  messageTimeUser: {
-    color: "rgba(191,219,254,0.55)",
-  },
-  ttsBtn: {
-    padding: 2,
-  },
-
-  /* ── Reply context inside message ──────────────────────── */
-  replyContext: {
-    backgroundColor: "rgba(255,255,255,0.06)",
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    marginBottom: 6,
-    borderLeftWidth: 2,
-    borderLeftColor: COLORS.primaryLight,
-  },
-  replyContextUser: {
-    backgroundColor: "rgba(255,255,255,0.12)",
-  },
-  replyContent: { flex: 1 },
-  replyAuthor: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: COLORS.primaryLight,
-    marginBottom: 1,
-  },
-  replyText: {
-    fontSize: 11,
-    color: COLORS.textMuted,
-    lineHeight: 15,
-  },
-
-  /* ── Analysis reference inside message ─────────────────── */
-  analysisReference: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.06)",
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    marginBottom: 6,
-    borderLeftWidth: 2,
-    borderLeftColor: COLORS.primaryLight,
-    gap: 8,
-  },
-  analysisThumb: {
-    width: 36,
-    height: 36,
-    borderRadius: 6,
-    backgroundColor: COLORS.bgDark,
-  },
-  analysisThumbPlaceholder: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  analysisInfo: { flex: 1 },
-  analysisLabel: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: COLORS.primaryLight,
-    marginBottom: 1,
-  },
-  analysisSpecies: {
-    fontSize: 11,
-    color: COLORS.textMuted,
-  },
-
-  /* ── Swipe action ──────────────────────────────────────── */
-  swipeReplyAction: {
-    justifyContent: "center",
-    alignItems: "center",
-    width: 56,
-    paddingRight: 8,
-  },
-  swipeReplyCircle: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: COLORS.bgCard,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  /* ── Typing indicator ──────────────────────────────────── */
-  typingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  typingBubble: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    backgroundColor: COLORS.bgCard,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  typingDots: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  typingLabel: {
-    color: COLORS.textMuted,
-    fontSize: 12,
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: COLORS.primaryLight,
-  },
-  stopBtn: {
-    padding: 4,
-    marginLeft: 2,
-  },
-
-  /* ── Agent Capability Hub ────────────────────────────────── */
-  capabilityHub: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 10,
-    backgroundColor: COLORS.bgDark,
-  },
-  hubHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 14,
-    gap: 12,
-  },
-  hubIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: COLORS.primary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  hubHeaderText: {
-    flex: 1,
-  },
-  hubGreeting: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: COLORS.textPrimary,
-    letterSpacing: 0.2,
-  },
-  hubSubtitle: {
-    fontSize: 12,
-    color: COLORS.textMuted,
-    marginTop: 1,
-  },
-  capGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 12,
-  },
-  capCard: {
-    width: "23.5%",
-    backgroundColor: COLORS.bgCard,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    paddingVertical: 10,
-    paddingHorizontal: 6,
-    alignItems: "center",
-    gap: 4,
-  },
-  capIconWrap: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 2,
-  },
-  capLabel: {
-    fontSize: 10,
-    fontWeight: "600",
-    color: COLORS.textPrimary,
-    textAlign: "center",
-    lineHeight: 13,
-  },
-  capDesc: {
-    fontSize: 8,
-    color: COLORS.textSubtle,
-    textAlign: "center",
-    lineHeight: 10,
-  },
-
-  /* ── Action Bar ────────────────────────────────────────── */
-  actionBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 4,
-    marginBottom: 8,
-  },
-  actionBarBtn: {
-    width: 36,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: COLORS.bgCard,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  chipRow: {
-    gap: 8,
-    paddingBottom: 2,
-  },
-  chip: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: COLORS.bgCard,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    gap: 5,
-  },
-  chipText: {
-    color: COLORS.textSecondary,
-    fontSize: 12,
-    fontWeight: "500",
-  },
-
-  /* ── Input Area ────────────────────────────────────────── */
-  inputArea: {
-    backgroundColor: COLORS.bgDark,
-    paddingHorizontal: 12,
-    paddingTop: 8,
-    paddingBottom: 10,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: COLORS.border,
-  },
-  inputRow: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    backgroundColor: COLORS.bgCard,
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    paddingLeft: 6,
-    paddingRight: 5,
-    paddingVertical: 4,
-  },
-  attachBtn: {
-    width: 38,
-    height: 38,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  textInput: {
-    flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 8,
-    color: COLORS.textPrimary,
-    fontSize: 14,
-    maxHeight: 100,
-    minHeight: 36,
-    lineHeight: 20,
-  },
-  sendBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: COLORS.primary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  sendBtnDisabled: {
-    backgroundColor: COLORS.bgSurface,
-    opacity: 0.4,
-  },
-
-  /* ── Reply / Analysis Preview ──────────────────────────── */
-  replyPreview: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: COLORS.bgCard,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginBottom: 6,
-    gap: 8,
-  },
-  replyPreviewBar: {
-    width: 3,
-    height: "100%",
-    backgroundColor: COLORS.primaryLight,
-    borderRadius: 2,
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-  },
-  replyPreviewBody: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingLeft: 4,
-  },
-  replyPreviewTextCol: { flex: 1 },
-  replyPreviewAuthor: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: COLORS.primaryLight,
-    marginBottom: 1,
-  },
-  replyPreviewMessage: {
-    fontSize: 11,
-    color: COLORS.textMuted,
-  },
-
-  analysisPreview: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: COLORS.bgCard,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginBottom: 6,
-    gap: 8,
-  },
-  analysisPreviewBody: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingLeft: 4,
-  },
-  analysisPreviewThumb: {
-    width: 32,
-    height: 32,
-    borderRadius: 6,
-    backgroundColor: COLORS.bgSurface,
-  },
-  analysisPreviewThumbPlaceholder: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  analysisPreviewTextCol: { flex: 1 },
-  analysisPreviewLabel: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: COLORS.primaryLight,
-    marginBottom: 1,
-  },
-  analysisPreviewSpecies: {
-    fontSize: 11,
-    color: COLORS.textMuted,
-  },
-
-  /* ── Sidebar ───────────────────────────────────────────── */
-  sidebarOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.55)",
-  },
-  sidebar: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: SCREEN_WIDTH * 0.78,
-    backgroundColor: COLORS.bgDark,
-    borderRightWidth: StyleSheet.hairlineWidth,
-    borderRightColor: COLORS.border,
-    paddingTop: 54,
-  },
-  sidebarHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingBottom: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.border,
-  },
-  sidebarTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: COLORS.textPrimary,
-    letterSpacing: 0.3,
-  },
-  newChatBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: COLORS.primary,
-    marginHorizontal: 16,
-    marginTop: 14,
-    marginBottom: 10,
-    paddingVertical: 10,
-    borderRadius: 10,
-    gap: 6,
-  },
-  newChatText: {
-    color: "#fff",
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  chatListScroll: {
-    flex: 1,
-    paddingHorizontal: 10,
-    paddingTop: 6,
-  },
-  chatListItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    marginBottom: 2,
-  },
-  chatListItemActive: {
-    backgroundColor: COLORS.primary + "18",
-    borderWidth: 1,
-    borderColor: COLORS.primary + "40",
-  },
-  chatListItemContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    flex: 1,
-  },
-  chatListItemText: { flex: 1 },
-  chatListText: {
-    color: COLORS.textSecondary,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  chatListTextActive: {
-    color: COLORS.primaryLight,
-    fontWeight: "600",
-  },
-  chatListTime: {
-    color: COLORS.textSubtle,
-    fontSize: 10,
-    marginTop: 2,
-  },
-  deleteBtn: {
-    padding: 6,
-  },
-  emptyChatList: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 48,
-    paddingHorizontal: 24,
-  },
-  emptyChatTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: COLORS.textPrimary,
-    marginTop: 12,
-    marginBottom: 4,
-    textAlign: "center",
-  },
-  emptyChatText: {
-    fontSize: 12,
-    color: COLORS.textMuted,
-    textAlign: "center",
-    lineHeight: 18,
-  },
-
-  /* ── Offline overlay ───────────────────────────────────── */
-  offlineOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(15,23,42,0.95)",
-    zIndex: 1000,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 32,
-  },
-  offlineCard: {
-    backgroundColor: COLORS.bgCard,
-    borderRadius: 16,
-    padding: 28,
-    alignItems: "center",
-    maxWidth: 300,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  offlineTitle: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: COLORS.textPrimary,
-    marginTop: 12,
-    marginBottom: 6,
-  },
-  offlineText: {
-    fontSize: 13,
-    color: COLORS.textMuted,
-    textAlign: "center",
-    lineHeight: 19,
-  },
-});
+};

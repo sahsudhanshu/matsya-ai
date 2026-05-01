@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   FlatList,
   RefreshControl,
   ActivityIndicator,
@@ -246,12 +245,12 @@ export default function HistoryScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safe}>
-        <View style={styles.header}>
-          <Text style={styles.title}>History</Text>
-          <Text style={styles.subtitle}>Loading...</Text>
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#0f172a" }}>
+        <View className="flex-row items-center px-6 pt-2 pb-4 border-b border-[#334155]">
+          <Text className="text-[17px] font-bold color-[#f8fafc]">History</Text>
+          <Text className="text-[10px] color-[#94a3b8] mt-[2px]">Loading...</Text>
         </View>
-        <View style={styles.list}>
+        <View className="p-6">
           <SkeletonList itemCount={5} />
         </View>
       </SafeAreaView>
@@ -259,20 +258,20 @@ export default function HistoryScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <View style={styles.header}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#0f172a" }}>
+      <View className="flex-row items-center px-6 pt-2 pb-4 border-b border-[#334155]">
         <View style={{ flex: 1 }}>
-          <Text style={styles.title}>History</Text>
-          <Text style={styles.subtitle}>{totalCount} analysis sessions</Text>
+          <Text className="text-[17px] font-bold color-[#f8fafc]">History</Text>
+          <Text className="text-[10px] color-[#94a3b8] mt-[2px]">{totalCount} analysis sessions</Text>
         </View>
         {isOfflineCache && (
-          <View style={styles.offlineBanner}>
+          <View className="flex-row items-center gap-1 py-1 px-2 rounded-full" style={{ backgroundColor: COLORS.warning + "18" }}>
             <Ionicons
               name="cloud-offline-outline"
               size={12}
               color={COLORS.warning}
             />
-            <Text style={styles.offlineBannerText}>Cached</Text>
+            <Text className="text-[10px] font-semibold" style={{ color: COLORS.warning }}>Cached</Text>
           </View>
         )}
         <ProfileMenu size={36} />
@@ -297,13 +296,13 @@ export default function HistoryScreen() {
           ListHeaderComponent={
             localRecords.length > 0 ? (
               <View>
-                <View style={styles.sectionRow}>
+                <View className="flex-row items-center gap-1 mb-2 mt-1">
                   <Ionicons
                     name="phone-portrait-outline"
                     size={14}
                     color={COLORS.warning}
                   />
-                  <Text style={styles.sectionLabel}>
+                  <Text className="text-[10px] font-bold color-[#94a3b8] uppercase tracking-[0.8px]">
                     Offline Analyses{" "}
                     {isOnline ? "- syncing…" : "- pending sync"}
                   </Text>
@@ -322,13 +321,13 @@ export default function HistoryScreen() {
                   />
                 ))}
                 {groups.length > 0 && (
-                  <View style={styles.sectionRow}>
+                  <View className="flex-row items-center gap-1 mb-2 mt-1">
                     <Ionicons
                       name="cloud-outline"
                       size={14}
                       color={COLORS.primaryLight}
                     />
-                    <Text style={styles.sectionLabel}>Cloud History</Text>
+                    <Text className="text-[10px] font-bold color-[#94a3b8] uppercase tracking-[0.8px]">Cloud History</Text>
                   </View>
                 )}
               </View>
@@ -346,7 +345,7 @@ export default function HistoryScreen() {
               onExportPDF={() => handleExportPDF(item.groupId)}
             />
           )}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={{ padding: 24 }}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -359,70 +358,3 @@ export default function HistoryScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: COLORS.bgDark,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: SPACING.lg,
-    paddingTop: SPACING.sm,
-    paddingBottom: SPACING.md,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  title: {
-    fontSize: FONTS.sizes.lg,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textPrimary,
-  },
-  subtitle: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-    marginTop: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingText: {
-    marginTop: SPACING.sm,
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-  },
-  list: {
-    padding: SPACING.lg,
-  },
-  sectionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.xs,
-    marginBottom: SPACING.sm,
-    marginTop: SPACING.xs,
-  },
-  sectionLabel: {
-    fontSize: FONTS.sizes.xs,
-    fontWeight: FONTS.weights.bold,
-    color: COLORS.textMuted,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  offlineBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingVertical: 4,
-    paddingHorizontal: SPACING.sm,
-    backgroundColor: COLORS.warning + "18",
-    borderRadius: RADIUS.full,
-  },
-  offlineBannerText: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.warning,
-    fontWeight: FONTS.weights.semibold,
-  },
-});
