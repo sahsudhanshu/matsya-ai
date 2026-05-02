@@ -425,7 +425,7 @@ export default function UploadComponent({
         fileType: f.type,
       }));
       const { groupId, presignedUrls } =
-        await createGroupPresignedUrls(fileMetadata);
+        await createGroupPresignedUrls(fileMetadata, location?.lat, location?.lng);
       setCurrentGroupId(groupId);
 
       await uploadGroupToS3(presignedUrls, files, (index, pct) => {

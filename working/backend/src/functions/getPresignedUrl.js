@@ -98,9 +98,16 @@ exports.handler = async (event) => {
     }
 
     const locationCheck = await detectOceanLocation(latitude, longitude);
-    const isValid = locationCheck.reason !== "location_invalid" && locationCheck.reason !== "location_not_provided";
-    const mappedLatitude = isValid ? Number(latitude) : null;
-    const mappedLongitude = isValid ? Number(longitude) : null;
+    let mappedLatitude = null;
+    let mappedLongitude = null;
+    if (latitude != null && longitude != null) {
+        const lat = Number(latitude);
+        const lng = Number(longitude);
+        if (Number.isFinite(lat) && Number.isFinite(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+            mappedLatitude = lat;
+            mappedLongitude = lng;
+        }
+    }
 
     const imageId = uuidv4();
     const userId = decoded.sub;

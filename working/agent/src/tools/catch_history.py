@@ -4,6 +4,7 @@ Catch history tool - queries the images table.
 Returns the user's last N catches (images analysed via HuggingFace ML API)
 in a format useful for the agent.
 """
+
 from __future__ import annotations
 import json
 from typing import Optional
@@ -19,7 +20,7 @@ def _get_field(item: dict, ar: dict, key: str, default=None):
 
 
 @tool
-async def get_catch_history(
+def get_catch_history(
     page: int = 1,
     limit: Optional[int] = None,
     user_id: str = "",
@@ -32,6 +33,7 @@ async def get_catch_history(
     Args:
         page: Page number (1-based). Default 1.
         limit: Max results per page. Default from settings.
+        user_id: Auto-injected by the system. Do not provide.
         user_id: Auto-injected by the system. Do not provide.
     """
     print(f"🐟  [TOOL] get_catch_history called → user_id={user_id!r}, page={page}")
@@ -60,7 +62,14 @@ async def get_catch_history(
 
     lines = [f"🐟 **Catch History** (Page {page}, showing {len(page_items)} records):"]
     for i, item in enumerate(page_items, start=start + 1):
+        if item.get("analysisResult") and isinstance(item["analysisResult"], str):
+            try:
+                item["analysisResult"] = json.loads(item["analysisResult"])
+            except Exception:
+                pass
         ar = item.get("analysisResult") or {}
+        if isinstance(ar, str):
+            ar = {}
         species = _get_field(item, ar, "species", "Unknown")
         location = item.get("location", "Unknown location")
         date = item.get("createdAt", "Unknown date")
@@ -82,4 +91,4 @@ async def get_catch_history(
     if total > start + page_size:
         lines.append(f"\n  → More records available. Ask for page {page + 1}.")
 
-    return "\n".join(lines)
+    return "\n".join(lines)

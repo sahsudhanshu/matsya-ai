@@ -133,7 +133,7 @@ def _fetch_catch_markers(species_filter: Optional[str] = None, date_from: Option
 
 
 @tool
-async def get_map_data(
+def get_map_data(
     latitude: Optional[float] = None,
     longitude: Optional[float] = None,
     radius_km: Optional[float] = 300,

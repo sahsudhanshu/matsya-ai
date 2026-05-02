@@ -1,6 +1,7 @@
 """
 Specific catch tool - queries a single image analysis result from MySQL.
 """
+
 from __future__ import annotations
 import json
 from langchain_core.tools import tool
@@ -11,6 +12,7 @@ from src.utils.db import fetchone
 def _get_field(item: dict, ar: dict, key: str, default=None):
     """Read from nested analysisResult first, then fall back to top-level (legacy)."""
     return ar.get(key, item.get(key, default))
+
 
 @tool
 async def get_catch_details(image_id: str) -> str:
@@ -23,7 +25,7 @@ async def get_catch_details(image_id: str) -> str:
         image_id: The unique identifier of the catch/image to look up.
         user_id: Auto-injected by the system. Do not provide.
     """
-    print(f"🔬  [TOOL] get_catch_details called → image_id={image_id!r}, user_id={user_id!r}")
+    print(f"🔬  [TOOL] get_catch_details called → image_id={image_id!r}")
 
     try:
         item = fetchone("SELECT * FROM images WHERE imageId = %s", (image_id,))
@@ -58,10 +60,14 @@ async def get_catch_details(image_id: str) -> str:
     # Weight and market value
     measurements = ar.get("measurements") or {}
     weight_g = measurements.get("weight_g", 0)
-    weight_kg = _get_field(item, ar, "weightEstimate", weight_g / 1000 if weight_g else 0.0)
+    weight_kg = _get_field(
+        item, ar, "weightEstimate", weight_g / 1000 if weight_g else 0.0
+    )
 
     market_est = ar.get("marketEstimate") or {}
-    price_per_kg = _get_field(item, ar, "marketPriceEstimate", market_est.get("price_per_kg", 0))
+    price_per_kg = _get_field(
+        item, ar, "marketPriceEstimate", market_est.get("price_per_kg", 0)
+    )
     total_value = market_est.get("estimated_value") or round(weight_kg * price_per_kg)
 
     lines = [
@@ -80,6 +86,8 @@ async def get_catch_details(image_id: str) -> str:
 
     status = item.get("status", "unknown")
     if status != "completed":
-        lines.append(f"\nNote: Analysis status is currently '{status}'. Some metrics may be missing or inaccurate until completed.")
+        lines.append(
+            f"\nNote: Analysis status is currently '{status}'. Some metrics may be missing or inaccurate until completed."
+        )
 
     return "\n".join(lines)

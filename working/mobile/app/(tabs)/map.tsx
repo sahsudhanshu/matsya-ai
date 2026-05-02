@@ -450,7 +450,6 @@ export default function MapScreen() {
         setLayersPopupVisible(false);
         return;
       }
-      if (!OWM_KEY) return;
 
       const { latitude: lat, longitude: lng } = e.nativeEvent?.coordinate || {};
       if (lat === undefined || lng === undefined) return;
@@ -474,7 +473,11 @@ export default function MapScreen() {
         }
       }
 
-      setTapCard({ lat, lng, loading: true, cardX, cardY });
+      setTapCard({ lat, lng, loading: !!OWM_KEY, cardX, cardY });
+      if (!OWM_KEY) {
+        setTapCard({ lat, lng, loading: false, cardX, cardY });
+        return;
+      }
       try {
         const r = await fetch(
           `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&appid=${OWM_KEY}&units=metric`,
@@ -492,7 +495,7 @@ export default function MapScreen() {
           description: d.weather?.[0]?.description,
         });
       } catch {
-        setTapCard(null);
+        setTapCard({ lat, lng, loading: false, cardX, cardY });
       }
     },
     [layersPopupVisible],

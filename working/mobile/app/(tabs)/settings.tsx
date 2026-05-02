@@ -270,7 +270,9 @@ export default function SettingsScreen() {
       >
         {/* Header */}
         <View className="mb-6 flex-row justify-between items-center">
-          <Text className="text-xl text-slate-50 font-bold">{t("nav.settings")}</Text>
+          <Text className="text-xl text-slate-50 font-bold">
+            {t("nav.settings")}
+          </Text>
           <ProfileMenu size={36} />
         </View>
 
@@ -282,8 +284,12 @@ export default function SettingsScreen() {
             </Text>
           </View>
           <View className="flex-1">
-            <Text className="text-[13px] font-semibold text-slate-50">{user?.name ?? "Fisherman"}</Text>
-            <Text className="text-xs text-slate-400 mt-0.5">{user?.email ?? ""}</Text>
+            <Text className="text-[13px] font-semibold text-slate-50">
+              {user?.name ?? "Fisherman"}
+            </Text>
+            <Text className="text-xs text-slate-400 mt-0.5">
+              {user?.email ?? ""}
+            </Text>
             {user?.location && (
               <View
                 style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
@@ -293,14 +299,18 @@ export default function SettingsScreen() {
                   size={12}
                   color={COLORS.textMuted}
                 />
-                <Text className="text-[10px] text-slate-500 mt-0.5">{user.location}</Text>
+                <Text className="text-[10px] text-slate-500 mt-0.5">
+                  {user.location}
+                </Text>
               </View>
             )}
           </View>
         </View>
 
         {/* Account Info */}
-        <Text className="text-[10px] text-slate-500 font-semibold tracking-wide uppercase mb-1 mt-2 px-1">{t("settings.account")}</Text>
+        <Text className="text-[10px] text-slate-500 font-semibold tracking-wide uppercase mb-1 mt-2 px-1">
+          {t("settings.account")}
+        </Text>
         <Card padding={0} className="mb-1 overflow-hidden">
           {user?.phone && (
             <PreferenceRow
@@ -330,11 +340,15 @@ export default function SettingsScreen() {
         </Card>
 
         {/* Public Profile Section */}
-        <Text className="text-xs font-bold color-[#94a3b8] uppercase tracking-[0.8px] mb-2 ml-1 mt-4">Public Profile</Text>
+        <Text className="text-xs font-bold color-[#94a3b8] uppercase tracking-[0.8px] mb-2 ml-1 mt-4">
+          Public Profile
+        </Text>
         {loadingProfile ? (
           <Card className="flex-row items-center justify-center p-6 gap-4">
             <ActivityIndicator size="small" color={COLORS.primary} />
-            <Text className="text-xs text-slate-400">Loading profile settings...</Text>
+            <Text className="text-xs text-slate-400">
+              Loading profile settings...
+            </Text>
           </Card>
         ) : publicProfile ? (
           <>
@@ -357,7 +371,9 @@ export default function SettingsScreen() {
         ) : null}
 
         {/* Preferences */}
-        <Text className="text-xs font-bold color-[#94a3b8] uppercase tracking-[0.8px] mb-2 ml-1 mt-4">{t("settings.preferences")}</Text>
+        <Text className="text-xs font-bold color-[#94a3b8] uppercase tracking-[0.8px] mb-2 ml-1 mt-4">
+          {t("settings.preferences")}
+        </Text>
         <Card padding={0} className="mb-4">
           <PreferenceRow
             label={t("settings.notifications")}
@@ -376,7 +392,9 @@ export default function SettingsScreen() {
         </Card>
 
         {/* Fishing Preferences */}
-        <Text className="text-xs font-bold color-[#94a3b8] uppercase tracking-[0.8px] mb-2 ml-1 mt-4">Fishing Preferences</Text>
+        <Text className="text-xs font-bold color-[#94a3b8] uppercase tracking-[0.8px] mb-2 ml-1 mt-4">
+          Fishing Preferences
+        </Text>
         <Card padding={0} className="mb-4">
           <PreferenceRow
             label="Boat Type"
@@ -411,7 +429,9 @@ export default function SettingsScreen() {
         </Card>
 
         {/* Language */}
-        <Text className="text-xs font-bold color-[#94a3b8] uppercase tracking-[0.8px] mb-2 ml-1 mt-4">{t("settings.language")}</Text>
+        <Text className="text-xs font-bold color-[#94a3b8] uppercase tracking-[0.8px] mb-2 ml-1 mt-4">
+          {t("settings.language")}
+        </Text>
         <Card padding={0} className="mb-4">
           <PreferenceRow
             label={t("settings.appLanguage")}
@@ -422,7 +442,9 @@ export default function SettingsScreen() {
         </Card>
 
         {/* Privacy & Security */}
-        <Text className="text-xs font-bold color-[#94a3b8] uppercase tracking-[0.8px] mb-2 ml-1 mt-4">{t("settings.privacy")}</Text>
+        <Text className="text-xs font-bold color-[#94a3b8] uppercase tracking-[0.8px] mb-2 ml-1 mt-4">
+          {t("settings.privacy")}
+        </Text>
         <Card padding={0} className="mb-4">
           <PreferenceRow
             label={t("settings.changePassword")}
@@ -443,7 +465,9 @@ export default function SettingsScreen() {
         </Card>
 
         {/* AI Agent */}
-        <Text className="text-xs font-bold color-[#94a3b8] uppercase tracking-[0.8px] mb-2 ml-1 mt-4">AI Agent</Text>
+        <Text className="text-xs font-bold color-[#94a3b8] uppercase tracking-[0.8px] mb-2 ml-1 mt-4">
+          AI Agent
+        </Text>
         <Card padding={0} className="mb-4">
           <PreferenceRow
             label="Agent Memory"
@@ -515,11 +539,10 @@ export default function SettingsScreen() {
         </Card>
 
         {/* Data Sync */}
-        <Text className="text-xs font-bold color-[#94a3b8] uppercase tracking-[0.8px] mb-2 ml-1 mt-4">Data Sync</Text>
-        <Card
-          padding={SPACING.md}
-          className="mb-1 overflow-hidden p-4"
-        >
+        <Text className="text-xs font-bold color-[#94a3b8] uppercase tracking-[0.8px] mb-2 ml-1 mt-4">
+          Data Sync
+        </Text>
+        <Card padding={SPACING.md} className="mb-1 overflow-hidden p-4">
           {/* Status row */}
           <View
             style={{
@@ -749,7 +772,9 @@ export default function SettingsScreen() {
         )}
 
         {/* Help */}
-        <Text className="text-xs font-bold color-[#94a3b8] uppercase tracking-[0.8px] mb-2 ml-1 mt-4">{t("settings.help")}</Text>
+        <Text className="text-xs font-bold color-[#94a3b8] uppercase tracking-[0.8px] mb-2 ml-1 mt-4">
+          {t("settings.help")}
+        </Text>
         <Card padding={0} className="mb-4">
           <PreferenceRow
             label="Documentation"
@@ -775,12 +800,14 @@ export default function SettingsScreen() {
           onPress={handleLogout}
           activeOpacity={0.8}
         >
-          <Text className="text-red-500 text-xs font-semibold">🚪 {t("settings.logout")}</Text>
+          <Text className="text-red-500 text-xs font-semibold">
+            🚪 {t("settings.logout")}
+          </Text>
         </TouchableOpacity>
 
         {/* App Info */}
         <Text className="text-center text-slate-500 text-[10px] mb-2">
-          Matsya AI v1.0.0 · AWS AI for Bharat Challenge
+          Matsya AI v1.0.0
         </Text>
       </KeyboardAwareScrollView>
 
@@ -861,7 +888,9 @@ export default function SettingsScreen() {
       >
         <View className="flex-1 justify-end bg-black/60">
           <View className="bg-[#1e293b] rounded-t-3xl p-6 pb-8">
-            <Text className="text-xl font-bold color-[#f8fafc] mb-6 text-center">Select Boat Type</Text>
+            <Text className="text-xl font-bold color-[#f8fafc] mb-6 text-center">
+              Select Boat Type
+            </Text>
             <ScrollView showsVerticalScrollIndicator={false}>
               {[
                 "Trawler",
@@ -909,7 +938,9 @@ export default function SettingsScreen() {
       >
         <View className="flex-1 justify-end bg-black/60">
           <View className="bg-[#1e293b] rounded-t-3xl p-6 pb-8">
-            <Text className="text-xl font-bold color-[#f8fafc] mb-6 text-center">Select Weight Unit</Text>
+            <Text className="text-xl font-bold color-[#f8fafc] mb-6 text-center">
+              Select Weight Unit
+            </Text>
             <ScrollView showsVerticalScrollIndicator={false}>
               {[
                 { label: "Kilograms (kg)", value: "kg" },
@@ -946,4 +977,3 @@ export default function SettingsScreen() {
     </SafeAreaView>
   );
 }
-

@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { router, Href } from "expo-router";
 import { useAuth } from "../../lib/auth-context";
 import { getAnalytics } from "../../lib/api-client";
 import { COLORS, FONTS, SPACING, RADIUS } from "../../lib/constants";
@@ -35,7 +35,9 @@ export default function HomeScreen() {
     agentCtx.updateScreen("home");
     getAnalytics()
       .then(setAnalytics)
-      .catch(() => {});
+      .catch((error) => {
+        console.error("[Analytics] Failed to load analytics:", error);
+      });
     // Entrance animation
     const entranceAnimation = Animated.parallel([
       Animated.timing(fadeAnim, {
@@ -106,7 +108,7 @@ export default function HomeScreen() {
     icon: IoniconName;
     title: string;
     desc: string;
-    route: string;
+    route: Href;
     color: string;
   }[] = [
     {
@@ -319,7 +321,7 @@ export default function HomeScreen() {
               key={tool.title}
               className="w-[47%] flex-grow rounded-[16px] border bg-[#1e293b] p-3 gap-1"
               style={{ borderColor: tool.color + "30" }}
-              onPress={() => router.push(tool.route as any)}
+              onPress={() => router.push(tool.route)}
               activeOpacity={0.8}
             >
               <View
@@ -335,45 +337,7 @@ export default function HomeScreen() {
         </View>
 
         {/* Insights */}
-        <Text className="mb-2 mt-1 text-[15px] font-semibold text-[#f8fafc]">{t("home.insights")}</Text>
-        <Card className="mb-6 p-4">
-          {[
-            {
-              icon: "time-outline" as IoniconName,
-              label: t("home.insightTime"),
-              value: "5:00–8:00 AM",
-            },
-            {
-              icon: "fish-outline" as IoniconName,
-              label: t("home.insightSpecies"),
-              value: analytics?.topSpecies ?? "Indian Pomfret",
-            },
-            {
-              icon: "leaf-outline" as IoniconName,
-              label: t("home.insightSustainability"),
-              value: "88/100",
-            },
-            {
-              icon: "trending-up-outline" as IoniconName,
-              label: t("home.insightMarket"),
-              value: "Pomfret ↑12%",
-            },
-          ].map((item, i) => (
-            <View
-              key={item.label}
-              className={`flex-row items-center py-2 ${i > 0 ? "border-t border-[#334155]" : ""}`}
-            >
-              <Ionicons
-                name={item.icon}
-                size={16}
-                color={COLORS.primaryLight}
-                style={{ marginRight: 8 }}
-              />
-              <Text className="flex-1 text-[13px] font-medium text-[#94a3b8]">{item.label}</Text>
-              <Text className="text-[13px] font-semibold text-[#f8fafc]">{item.value}</Text>
-            </View>
-          ))}
-        </Card>
+        
       </ScrollView>
     </SafeAreaView>
   );

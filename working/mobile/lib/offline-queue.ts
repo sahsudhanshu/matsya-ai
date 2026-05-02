@@ -184,6 +184,10 @@ class OfflineQueue {
 
   private async saveFailed(): Promise<void> {
     try {
+      // Keep only the last 50 failed operations to prevent storage bloat
+      if (this.failedQueue.length > 50) {
+        this.failedQueue = this.failedQueue.slice(-50);
+      }
       await AsyncStorage.setItem(
         FAILED_QUEUE_KEY,
         JSON.stringify(this.failedQueue),
@@ -226,57 +230,65 @@ class OfflineQueue {
     let failCount = 0;
     let skippedCount = 0;
 
-    for (const operation of operations) {
-      // Check if we should retry based on exponential backoff
-      if (!this.shouldRetry(operation)) {
-        skippedCount++;
-        continue;
-      }
+    try {
+      for (const operation of operations) {
+        // Check if we should retry based on exponential backoff
+        if (!this.shouldRetry(operation)) {
+          skippedCount++;
+          continue;
+        }
 
-      try {
-        // Update last attempt timestamp
-        operation.lastAttempt = Date.now();
+        try {
+          // Update last attempt timestamp
+          operation.lastAttempt = Date.now();
 
-        syncLogger.info("OfflineQueue", `Executing ${operation.type}…`);
-        // Execute with conflict resolution
-        await this.executeOperation(operation);
+          syncLogger.info("OfflineQueue", `Executing ${operation.type}…`);
+          // Execute with conflict resolution
+          await this.executeOperation(operation);
 
-        // Success - remove from queue
-        await this.remove(operation.id);
-        syncLogger.success("OfflineQueue", `✔ ${operation.type} complete`);
-        successCount++;
-      } catch (error) {
-        console.error(
-          `[OfflineQueue] Failed to execute ${operation.type}:`,
-          error,
-        );
-
-        // Increment retry count
-        operation.retryCount++;
-        operation.error =
-          error instanceof Error ? error.message : "Unknown error";
-
-        // Move to failed queue if max retries exceeded
-        if (operation.retryCount >= MAX_RETRIES) {
-          console.warn(
-            `[OfflineQueue] Max retries exceeded for ${operation.id}, moving to failed queue`,
-          );
-          syncLogger.error("OfflineQueue", `✘ ${operation.type} exceeded max retries - moved to failed queue`);
-          this.failedQueue.push(operation);
+          // Success - remove from queue
           await this.remove(operation.id);
-          await this.saveFailed();
-          this.notifyFailedListeners();
-          failCount++;
-        } else {
-          const msg = error instanceof Error ? error.message : String(error);
-          syncLogger.warn("OfflineQueue", `✘ ${operation.type} failed (attempt ${operation.retryCount}/${MAX_RETRIES}): ${msg}`);
-          // Save updated retry count and last attempt
-          await this.save();
+          syncLogger.success("OfflineQueue", `✔ ${operation.type} complete`);
+          successCount++;
+        } catch (error) {
+          console.error(
+            `[OfflineQueue] Failed to execute ${operation.type}:`,
+            error,
+          );
+
+          try {
+            // Increment retry count
+            operation.retryCount++;
+            operation.error =
+              error instanceof Error ? error.message : "Unknown error";
+
+            // Move to failed queue if max retries exceeded
+            if (operation.retryCount >= MAX_RETRIES) {
+              console.warn(
+                `[OfflineQueue] Max retries exceeded for ${operation.id}, moving to failed queue`,
+              );
+              syncLogger.error("OfflineQueue", `✘ ${operation.type} exceeded max retries - moved to failed queue`);
+              this.failedQueue.push(operation);
+              await this.remove(operation.id);
+              await this.saveFailed();
+              this.notifyFailedListeners();
+              failCount++;
+            } else {
+              const msg = error instanceof Error ? error.message : String(error);
+              syncLogger.warn("OfflineQueue", `✘ ${operation.type} failed (attempt ${operation.retryCount}/${MAX_RETRIES}): ${msg}`);
+              // Save updated retry count and last attempt
+              await this.save();
+            }
+          } catch (storageError) {
+            console.error("[OfflineQueue] Critical storage failure during error handling:", storageError);
+          }
         }
       }
+    } finally {
+      if (this.queue.length === 0 || successCount + failCount + skippedCount === operations.length) {
+        this.isProcessing = false;
+      }
     }
-
-    this.isProcessing = false;
 
     if (successCount > 0) {
       toastService.success(

@@ -235,7 +235,24 @@ async function apiFetch<T>(
       ),
     );
 
-    const res = await fetch(url, { ...options, headers });
+    // Apply a default timeout of 30 seconds to prevent hanging requests causing silent failures
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+    const fetchOptions: RequestInit = {
+      ...options,
+      headers,
+    };
+    if (!fetchOptions.signal) {
+      fetchOptions.signal = controller.signal as any;
+    }
+
+    let res;
+    try {
+      res = await fetch(url, fetchOptions);
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     if (!res.ok) {
       let message = `API error ${res.status}`;
@@ -524,6 +541,8 @@ export async function getMapData(filters?: {
   }
   const params = new URLSearchParams();
   if (filters?.species) params.set("species", filters.species);
+  if (filters?.from) params.set("from", filters.from);
+  if (filters?.to) params.set("to", filters.to);
   const query = params.toString() ? `?${params}` : "";
   return apiFetch(`${ENDPOINTS.getMapData}${query}`);
 }
@@ -766,9 +785,9 @@ export async function getChatHistory(
 
   try {
     const apiLog = await retryWithBackoff(() =>
-      apiFetch<ChatMessage[]>(`${ENDPOINTS.getChatHistory}?limit=${limit}`),
+      apiFetch<{ chats: ChatMessage[] }>(`${ENDPOINTS.getChatHistory}?limit=${limit}`),
     );
-    return apiLog.map((m) => ({
+    return (apiLog.chats || []).map((m) => ({
       id: m.chatId,
       role: "assistant" as const,
       text: m.response,
@@ -784,7 +803,7 @@ export async function getChatHistory(
 export async function synthesizeSpeech(
   text: string,
   languageCode: string,
-): Promise<{ audioBase64: string }> {
+): Promise<{ audioBase64?: string; useBrowserTTS?: boolean }> {
   if (IS_DEMO_MODE) {
     return { audioBase64: "" };
   }
@@ -1735,7 +1754,7 @@ export async function deleteUserAccount(): Promise<void> {
 
   try {
     await apiFetchWithRetry<void>(
-      "/account",
+      "/user/account",
       { method: "DELETE" },
       RETRY_PRESETS.STANDARD,
     );

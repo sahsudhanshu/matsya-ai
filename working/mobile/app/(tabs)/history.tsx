@@ -220,18 +220,14 @@ export default function HistoryScreen() {
 
   const handleAskAI = (groupId: string) => {
     const group = groups.find((g) => g.groupId === groupId);
-    if (group?.analysisResult) {
-      const stats = group.analysisResult.aggregateStats;
-      const species = stats.speciesDistribution
-        ? Object.keys(stats.speciesDistribution).join(", ")
-        : "unknown";
-      const prompt = `I'm looking at my catch from ${new Date(group.createdAt).toLocaleDateString()}. ${stats.totalFishCount} fish detected (${species}), total weight ~${stats.totalEstimatedWeight.toFixed(1)}kg, estimated value ₹${stats.totalEstimatedValue}. Can you give me current market insights and recommendations?`;
+    if (group) {
       router.push({
         pathname: "/(tabs)/chat",
-        params: { initialMessage: prompt },
+        params: { 
+          historyGroupId: groupId,
+          historyGroupDate: group.createdAt,
+        },
       });
-    } else {
-      router.push({ pathname: "/(tabs)/chat", params: { groupId } });
     }
   };
 

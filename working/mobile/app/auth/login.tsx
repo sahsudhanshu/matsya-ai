@@ -1,10 +1,5 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Alert,
-} from "react-native";
+import { View, Text, TouchableOpacity, Alert } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -68,14 +63,8 @@ export default function LoginScreen() {
           <Text className="text-[26px] font-extrabold tracking-[-0.5px] text-[#f8fafc]">
             Matsya AI
           </Text>
-          <Text className="mt-1 text-[12px] font-medium text-[#94a3b8]">
-            AI for Bharat Fishermen
-          </Text>
-          <View className="mt-2 rounded-full bg-[#d9770620] px-2.5 py-[3px]">
-            <Text className="text-[10px] font-semibold text-[#f59e0b]">
-              AWS AI for Bharat Challenge
-            </Text>
-          </View>
+
+          <View className="mt-2 rounded-full bg-[#d9770620] px-2.5 py-[3px]"></View>
         </View>
 
         {/* Card */}
@@ -121,7 +110,7 @@ export default function LoginScreen() {
 
           <View className="mt-4 flex-row justify-center">
             <Text className="text-[12px] text-[#94a3b8]">
-              Don't have an account? 
+              Don't have an account?
             </Text>
             <TouchableOpacity onPress={() => router.push("/auth/register")}>
               <Text className="text-[12px] font-semibold text-[#3b82f6]">

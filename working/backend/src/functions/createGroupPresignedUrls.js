@@ -125,18 +125,18 @@ exports.handler = async (event) => {
 
     // Validate each file has fileName and fileType
     const allowedTypes = ["image/jpeg", "image/png", "image/heic", "image/webp"];
-    
+
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        
+
         if (!file.fileName || typeof file.fileName !== "string") {
             return badRequest(`files[${i}].fileName is required and must be a string`);
         }
-        
+
         if (!file.fileType || typeof file.fileType !== "string") {
             return badRequest(`files[${i}].fileType is required and must be a string`);
         }
-        
+
         if (!allowedTypes.includes(file.fileType)) {
             return badRequest(`files[${i}].fileType must be one of: ${allowedTypes.join(", ")}`);
         }
@@ -144,9 +144,17 @@ exports.handler = async (event) => {
 
     // Detect ocean location if coordinates provided
     const locationCheck = await detectOceanLocation(latitude, longitude);
-    const isValid = locationCheck.reason !== "location_invalid" && locationCheck.reason !== "location_not_provided";
-    const mappedLatitude = isValid ? Number(latitude) : null;
-    const mappedLongitude = isValid ? Number(longitude) : null;
+
+    let mappedLatitude = null;
+    let mappedLongitude = null;
+    if (latitude != null && longitude != null) {
+        const lat = Number(latitude);
+        const lng = Number(longitude);
+        if (Number.isFinite(lat) && Number.isFinite(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+            mappedLatitude = lat;
+            mappedLongitude = lng;
+        }
+    }
 
     try {
         // Call presigned URL generation service

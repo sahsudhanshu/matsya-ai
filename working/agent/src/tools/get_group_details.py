@@ -9,7 +9,7 @@ from src.utils.db import fetchone
 
 
 @tool
-async def get_group_details(group_id: str, user_id: str = "") -> str:
+def get_group_details(group_id: str, user_id: str = "") -> str:
     """
     Get the detailed analysis of a specific group catch (multi-image batch) using its group_id.
     This provides detailed aggregate metrics like total fish count, species distribution, 

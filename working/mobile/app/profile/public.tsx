@@ -1,11 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  ActivityIndicator,
-  Alert,
-} from "react-native";
+import { View, Text, ScrollView, ActivityIndicator, Alert } from "react-native";
 import { Stack, router } from "expo-router";
 import { Avatar } from "../../components/ui/Avatar";
 import { Card } from "../../components/ui/Card";
@@ -151,9 +145,7 @@ export default function PublicProfilePreviewScreen() {
                 size={12}
                 color={COLORS.textMuted}
               />
-              <Text className="text-[12px] text-[#e2e8f0]">
-                {profile.port}
-              </Text>
+              <Text className="text-[12px] text-[#e2e8f0]">{profile.port}</Text>
             </View>
           )}
           {profile.region && (
@@ -238,7 +230,7 @@ export default function PublicProfilePreviewScreen() {
         {/* Footer */}
         <View className="mt-4 items-center">
           <Text className="text-center text-[10px] text-[#64748b]">
-            Powered by Matsya AI - AI for Bharat Fishermen
+            Powered by Matsya AI
           </Text>
         </View>
       </ScrollView>

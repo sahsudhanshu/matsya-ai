@@ -22,7 +22,7 @@ from src.utils.db import fetchall
 
 
 @tool
-async def get_group_history(
+def get_group_history(
     page: int = 1,
     limit: Optional[int] = None,
     user_id: str = "",
