@@ -62,6 +62,10 @@ def sync_from_mysql() -> int:
     if collection is None:
         return 0
 
+    if collection.count() > 0:
+        logger.info(f"[RAG] Collection already has {collection.count()} docs. Skipping sync.")
+        return 0
+
     rows = fetchall("SELECT doc_id, title, content, topic, language, source FROM fish_knowledge")
     if not rows:
         logger.info("[RAG] No documents in fish_knowledge table yet.")

@@ -144,8 +144,9 @@ exports.handler = async (event) => {
 
     // Detect ocean location if coordinates provided
     const locationCheck = await detectOceanLocation(latitude, longitude);
-    const mappedLatitude = locationCheck.isOcean ? Number(latitude) : null;
-    const mappedLongitude = locationCheck.isOcean ? Number(longitude) : null;
+    const isValid = locationCheck.reason !== "location_invalid" && locationCheck.reason !== "location_not_provided";
+    const mappedLatitude = isValid ? Number(latitude) : null;
+    const mappedLongitude = isValid ? Number(longitude) : null;
 
     try {
         // Call presigned URL generation service

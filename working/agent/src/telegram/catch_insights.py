@@ -180,7 +180,7 @@ async def get_catch_insights(user_id: str) -> Optional[str]:
         logger.error(f"Catch insights - LLM summary failed: {e}")
         # Fallback: raw stats
         lines = [
-            f"📊 *Your Capture Insights*",
+            "📊 *Your Capture Insights*",
             f"🐟 Total catches: {total_catches} ({unique_species} species)",
         ]
         if top_species:

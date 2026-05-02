@@ -32,7 +32,7 @@ async def get_catch_history(
     Args:
         page: Page number (1-based). Default 1.
         limit: Max results per page. Default from settings.
-        user_id: Auto-injected by the system. Do not provide.asyncio.run(get_catch_history(page=1, user_id="f1933d6a-2021-7081-47c5-d51cf609a264"))
+        user_id: Auto-injected by the system. Do not provide.
     """
     print(f"🐟  [TOOL] get_catch_history called → user_id={user_id!r}, page={page}")
     page_size = limit or CATCH_HISTORY_PAGE_SIZE
@@ -82,5 +82,4 @@ async def get_catch_history(
     if total > start + page_size:
         lines.append(f"\n  → More records available. Ask for page {page + 1}.")
 
-    return "\n".join(lines)
-asyncio.run(get_catch_history(page=1, user_id="f1933d6a-2021-7081-47c5-d51cf609a264"))
+    return "\n".join(lines)

@@ -116,7 +116,7 @@ async def _fetch_overpass_bodies(lat: float, lon: float, radius_m: int) -> list[
         )
         async with httpx.AsyncClient(timeout=28) as client:
             resp = await client.post(
-                "https://overpass.kumi.systems/api/interpreter",
+                "https://overpass-api.de/api/interpreter",
                 data={"data": query},
                 headers={"User-Agent": "MatsyaAI Fishing Assistant (contact@matsya.ai)", "Accept": "application/json"}
             )
@@ -375,11 +375,11 @@ async def get_nearby_fishing_spots(
         }, indent=2)
     print(f"[fishing_spots] {len(bodies)} water bodies found.", flush=True)
 
-    # ── Step 2: Recency-weighted catch records from MySQL ─────────────────────
+    # ── Step 2: Recency-weighted catch records from MySQL (groups table) ─────
     catch_markers: list[dict] = []
     try:
         rows = fetchall(
-            "SELECT latitude, longitude, createdAt FROM images WHERE status = 'completed' AND latitude IS NOT NULL AND longitude IS NOT NULL ORDER BY createdAt DESC LIMIT 500",
+            "SELECT latitude, longitude, createdAt FROM `groups` WHERE status IN ('completed', 'partial') AND latitude IS NOT NULL AND longitude IS NOT NULL ORDER BY createdAt DESC LIMIT 500",
         )
         for item in rows:
             try:

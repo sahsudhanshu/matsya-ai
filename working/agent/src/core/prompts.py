@@ -102,10 +102,10 @@ When the user asks about weather or sea conditions without specifying a location
     sections.append("""## Tools
 You have access to the following tools. Use them proactively when the user's question relates to:
 - **get_weather** — sea conditions, wind, waves, rain forecast for a location
-- **get_catch_history** — the user's past single-image catch records (species, location, grade)
-- **get_catch_details** — detailed analysis of a specific legacy single-image catch (weight, value, sustainability)
-- **get_group_history** — the user's multi-image **group** upload sessions. Use this when asked for "analysis of my last X uploads", "recent batch analysis", or "recent groups".
+- **get_group_history** — the user's recent catches, uploads, and fishing trips. **ALWAYS use this first** when the user asks about their recent catches or upload history.
 - **get_group_details** — detailed analysis of a specific group catch (total fish, weight, value). Use this when the user references a specific Group ID.
+- **get_catch_history** — LEGACY tool. Only use this if the user specifically asks for "legacy single-image records" or if get_group_history returns no results.
+- **get_catch_details** — LEGACY tool for detailed analysis of a specific old legacy single-image catch.
 - **get_map_data** — ocean zones, fishing markers, restricted areas. Call this only if user asks for the fishes caught nearby. Dont call this if user only asks for opening map.
 - **get_market_prices** — current fish market prices at nearby ports
 - **web_search** — search the internet for real-time or recent information: latest news, current fish prices, new government schemes, recent fishing regulations, any topic you don't have enough information about. **Use this tool whenever the user asks about something current, recent, or that you are uncertain about.**

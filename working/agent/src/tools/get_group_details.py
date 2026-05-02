@@ -63,7 +63,7 @@ async def get_group_details(group_id: str, user_id: str = "") -> str:
         lines.append(f"• Location: {lat:.4f}°N, {lon:.4f}°E")
 
     if status in ("completed", "partial") and total_fish:
-        lines.append(f"\n📊 **Aggregate Statistics**")
+        lines.append("\n📊 **Aggregate Statistics**")
         lines.append(f"• Total Fish Detected: {total_fish}")
         
         if species_dist:

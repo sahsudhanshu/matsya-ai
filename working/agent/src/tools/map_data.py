@@ -1,7 +1,7 @@
 """
 Map / ocean data tool - provides region context for the agent.
 
-Queries the images table in MySQL for geo-tagged catch records
+Queries the groups table in MySQL for geo-tagged catch records
 (matching the backend getMapData Lambda), and combines with static zone/harbor data.
 """
 from __future__ import annotations
@@ -67,10 +67,11 @@ def _haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
 
 def _fetch_catch_markers(species_filter: Optional[str] = None, date_from: Optional[str] = None, date_to: Optional[str] = None) -> list[dict]:
     """
-    Query images table from MySQL (mirrors getMapData Lambda).
+    Query groups table from MySQL (mirrors getMapData Lambda).
     Returns list of {lat, lon, species, qualityGrade, weight_g, createdAt}.
+    Each group row is expanded into one entry per species in aggregateStats.
     """
-    where = ["status = 'completed'", "latitude IS NOT NULL", "longitude IS NOT NULL"]
+    where = ["status IN ('completed', 'partial')", "latitude IS NOT NULL", "longitude IS NOT NULL"]
     params = []
 
     if date_from:
@@ -80,7 +81,7 @@ def _fetch_catch_markers(species_filter: Optional[str] = None, date_from: Option
         where.append("createdAt <= %s + 'T23:59:59Z'")
         params.append(date_to)
 
-    sql = f"SELECT imageId, latitude, longitude, createdAt, analysisResult FROM images WHERE {' AND '.join(where)} ORDER BY createdAt DESC LIMIT 200"
+    sql = f"SELECT latitude, longitude, createdAt, analysisResult FROM `groups` WHERE {' AND '.join(where)} ORDER BY createdAt DESC LIMIT 200"
 
     try:
         rows = fetchall(sql, params or None)
@@ -102,16 +103,32 @@ def _fetch_catch_markers(species_filter: Optional[str] = None, date_from: Option
                 ar = json.loads(ar)
             except Exception:
                 ar = {}
-        if species_filter and ar.get("species", "").lower() != species_filter.lower():
-            continue
-        markers.append({
-            "lat": lat,
-            "lon": lon,
-            "species": ar.get("species", "Unknown"),
-            "qualityGrade": ar.get("qualityGrade", ""),
-            "weight_g": (ar.get("measurements") or {}).get("weight_g"),
-            "createdAt": str(item.get("createdAt", ""))[:10],
-        })
+        agg = ar.get("aggregateStats") or {}
+        species_dist: dict = agg.get("speciesDistribution") or {}
+        created_at = str(item.get("createdAt", ""))[:10]
+        est_weight = agg.get("totalEstimatedWeight")
+
+        if species_dist:
+            for sp, count in species_dist.items():
+                if species_filter and sp.lower() != species_filter.lower():
+                    continue
+                markers.append({
+                    "lat": lat,
+                    "lon": lon,
+                    "species": sp,
+                    "qualityGrade": agg.get("averageConfidence", ""),
+                    "weight_g": round(est_weight * 1000 / max(agg.get("totalFishCount", 1), 1), 1) if est_weight else None,
+                    "createdAt": created_at,
+                })
+        else:
+            # Group with no species info — still include as an anonymous catch point
+            if not species_filter:
+                markers.append({
+                    "lat": lat, "lon": lon,
+                    "species": "Unknown",
+                    "qualityGrade": "", "weight_g": None,
+                    "createdAt": created_at,
+                })
     return markers
 
 

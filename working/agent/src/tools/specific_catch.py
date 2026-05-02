@@ -12,8 +12,7 @@ def _get_field(item: dict, ar: dict, key: str, default=None):
     """Read from nested analysisResult first, then fall back to top-level (legacy)."""
     return ar.get(key, item.get(key, default))
 
-# async def get_catch_details(image_id: str, user_id: str = "") -> str:
-
+@tool
 async def get_catch_details(image_id: str) -> str:
     """
     Get the detailed analysis of a specific catch (fish upload) using its image_id.

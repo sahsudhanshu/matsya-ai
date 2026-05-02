@@ -235,26 +235,7 @@ async def load_context(state: AgentState) -> Dict[str, Any]:
     }
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Node: rag_retrieval
-# ─────────────────────────────────────────────────────────────────────────────
 
-async def rag_retrieval(state: AgentState) -> Dict[str, Any]:
-    """Sync fish_knowledge documents from MySQL into ChromaDB on first run."""
-    try:
-        from src.utils.rag import sync_from_mysql, _get_collection
-        import asyncio as _aio
-        loop = _aio.get_running_loop()
-        count = await loop.run_in_executor(None, sync_from_mysql)
-        return {"rag_documents_count": count, "rag_context": None, "rag_error": None}
-    except Exception as e:
-        import logging
-        logging.warning(f"RAG sync failed (non-fatal): {e}")
-        return {"rag_context": None, "rag_error": str(e), "rag_documents_count": 0}
-
-
-
-# ─────────────────────────────────────────────────────────────────────────────# Node: intent_classifier
 # ───────────────────────────────────────────────────────────────────────────────
 
 _INTENT_CLASSIFIER_PROMPT = """
@@ -552,8 +533,7 @@ def build_graph() -> StateGraph:
     workflow.add_node("language_guard", language_guard)
     workflow.add_node("load_context", load_context)
     workflow.add_node("intent_classifier", intent_classifier)
-    if RAG_AVAILABLE:
-        workflow.add_node("rag_retrieval", rag_retrieval)
+
     workflow.add_node("agent", agent)
     workflow.add_node("tool_executor", tool_executor)
     workflow.add_node("memory_update", memory_update)
@@ -570,13 +550,8 @@ def build_graph() -> StateGraph:
     # load_context -> intent_classifier (always), then -> rag/agent
     workflow.add_edge("load_context", "intent_classifier")
 
-    if RAG_AVAILABLE:
-        # intent_classifier -> rag_retrieval -> agent
-        workflow.add_edge("intent_classifier", "rag_retrieval")
-        workflow.add_edge("rag_retrieval", "agent")
-    else:
-        # intent_classifier -> agent
-        workflow.add_edge("intent_classifier", "agent")
+    # intent_classifier -> agent
+    workflow.add_edge("intent_classifier", "agent")
     
     workflow.add_conditional_edges("agent", route_agent, {
         "tool_executor": "tool_executor",

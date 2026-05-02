@@ -69,6 +69,15 @@ async def lifespan(app: FastAPI):
     if not diagnostics.get('ok', True):
         logger.error("Critical startup checks failed — see diagnostics above")
 
+    # ── Run RAG sync once on startup ─────────────────────────────────────────
+    try:
+        from src.utils.rag import sync_from_mysql
+        import asyncio
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(None, sync_from_mysql)
+    except Exception as e:
+        logger.error(f"RAG sync failed at startup: {e}")
+
     if TELEGRAM_BOT_TOKEN:
         try:
             from src.telegram.bot import create_telegram_app
