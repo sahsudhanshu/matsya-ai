@@ -2,14 +2,13 @@
 
 import React, { useState, useMemo, useCallback } from "react";
 import {
-    Search, ChevronDown, ChevronUp, Mail,
+    Search, ChevronDown, Mail,
     Fish, BarChart2, MessageSquare, Phone,
-    HelpCircle, BookOpen, Zap, Shield, Globe, ArrowRight
+    HelpCircle, BookOpen, Zap, Shield, Globe
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 // ── FAQ Data ──────────────────────────────────────────────────────────────────

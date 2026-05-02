@@ -72,7 +72,7 @@ export default function UserLocationMarker({
         setCoords({ lat, lng });
         onLocationFound?.(lat, lng);
         if (autoCenter) {
-          map.flyTo([lat, lng], 9, { duration: 1.5 });
+          map.flyTo([lat, lng], 11, { duration: 1.5 });
         }
       },
       () => {

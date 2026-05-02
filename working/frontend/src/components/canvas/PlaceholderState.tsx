@@ -4,7 +4,6 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Waves, Compass } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n';
-import { cn } from '@/lib/utils';
 
 export default function PlaceholderState() {
   const { t } = useLanguage();

@@ -120,7 +120,7 @@ export default function SettingsOverlay({ onClose, onSwitchTab }: SettingsOverla
             await changePassword(oldPw, newPw);
             toast.success("Password changed!");
             setOldPw(""); setNewPw(""); setConfirmPw(""); setShowPassword(false);
-        } catch (e: any) { toast.error(e.message || "Failed"); }
+        } catch (e: unknown) { toast.error(e instanceof Error ? e.message : "Failed"); }
         finally { setIsChangingPw(false); }
     }, [oldPw, newPw, confirmPw, changePassword]);
 
@@ -128,7 +128,7 @@ export default function SettingsOverlay({ onClose, onSwitchTab }: SettingsOverla
         try {
             await updateUserProfile({ preferences: { language, notifications, offlineSync, units, boatType } });
             toast.success("Preferences saved!");
-        } catch (e: any) { toast.error(e.message || "Failed"); }
+        } catch (e: unknown) { toast.error(e instanceof Error ? e.message : "Failed"); }
     }, [language, notifications, offlineSync, units, boatType]);
 
     const exportData = useCallback(async () => {
@@ -142,7 +142,7 @@ export default function SettingsOverlay({ onClose, onSwitchTab }: SettingsOverla
             document.body.appendChild(a); a.click(); document.body.removeChild(a);
             URL.revokeObjectURL(url);
             toast.success("Data exported!");
-        } catch (e: any) { toast.error(e.message || "Failed"); }
+        } catch (e: unknown) { toast.error(e instanceof Error ? e.message : "Failed"); }
         finally { setIsExporting(false); }
     }, []);
 
@@ -154,7 +154,7 @@ export default function SettingsOverlay({ onClose, onSwitchTab }: SettingsOverla
             toast.success("Account deleted.");
             logout();
             onClose();
-        } catch (e: any) { toast.error(e.message || "Failed"); }
+        } catch (e: unknown) { toast.error(e instanceof Error ? e.message : "Failed"); }
         finally { setIsDeleting(false); }
     }, [deleteText, logout, onClose]);
 

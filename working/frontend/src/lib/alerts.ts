@@ -154,7 +154,13 @@ export function timeUntilExpiry(expiresAt: string): string {
 
 function deriveAlertFromWeather(
     station: MonitoringStation,
-    weather: any
+    weather: {
+        wind?: { speed?: number; gust?: number };
+        rain?: { "1h"?: number };
+        visibility?: number;
+        weather?: Array<{ id: number; description: string }>;
+        main?: { temp?: number };
+    }
 ): DisasterAlert | null {
     const wind = weather.wind?.speed ?? 0;      // m/s
     const gust = weather.wind?.gust ?? 0;       // m/s

@@ -19,7 +19,7 @@ export interface ComponentState {
 
 export interface ComponentProps {
   onPaneMessage?: (message: PaneMessage) => void;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface ComponentHistoryEntry {
@@ -38,7 +38,7 @@ export interface PaneMessage {
   id: string;
   type: PaneMessageType;
   source: PaneMessageSource;
-  payload: Record<string, any>;
+  payload: Record<string, unknown>;
   timestamp: number;
   metadata?: {
     userInitiated: boolean;
@@ -55,14 +55,14 @@ export interface PaneWidths {
 
 export interface CachedComponent {
   props: ComponentProps;
-  state: any;
+  state: unknown;
   timestamp: number;
 }
 
 export interface SessionState {
   version: string;
   timestamp: number;
-  conversationHistory: any[];
+  conversationHistory: unknown[];
   currentChatId: string | null;
   activeComponent: ComponentType | null;
   componentProps: ComponentProps;
@@ -102,7 +102,7 @@ export interface AgentFirstStore {
   isOffline: boolean;
 
   // Session state
-  conversationHistory: any[];
+  conversationHistory: unknown[];
   currentChatId: string | null;
 
   // Component cache
@@ -118,7 +118,7 @@ export interface AgentFirstStore {
   toggleDrawer: (open: boolean) => void;
   setVoiceActive: (active: boolean) => void;
   setOffline: (offline: boolean) => void;
-  setConversationHistory: (history: any[]) => void;
+  setConversationHistory: (history: unknown[]) => void;
   setChatId: (chatId: string | null) => void;
   restoreSession: (state: Partial<SessionState>) => void;
   persistSession: () => void;
@@ -134,7 +134,7 @@ export interface AnimationConfig {
 }
 
 export interface TransitionVariants {
-  initial: any;
-  animate: any;
-  exit: any;
+  initial: Record<string, unknown>;
+  animate: Record<string, unknown>;
+  exit: Record<string, unknown>;
 }

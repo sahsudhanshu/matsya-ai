@@ -634,7 +634,7 @@ export async function streamChat(
 
           for (const line of lines) {
             if (line.startsWith("data: ")) {
-              let data: any;
+              let data: { type: string; text?: string; name?: string; messageId?: string; ui?: { map?: boolean; history?: boolean; upload?: boolean; mapLat?: number; mapLon?: number }; error?: string };
               try {
                 data = JSON.parse(line.slice(6));
               } catch {
@@ -649,7 +649,7 @@ export async function streamChat(
               } else if (data.type === "chunk") {
                 streamEstablished = true;
                 streamedAnyChunk = true;
-                onChunk(data.text);
+                onChunk(data.text || "");
               } else if (data.type === "end") {
                 streamEstablished = true;
                 finalMessageId = data.messageId;
@@ -670,8 +670,8 @@ export async function streamChat(
         }
       }
       return { chatId: overrideChatId, messageId: finalMessageId, ui: finalUi };
-    } catch (err: any) {
-      if (signal?.aborted || err?.name === 'AbortError') {
+    } catch (err: unknown) {
+      if (signal?.aborted || (err instanceof Error && err.name === 'AbortError')) {
         const abortErr = new Error('AbortError');
         abortErr.name = 'AbortError';
         throw abortErr;
@@ -852,7 +852,7 @@ export async function uploadGroupToS3(
  */
 export async function analyzeGroup(
   groupId: string,
-  imageCount?: number,
+  _imageCount?: number,
 ): Promise<{ groupId: string; analysisResult: GroupAnalysis }> {
   return apiFetch<{ groupId: string; analysisResult: GroupAnalysis }>(
     `/groups/${groupId}/analyze`,
@@ -1082,6 +1082,6 @@ export function getPrimaryCrop(
   return entries.sort((a, b) => b.species.confidence - a.species.confidence)[0];
 }
 
-function delay(ms: number) {
+function _delay(ms: number) {
   return new Promise<void>((r) => setTimeout(r, ms));
 }

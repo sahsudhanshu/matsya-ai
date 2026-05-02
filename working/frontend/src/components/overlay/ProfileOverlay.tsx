@@ -1,9 +1,8 @@
 "use client"
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import {
-    User, Camera, Pencil, Save, Globe, ExternalLink,
-    X, Copy, Link2, Scale, Loader2, MapPin, Ship,
+import { Camera, Pencil, Save, Globe, ExternalLink,
+    X, Copy, Link2, Scale, Loader2,
     Settings, LogOut
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -18,7 +17,6 @@ import { useAuth } from "@/lib/auth-context";
 import { getUserProfile, updateUserProfile } from "@/lib/api-client";
 import type { UserProfile } from "@/lib/api-client";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 
 // ═══════════════════════════════════════════════════════════════════
 // PROFILE OVERLAY - lightweight, no router, renders directly
@@ -59,7 +57,7 @@ export default function ProfileOverlay({ onClose, onSwitchTab }: ProfileOverlayP
                 setProfile(p);
                 setPublicEnabled(p.publicProfileEnabled ?? false);
                 setPublicSlug(p.publicProfileSlug || "");
-                setShowStats((p as any).showPublicStats ?? false);
+                setShowStats((p as unknown as { showPublicStats?: boolean }).showPublicStats ?? false);
                 setEditName(p.name || user?.name || "");
                 setEditPhone(p.phone || user?.phone || "");
                 setEditPort(p.port || user?.port || "");
@@ -96,7 +94,7 @@ export default function ProfileOverlay({ onClose, onSwitchTab }: ProfileOverlayP
             updateUser({ name: editName, phone: editPhone, port: editPort, region: editRegion, role: editRole });
             setIsEditing(false);
             toast.success("Profile saved!");
-        } catch (e: any) { toast.error(e.message || "Failed"); }
+        } catch (e: unknown) { toast.error(e instanceof Error ? e.message : "Failed"); }
         finally { setIsSaving(false); }
     }, [editName, editPhone, editPort, editCustomPort, editRegion, editRole, user, updateUser]);
 
@@ -143,7 +141,7 @@ export default function ProfileOverlay({ onClose, onSwitchTab }: ProfileOverlayP
                 customPort: editPort === "other" ? editCustomPort : "",
                 region: editRegion || profile?.region || "", role: editRole || profile?.role || "fisherman",
                 publicProfileEnabled: checked, publicProfileSlug: slug,
-            } as any);
+            } as Record<string, unknown>);
             toast.success(checked ? "Public profile enabled!" : "Public profile disabled");
         } catch { toast.error("Failed"); setPublicEnabled(!checked); }
         finally { setIsSavingPublic(false); }
@@ -157,7 +155,7 @@ export default function ProfileOverlay({ onClose, onSwitchTab }: ProfileOverlayP
                 port: editPort || profile?.port || "", customPort: editPort === "other" ? editCustomPort : "",
                 region: editRegion || profile?.region || "", role: editRole || profile?.role || "fisherman",
                 showPublicStats: checked,
-            } as any);
+            } as Record<string, unknown>);
             toast.success(checked ? "Stats visible!" : "Stats hidden");
         } catch { setShowStats(!checked); toast.error("Failed"); }
     }, [editName, editPhone, editPort, editCustomPort, editRegion, editRole, profile]);

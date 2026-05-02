@@ -12,7 +12,7 @@ import type { ComponentType } from '@/types/agent-first';
 export interface CommandIntent {
   action: 'open' | 'close' | 'query' | 'navigate';
   target: ComponentType | null;
-  params?: Record<string, any>;
+  params?: Record<string, unknown>;
   confidence: number;
 }
 
@@ -145,8 +145,8 @@ function calculateConfidence(message: string, patterns: RegExp[]): number {
  * Extract parameters from command message
  * Used for commands with additional context (e.g., "show map near Mumbai")
  */
-export function extractParams(message: string, target: ComponentType): Record<string, any> {
-  const params: Record<string, any> = {};
+export function extractParams(message: string, target: ComponentType): Record<string, unknown> {
+  const params: Record<string, unknown> = {};
 
   if (!target) return params;
 

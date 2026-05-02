@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import React, { useEffect, useRef, useCallback } from 'react';
@@ -28,7 +29,6 @@ interface AgentInterfacePaneProps {
  * - Glassmorphism oceanic theme
  */
 export default function AgentInterfacePane({
-  variant = 'full',
   className,
 }: AgentInterfacePaneProps) {
   const { t } = useLanguage();
@@ -58,7 +58,7 @@ export default function AgentInterfacePane({
 
   const selectedContextGroupId =
     (activeComponent === 'history' || activeComponent === 'upload')
-      ? (componentProps?.selectedGroupId ?? componentProps?.currentGroupId ?? null)
+      ? ((componentProps as any)?.selectedGroupId ?? (componentProps as any)?.currentGroupId ?? null)
       : null;
 
   // ── Clear global agent context when closing panes ──────────────────────────
@@ -299,7 +299,7 @@ export default function AgentInterfacePane({
             chatId={currentChatId}
             contextGroupId={selectedContextGroupId}
             onChatIdChange={handleChatIdChange}
-            initialMessages={conversationHistory}
+            initialMessages={conversationHistory as any}
             onMessagesChange={handleConversationUpdate}
             className="h-full"
           />

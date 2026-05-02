@@ -7,6 +7,7 @@
  * failed (ChunkLoadError). This helper retries the import once after a
  * short delay, giving Turbopack time to finish compiling.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function lazyRetry<T extends React.ComponentType<any>>(
   factory: () => Promise<{ default: T }>,
   retryDelay = 1500,

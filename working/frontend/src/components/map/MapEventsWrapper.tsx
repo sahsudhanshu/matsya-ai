@@ -41,10 +41,10 @@ export default function MapEventsWrapper({ onMouseMove, onClick, onMapReady, onM
     }, [map]);
 
     const handlers = useRef({
-        mousemove(e: any) {
+        mousemove(e: L.LeafletMouseEvent) {
             callbacks.current.onMouseMove(e.latlng);
         },
-        click(e: any) {
+        click(e: L.LeafletMouseEvent) {
             callbacks.current.onClick?.(e.latlng);
         },
         dragend() {

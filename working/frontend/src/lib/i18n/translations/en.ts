@@ -1,4 +1,3 @@
-import type { TranslationStrings } from '../types';
 
 const en = {
   // Nav
@@ -363,6 +362,27 @@ const en = {
   'canvas.loading.timeout.retry': 'Retry',
   'canvas.placeholder.title': 'Ask me anything about fishing',
   'canvas.placeholder.subtitle': 'Upload catches, view maps, check analytics, or ask questions about the ocean',
+  'chat.goodEvening': 'Good Evening',
+  'chat.goodAfternoon': 'Good Afternoon',
+  'chat.goodMorning': 'Good Morning',
+  'chat.holdToSpeak': 'Hold to speak',
+  'chat.askMeAnything': 'Ask me anything',
+  'chat.matsyaAi': 'Matsya AI',
+  'nav.oceanMap': 'Ocean Map',
+  'nav.history': 'History',
+  'nav.showChat': 'Show chat',
+  'nav.collapseChat': 'Collapse chat',
+  'nav.language': 'Language',
+  'nav.dark': 'Dark',
+  'nav.systemDefault': 'System Default',
+  'nav.light': 'Light',
+  'nav.appearance': 'Appearance',
+  'nav.profile': 'Profile',
+  'nav.deleteChat': 'Delete chat',
+  'nav.untitledChat': 'Untitled Chat',
+  'nav.recentChats': 'Recent chats',
+  'nav.openChat': 'Open Chat',
+  'nav.newChat': 'New Chat',
 };
 
 export default en;

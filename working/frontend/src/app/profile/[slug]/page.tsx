@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -35,8 +37,8 @@ export default function PublicProfilePage() {
             try {
                 const data = await getPublicProfile(slug);
                 setProfile(data);
-            } catch (err: any) {
-                setError(err.message || "Profile not found");
+            } catch (err: unknown) {
+                setError(err instanceof Error ? err.message : "Profile not found");
             } finally {
                 setLoading(false);
             }

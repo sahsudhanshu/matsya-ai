@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
 import React, {
     useState,
@@ -33,7 +35,7 @@ import {
     Square
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import {
     streamChat,
@@ -249,7 +251,7 @@ const UI_DIRECTIVE_RE = new RegExp(
 
 const stripUiDirective = (text: string): string => {
     // Single-pass replace for all known directive shapes
-    let result = text.replace(UI_DIRECTIVE_RE, "").trim();
+    const result = text.replace(UI_DIRECTIVE_RE, "").trim();
 
     // Secondary guard: if the entire remaining output is a JSON object (e.g.,
     // the model emitted `{"map":true}` with no UI prefix), drop it entirely.
@@ -932,10 +934,11 @@ function ToolSuggestionChips({
 }
 
 // Show a greeting and date at the top of empty chat state
-function AgentDigestCard({ onBriefingClick }: { onBriefingClick: (prompt: string) => void }) {
+function AgentDigestCard({ onBriefingClick: _onBriefingClick }: { onBriefingClick: (prompt: string) => void }) {
     const { user } = useAuth();
+    const { t } = useLanguage();
     const hour = new Date().getHours();
-    const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
+    const greeting = hour < 12 ? t('chat.goodMorning') || 'Good Morning' : hour < 17 ? t('chat.goodAfternoon') || 'Good Afternoon' : t('chat.goodEvening') || 'Good Evening';
 
     // Get the first name, fallback to 'Fisher'
     const firstName = user?.name ? user.name.split(' ')[0] : 'Fisher';
@@ -1036,7 +1039,7 @@ export default function AgentChat({
     onMessagesChange,
     onNewConversationCreated,
 }: AgentChatProps) {
-    const { user } = useAuth();
+    const { } = useAuth();
     const { t, locale, speechCode } = useLanguage();
     const isCompact = variant === "compact";
 
@@ -1157,6 +1160,7 @@ export default function AgentChat({
             setHasMoreHistory(false);
             setIsLoadingHistory(false);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [externalChatId]);
 
     // ── Explicit reset for New Chat even when chatId remains null ───────────────
@@ -1298,7 +1302,7 @@ export default function AgentChat({
             () => { },
             { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 },
         );
-    }, []);
+    }, [messages.length]);
 
     // ── Context Welcome message ──────────────────────────────────────────────────────
     useEffect(() => {
@@ -1329,7 +1333,7 @@ export default function AgentChat({
                 return [...prev, systemNote];
             });
         }
-    }, [contextImageIndex]);
+    }, [contextImageIndex, contextGroupId, contextImageCount, contextSpecies]);
 
     // ── TTS ──────────────────────────────────────────────────────────────────
     const handlePlayPause = async (msg: Message) => {
@@ -1805,7 +1809,7 @@ export default function AgentChat({
             t("chat.chip.regulations"),
         ];
 
-    const hasPendingAssistantSkeleton = messages.some(
+    const _hasPendingAssistantSkeleton = messages.some(
         (m) =>
             m.role === "assistant" &&
             m.id.startsWith("ai_temp_") &&
@@ -1844,12 +1848,12 @@ export default function AgentChat({
                             isCompact ? "text-sm" : "text-base",
                         )}
                     >
-                        {contextGroupId ? "Matsya AI" : "Matsya AI"}
+                        {t('chat.matsyaAi') || "Matsya AI"}
                     </h3>
                     <p className="text-[10px] text-muted-foreground/60 leading-tight">
                         {contextGroupId
                             ? `Analyzing image ${contextImageIndex + 1}${contextImageCount ? ` of ${contextImageCount}` : ""}`
-                            : "Ask me anything"}
+                            : t('chat.askMeAnything') || "Ask me anything"}
                     </p>
                 </div>
             </div>
@@ -2095,7 +2099,7 @@ export default function AgentChat({
                                             toast.error(t("voice.notSupported"));
                                             return;
                                         }
-                                        isListening ? stopListening() : startListening();
+                                        if (isListening) { stopListening(); } else { startListening(); }
                                     }}
                                     disabled={isTyping}
                                     className={cn(
@@ -2214,7 +2218,7 @@ export default function AgentChat({
                         </button>
                         {!isListening && (
                             <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-semibold text-muted-foreground whitespace-nowrap">
-                                Hold to speak
+                                {t('chat.holdToSpeak') || 'Hold to speak'}
                             </span>
                         )}
                     </div>

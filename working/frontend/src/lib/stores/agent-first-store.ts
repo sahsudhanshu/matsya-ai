@@ -10,11 +10,10 @@ import type {
   AgentFirstStore,
   ComponentType,
   ComponentProps,
-  ComponentHistoryEntry,
-  ComponentState,
   PaneWidths,
   PaneMessage,
   CachedComponent,
+  SessionState,
 } from '@/types/agent-first';
 
 // ── Default Values ────────────────────────────────────────────────────────────
@@ -48,7 +47,7 @@ const DEFAULT_STATE: Omit<AgentFirstStore, keyof ReturnType<typeof createActions
 
 // ── Store Actions ─────────────────────────────────────────────────────────────
 
-function createActions(set: any, get: any) {
+function createActions(set: (partial: Partial<AgentFirstStore> | ((state: AgentFirstStore) => Partial<AgentFirstStore>)) => void, get: () => AgentFirstStore) {
   return {
     setActiveComponent: (type: ComponentType, props: ComponentProps = {}) => {
       const current = get().activeComponent;
@@ -253,7 +252,7 @@ function createActions(set: any, get: any) {
       }
     },
 
-    setConversationHistory: (history: any[]) => {
+    setConversationHistory: (history: unknown[]) => {
       set({ conversationHistory: history });
     },
 
@@ -261,7 +260,7 @@ function createActions(set: any, get: any) {
       set({ currentChatId: chatId });
     },
 
-    restoreSession: (state: Partial<any>) => {
+    restoreSession: (state: Partial<SessionState>) => {
       set({
         conversationHistory: state.conversationHistory || [],
         currentChatId: state.currentChatId || null,

@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
+/* eslint-disable @next/next/no-img-element */
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {

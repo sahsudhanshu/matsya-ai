@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
 import React, {
   useState,
@@ -291,6 +293,13 @@ export default function UploadComponent({
 
   useEffect(() => {
     loadHistory();
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => setLocation(null),
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
   }, [loadHistory]);
 
   // Get overall upload progress
@@ -346,7 +355,7 @@ export default function UploadComponent({
     setWeightResults({});
     setWeightErrors({});
 
-    if ("geolocation" in navigator && files.length === 0) {
+    if ("geolocation" in navigator && files.length === 0 && !location) {
       navigator.geolocation.getCurrentPosition(
         (pos) =>
           setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),

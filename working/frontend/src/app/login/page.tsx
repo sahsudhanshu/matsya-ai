@@ -104,8 +104,8 @@ export default function LoginPage() {
         toast.success("Account created! Please sign in.");
         setMode("login");
       }
-    } catch (err: any) {
-      toast.error(err.message || "Request failed. Please try again.");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Request failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -152,7 +152,7 @@ export default function LoginPage() {
             AWS AI for Bharat Challenge
           </Badge>
           <h1 className="text-4xl xl:text-5xl font-bold text-white leading-tight">
-            Empowering India's
+            Empowering India&apos;s
             <br />
             <span className="text-amber-400">Fishermen</span>
             <br />

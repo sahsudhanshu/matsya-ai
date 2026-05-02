@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
+import Image from "next/image";
 import { Clock, ChevronRight, Fish, Sparkles, Images } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getGroups, type GroupRecord } from '@/lib/api-client';
@@ -106,7 +107,7 @@ export default function InlineHistoryCarousel({ onAskAboutGroup, className }: In
                 {/* Thumbnail */}
                 <div className="h-[80px] bg-muted/30 relative overflow-hidden">
                   {imgUrl ? (
-                    <img src={imgUrl} alt="catch" className="w-full h-full object-cover" />
+                    <Image unoptimized width={800} height={800}  src={imgUrl} alt="catch" className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <Fish className="w-6 h-6 text-muted-foreground/30" />

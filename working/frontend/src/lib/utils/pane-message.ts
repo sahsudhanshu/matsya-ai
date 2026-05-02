@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * PaneMessage utilities for creating, validating, and logging messages
  * 
@@ -464,19 +465,19 @@ export function formatMessageForDisplay(message: PaneMessage): string {
 
     case 'map':
       if (type === 'query' && 'latitude' in payload) {
-        return `Clicked location: ${payload.latitude.toFixed(4)}°N, ${payload.longitude.toFixed(4)}°E`;
+        return `Clicked location: ${(payload as any).latitude.toFixed(4)}°N, ${(payload as any).longitude.toFixed(4)}°E`;
       }
       if (type === 'query' && 'imageId' in payload) {
-        return `Viewing catch: ${payload.species || 'Unknown species'} at ${payload.latitude.toFixed(4)}°N`;
+        return `Viewing catch: ${(payload as any).species || 'Unknown species'} at ${(payload as any).latitude.toFixed(4)}°N`;
       }
       break;
 
     case 'analytics':
       if (type === 'query' && 'chartType' in payload) {
-        return `Clicked ${payload.chartType} chart: ${payload.dataPoint.label} (${payload.dataPoint.value})`;
+        return `Clicked ${(payload as any).chartType} chart: ${(payload as any).dataPoint.label} (${(payload as any).dataPoint.value})`;
       }
       if (type === 'info' && 'totalCatches' in payload) {
-        return `Loaded analytics: ${payload.totalCatches} catches, ₹${payload.totalEarnings} earnings`;
+        return `Loaded analytics: ${(payload as any).totalCatches} catches, ₹${(payload as any).totalEarnings} earnings`;
       }
       break;
   }

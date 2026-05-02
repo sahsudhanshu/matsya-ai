@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Session Manager - Handles serialization/deserialization of session state
  * Provides browser refresh recovery for conversation history and app state
@@ -34,7 +35,7 @@ export function serializeSession(
   paneWidths: PaneWidths
 ): string {
   // Convert messages to serializable format
-  const serializableMessages: SerializableMessage[] = conversationHistory.map(msg => ({
+  const serializableMessages: SerializableMessage[] = (conversationHistory as any[]).map((msg: any) => ({
     id: msg.id,
     role: msg.role,
     content: msg.content,

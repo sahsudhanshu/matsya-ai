@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
+/* eslint-disable @next/next/no-img-element */
 
 import React, { useState, useEffect, useCallback, useRef, memo } from 'react';
 import Link from 'next/link';
@@ -9,7 +11,7 @@ import {
     HelpCircle, User, LogOut, ChevronLeft, Globe, Bell, X,
     Plus, MessageSquare, PanelLeftClose, PanelLeftOpen,
     Home, Camera, Sun, Moon, Monitor,
-    PanelRightOpen,
+    PanelRightOpen, Trash2, Loader2
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
@@ -25,7 +27,7 @@ import PaneDivider from './PaneDivider';
 import { OfflineIndicator } from './OfflineIndicator';
 import OverlayDialog from './OverlayDialog';
 import type { OverlayTab } from './OverlayDialog';
-import { getConversationsList, createConversation } from '@/lib/api-client';
+import { getConversationsList, createConversation, deleteConversation } from '@/lib/api-client';
 import type { Conversation } from '@/lib/api-client';
 import {
     DropdownMenu,
@@ -144,6 +146,7 @@ export default function AgentFirstLayout() {
     const [rightSidebarExpanded, setRightSidebarExpanded] = useState(false);
     const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
     const [canvasFlash, setCanvasFlash] = useState(false);
+    const [deletingChatId, setDeletingChatId] = useState<string | null>(null);
     const prevActiveRef = useRef<string | null>(null);
 
     // ── Sync current page to agent context store ──────────────────────────────
@@ -458,7 +461,7 @@ export default function AgentFirstLayout() {
                                     chatHistory.slice(0, 20).map((conv) => {
                                         const isActive = chatId === conv.conversationId;
                                         return (
-                                            <button
+                                            <div
                                                 key={conv.conversationId}
                                                 onClick={() => {
                                                     setChatId(conv.conversationId);
@@ -466,16 +469,49 @@ export default function AgentFirstLayout() {
                                                     clearComponent();
                                                 }}
                                                 className={cn(
-                                                    "w-full h-8 rounded-lg flex items-center gap-2.5 px-2.5 text-left transition-all group/item",
+                                                    "w-full h-8 rounded-lg flex items-center gap-2.5 px-2.5 text-left transition-all group/item cursor-pointer",
                                                     isActive
                                                         ? "bg-primary/10 text-primary"
                                                         : "text-muted-foreground/70 hover:text-foreground hover:bg-muted/15"
                                                 )}
                                             >
-                                                <span className="text-[12px] font-medium truncate whitespace-nowrap w-full">
+                                                <span className="text-[12px] font-medium truncate whitespace-nowrap flex-1">
                                                     {conv.title || 'Untitled Chat'}
                                                 </span>
-                                            </button>
+                                                <button
+                                                    onClick={async (e) => {
+                                                        e.stopPropagation();
+                                                        if (deletingChatId) return;
+                                                        setDeletingChatId(conv.conversationId);
+                                                        try {
+                                                            await deleteConversation(conv.conversationId);
+                                                            setChatHistory(prev => prev.filter(c => c.conversationId !== conv.conversationId));
+                                                            if (isActive) {
+                                                                setChatId(null);
+                                                                clearComponent();
+                                                            }
+                                                        } catch (err) {
+                                                            console.error("Failed to delete chat", err);
+                                                        } finally {
+                                                            setDeletingChatId(null);
+                                                        }
+                                                    }}
+                                                    disabled={deletingChatId === conv.conversationId}
+                                                    className={cn(
+                                                        "w-5 h-5 rounded flex items-center justify-center transition-all shrink-0",
+                                                        deletingChatId === conv.conversationId
+                                                            ? "opacity-100 text-muted-foreground"
+                                                            : "opacity-0 group-hover/item:opacity-100 hover:bg-red-500/20 hover:text-red-500"
+                                                    )}
+                                                    title="Delete chat"
+                                                >
+                                                    {deletingChatId === conv.conversationId ? (
+                                                        <Loader2 className="w-3 h-3 animate-spin" />
+                                                    ) : (
+                                                        <Trash2 className="w-3 h-3" />
+                                                    )}
+                                                </button>
+                                            </div>
                                         );
                                     })
                                 )}

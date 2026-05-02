@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
-  Sparkles, MapPin, Upload, BarChart3, Clock, MessageSquare, Search,
+  Sparkles, MapPin, Upload, BarChart3, Clock, MessageSquare,
   Fish, Send,
 } from 'lucide-react';
 import {
@@ -14,7 +14,7 @@ import {
   CommandList,
   CommandSeparator,
 } from '@/components/ui/command';
-import { useAgentFirstStore, selectActiveComponent } from '@/lib/stores/agent-first-store';
+import { useAgentFirstStore } from '@/lib/stores/agent-first-store';
 import type { Conversation } from '@/lib/api-client';
 
 interface CommandPaletteProps {
@@ -114,10 +114,11 @@ export default function CommandPalette({
               clearComponent();
               onFocusChat?.();
             })}
+            className='hover:text-white'
           >
             <Fish className="mr-2 h-4 w-4 text-primary" />
             <span>Ask Matsya AI...</span>
-            <span className="ml-auto text-[10px] text-muted-foreground/50">Focus chat</span>
+            <span className="ml-auto text-[10px]">Focus chat</span>
           </CommandItem>
           <CommandItem
             onSelect={() => runCommand(() => {
@@ -168,8 +169,9 @@ export default function CommandPalette({
                 <CommandItem
                   key={conv.conversationId}
                   onSelect={() => runCommand(() => onSelectChat?.(conv.conversationId))}
+                  className='hover:text-white'
                 >
-                  <MessageSquare className="mr-2 h-4 w-4 text-muted-foreground/50" />
+                  <MessageSquare className="mr-2 h-4 w-4" />
                   <span className="truncate">{conv.title || 'Untitled Chat'}</span>
                   <span className="ml-auto text-[10px] text-muted-foreground/40">
                     {new Date(conv.updatedAt).toLocaleDateString()}

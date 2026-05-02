@@ -340,9 +340,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // are wiped immediately - prevents stale state leaking into next login
     try {
       // Dynamic import avoids circular dependency
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { useAgentFirstStore } = require("@/lib/stores/agent-first-store");
-      useAgentFirstStore.getState().logout();
+      import("@/lib/stores/agent-first-store").then(({ useAgentFirstStore }) => {
+        useAgentFirstStore.getState().logout();
+      });
     } catch { }
   };
 

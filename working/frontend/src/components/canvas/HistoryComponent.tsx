@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -36,7 +38,7 @@ export default function HistoryComponent(_props: HistoryComponentProps = {}) {
   // Sync selectedGroupId from store props
   useEffect(() => {
     if (store.componentProps?.selectedGroupId) {
-      setSelectedGroupId(store.componentProps.selectedGroupId);
+      setSelectedGroupId(store.componentProps.selectedGroupId as string);
     }
   }, [store.componentProps?.selectedGroupId]);
 
