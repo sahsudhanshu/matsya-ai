@@ -407,6 +407,31 @@ export default function ChatScreen() {
       }
     }
 
+    // Group context from History screen (Ask AI)
+    const targetGroupId = params.historyGroupId || params.groupId;
+    if (targetGroupId) {
+      setReferencedAnalysis({
+        id: targetGroupId as string,
+        imageUrl: "",
+        species: params.historyGroupDate 
+          ? `Catch from ${new Date(params.historyGroupDate as string).toLocaleDateString()}`
+          : `Scan ${targetGroupId}`,
+        type: "group",
+      });
+
+      setTimeout(() => {
+        setSelectedTips((prev) => {
+          const tip = `Analyze my catch (group ${targetGroupId})`;
+          if (!prev.includes(tip)) {
+            return [...prev, tip];
+          }
+          return prev;
+        });
+      }, 500);
+      
+      router.setParams({ historyGroupId: "", historyGroupDate: "", groupId: "" });
+    }
+
     // Catch history context from History screen
     if (params.catchId && params.species) {
       setReferencedAnalysis({
@@ -1802,7 +1827,11 @@ export default function ChatScreen() {
                   messages.length > 2 && (
                     <SuggestionChips
                       suggestions={lastSuggestions}
-                      onSelect={(prompt) => sendMessage(prompt)}
+                      onSelect={(prompt) => {
+                        if (!selectedTips.includes(prompt)) {
+                          setSelectedTips((prev) => [...prev, prompt]);
+                        }
+                      }}
                       disabled={isTyping || isStreaming}
                     />
                   )}

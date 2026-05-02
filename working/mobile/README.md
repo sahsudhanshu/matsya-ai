@@ -1,4 +1,4 @@
-# Matsya AI – AI for Bharat 🐟
+# Matsya AI 🐟
 
 An offline-capable mobile app that helps Indian fishers identify fish species, detect diseases, and get market insights - all running **on-device** using TFLite models.
 
@@ -71,7 +71,6 @@ The application comes with all necessary machine learning models bundled directl
 - **Disease Identification**: `Fish_disease.tflite`
 
 No manual deployment via ADB is required for standard use or release builds.
-
 
 ---
 
@@ -182,4 +181,4 @@ Copy `.env.example` to `.env.local` and fill in the values.
 
 ## License
 
-MIT © AI for Bharat contributors
+MIT © Matsya AI contributors

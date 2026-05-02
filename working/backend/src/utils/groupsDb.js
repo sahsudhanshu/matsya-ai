@@ -134,7 +134,7 @@ function transformLegacyToGroup(legacyRecord) {
         updatedAt: legacyRecord.updatedAt || legacyRecord.createdAt,
         primarySpecies,
         totalFishCount,
-        s3Keys: [], // legacy images don't have this array usually
+        s3Keys: legacyRecord.s3Key ? [legacyRecord.s3Key] : [],
         analysisResult: transformedAnalysis,
         isLegacy: true,
         latitude: legacyRecord.latitude,

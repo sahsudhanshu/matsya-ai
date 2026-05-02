@@ -112,14 +112,14 @@ export const ENDPOINTS = {
   getChatHistory: "/chat",
   getAnalytics: "/analytics",
   saveWeightEstimate: "/weight-estimates",
-  saveOfflineAnalysis: "/offline-analyses",  // legacy - kept for reference
+  saveOfflineAnalysis: "/offline-analyses", // legacy - kept for reference
   syncOfflineSessionPrepare: "/sync/offline-session/prepare",
   syncOfflineSessionCommit: "/sync/offline-session/commit",
 };
 
 // ── App Config ───────────────────────────────────────────────────────────────
 export const APP_NAME = "Matsya AI";
-export const APP_TAGLINE = "AI for Bharat Fishermen";
+export const APP_TAGLINE = "AI-Powered Fisherman's Assistant";
 
 // Telegram Bot Configuration
 export const TELEGRAM_BOT_USERNAME =

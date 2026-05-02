@@ -17,7 +17,7 @@ const en = {
   "header.language": "Language",
 
   // Dashboard
-  "dash.badge": "AWS AI for Bharat Challenge",
+  "dash.badge": "Matsya AI",
   "dash.title": "Empowering Indian Fishermen with",
   "dash.titleHighlight": "AI Insights",
   "dash.subtitle":
@@ -176,7 +176,7 @@ const en = {
 
   // Common
   "common.beta": "Beta Version 1.0",
-  "common.challenge": "AWS AI for Bharat Challenge",
+  "common.challenge": "Matsya AI",
   "common.loading": "Loading...",
   "common.profile": "Profile",
   "common.settings": "Settings",

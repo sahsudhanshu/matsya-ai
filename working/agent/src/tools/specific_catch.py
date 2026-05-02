@@ -15,7 +15,7 @@ def _get_field(item: dict, ar: dict, key: str, default=None):
 # async def get_catch_details(image_id: str, user_id: str = "") -> str:
 
 @tool
-async def get_catch_details(image_id: str) -> str:
+def get_catch_details(image_id: str) -> str:
     """
     Get the detailed analysis of a specific catch (fish upload) using its image_id.
     This provides detailed metrics like length, weight, quality grade, and market value.

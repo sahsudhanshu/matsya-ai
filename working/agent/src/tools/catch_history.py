@@ -19,7 +19,7 @@ def _get_field(item: dict, ar: dict, key: str, default=None):
 
 
 @tool
-async def get_catch_history(
+def get_catch_history(
     page: int = 1,
     limit: Optional[int] = None,
     user_id: str = "",

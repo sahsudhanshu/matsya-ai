@@ -233,12 +233,13 @@ export function HistoryCard({
           </TouchableOpacity>
 
           {group.status === "completed" && !offlineSyncStatus && (
-            <TouchableOpacity className="w-9 h-9 items-center justify-center bg-bgSurface rounded-md border border-borderDark" onPress={onAskAI}>
+            <TouchableOpacity className="flex-1 flex-row items-center justify-center gap-1 bg-bgSurface rounded-md border border-borderDark py-sm" onPress={onAskAI}>
               <Ionicons
                 name="chatbubble-outline"
                 size={15}
                 color={COLORS.primaryLight}
               />
+              <Text className="text-xs font-bold" style={{ color: COLORS.primaryLight }}>Ask AI</Text>
             </TouchableOpacity>
           )}
 
