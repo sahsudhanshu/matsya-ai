@@ -1,4 +1,5 @@
 require('dotenv').config();
+require('dns').setDefaultResultOrder('ipv4first'); // Fixes AWS SDK IPv6 timeout issues
 const express = require('express');
 const cors = require('cors');
 const { runStartupChecks } = require('./src/utils/startup-check');

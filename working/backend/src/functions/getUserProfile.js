@@ -44,7 +44,8 @@ exports.handler = async (event) => {
     let decoded;
     try {
         decoded = await verifyToken(event);
-    } catch {
+    } catch (err) {
+        console.error("verifyToken failed with error:", err.message, err.stack);
         return unauthorized();
     }
 

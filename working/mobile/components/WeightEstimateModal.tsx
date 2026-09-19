@@ -302,9 +302,7 @@ export function WeightEstimateModal({
               <ResultRow label="Quality Grade" value={result.quality_grade} />
             )}
 
-            {result.notes && (
-              <ResultRow label="Notes" value={result.notes} muted />
-            )}
+            
 
             <Button
               label="Done"
